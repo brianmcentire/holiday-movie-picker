@@ -1,5 +1,5 @@
 # holiday-movie-picker
-Holiday movie selector single page application. Created as a learning experience and for an AWS Community blog post.
+Holiday movie selector single page application. Created for a Python and JavaScript learning experience.
 
 # Set Flicks: Holiday Edition 🎬
 
