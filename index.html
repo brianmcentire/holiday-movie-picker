@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Flicks // Holiday Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .frosted { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); }
+        .state-neutral { background: white; color: #64748b; border-color: #e2e8f0; cursor: pointer; }
+        .state-include { background: #3b82f6; color: white; border-color: #3b82f6; cursor: pointer; }
+        .state-exclude { background: #ef4444; color: white; border-color: #ef4444; text-decoration: line-through; cursor: pointer; }
+        .state-disabled { display: none; } 
+
+        .movie-card:hover { transform: translateY(-4px); transition: all 0.2s; }
+        .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .sort-btn { transition: color 0.2s; }
+        #search-input:placeholder-shown + #clear-search { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen pb-20">
+
+    <header class="sticky top-0 z-50 frosted border-b border-slate-200 py-4 px-10 mb-8">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <h1 class="text-2xl font-black tracking-tighter text-slate-900 uppercase whitespace-nowrap">
+                Set Flicks <span class="text-blue-600 font-light ml-1 text-[22px] italic tracking-tight">Holiday Edition</span>
+            </h1>
+
+            <div class="flex-grow flex justify-center px-4">
+                <span id="stats" class="text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:block">...</span>
+            </div>
+            
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <div class="relative w-full md:w-80">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                    <input type="text" id="search-input" placeholder="Titles, keywords, or descriptions..." 
+                        class="pl-10 pr-10 py-2 bg-white border border-slate-200 rounded-lg text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button id="clear-search" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        <i data-lucide="x-circle" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                
+                <div class="flex items-center bg-white border border-slate-200 rounded-lg h-10 shadow-sm shrink-0">
+                    <select id="sort-select" class="pl-3 pr-8 py-2 text-[10px] font-bold uppercase tracking-widest focus:outline-none bg-transparent cursor-pointer">
+                        <option value="date" selected>Release Date</option>
+                        <option value="alpha">Alphabetical</option>
+                        <option value="rating">User Rating</option>
+                        <option value="votes">Total Votes</option>
+                        <option value="random">Random</option>
+                    </select>
+                    <button id="sort-dir" class="px-3 border-l border-slate-200 hover:bg-slate-50">
+                        <i data-lucide="arrow-down-wide-narrow" id="dir-icon" class="w-4 h-4 text-slate-600"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-10 grid grid-cols-1 lg:grid-cols-4 gap-12">
+        <aside class="lg:col-span-1 space-y-8 sticky top-28 h-fit max-h-[calc(100vh-120px)] overflow-y-auto sidebar-scroll pr-4 pb-10">
+            <div>
+                <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Genres</h3>
+                <div id="genre-cloud" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div>
+                <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Content Ratings</h3>
+                <div id="rating-cloud" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div class="-mt-4">
+                <hr class="border-slate-200 mb-2">
+                <p class="text-[10px] text-slate-400 italic leading-tight">
+                    Click to include, again to exclude, third click resets.
+                </p>
+            </div>
+            
+            <div>
+                <div class="flex justify-between items-end mb-3">
+                    <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Top Vibes</h3>
+                    <div class="flex gap-2 text-[9px] font-bold uppercase tracking-tighter">
+                        <button onclick="resortSidebar('top', 'freq')" id="top-freq" class="sort-btn text-blue-600">Most Common</button>
+                        <span class="text-slate-200">|</span>
+                        <button onclick="resortSidebar('top', 'alpha')" id="top-alpha" class="sort-btn text-slate-400 hover:text-blue-400">A to Z</button>
+                    </div>
+                </div>
+                <div id="top-vibes" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div>
+                <div class="flex justify-between items-end mb-3">
+                    <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">More Tags <span id="mid-count" class="font-medium opacity-60"></span></h3>
+                    <div class="flex gap-2 text-[9px] font-bold uppercase tracking-tighter">
+                        <button onclick="resortSidebar('mid', 'freq')" id="mid-freq" class="sort-btn text-slate-400 hover:text-blue-400">Most Common</button>
+                        <span class="text-slate-200">|</span>
+                        <button onclick="resortSidebar('mid', 'alpha')" id="mid-alpha" class="sort-btn text-blue-600">A to Z</button>
+                    </div>
+                </div>
+                <div id="mid-vibes" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div class="pt-2">
+                <div class="flex justify-between items-end mb-3">
+                    <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Get Specific <span id="tail-count" class="font-medium opacity-60"></span></h3>
+                    <div class="flex gap-2 text-[9px] font-bold uppercase tracking-tighter">
+                        <button onclick="resortSidebar('tail', 'freq')" id="tail-freq" class="sort-btn text-slate-400 hover:text-blue-400">Most Common</button>
+                        <span class="text-slate-200">|</span>
+                        <button onclick="resortSidebar('tail', 'alpha')" id="tail-alpha" class="sort-btn text-blue-600">A to Z</button>
+                    </div>
+                </div>
+                <div id="long-tail-vibes" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div class="pt-2">
+                <div class="flex justify-between items-end mb-3">
+                    <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">All the rest <span id="niche-count" class="font-medium opacity-60"></span></h3>
+                    <div class="flex gap-2 text-[9px] font-bold uppercase tracking-tighter">
+                        <button onclick="resortSidebar('niche', 'freq')" id="niche-freq" class="sort-btn text-slate-400 hover:text-blue-400">Most Common</button>
+                        <span class="text-slate-200">|</span>
+                        <button onclick="resortSidebar('niche', 'alpha')" id="niche-alpha" class="sort-btn text-blue-600">A to Z</button>
+                    </div>
+                </div>
+                <div id="niche-vibes" class="flex flex-wrap gap-2 opacity-80"></div>
+            </div>
+
+            <button onclick="location.reload()" class="text-xs text-slate-400 hover:text-blue-600 transition flex items-center gap-1 font-bold uppercase tracking-tighter pt-4">
+                <i data-lucide="refresh-cw" class="w-3 h-3"></i> Reset
+            </button>
+        </aside>
+
+        <section class="lg:col-span-3">
+            <div id="pill-container" class="flex flex-wrap gap-2 mb-6 min-h-[32px]"></div>
+            <div id="results-grid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+        </section>
+    </main>
+
+    <script>
+        let db = { index: {}, movies: {}, genres: {} }, tagStates = new Map(), sortDir = -1;
+        let sidebarSorts = { top: 'freq', mid: 'alpha', tail: 'alpha', niche: 'alpha' };
+        let tiers = { top: [], mid: [], tail: [], niche: [] };
+        const R_TAGS = ['G', 'PG', 'PG-13'];
+        let currentVisibleIds = [];
+
+        async function init() {
+            try {
+                const response = await fetch('holiday_engine.json');
+                db = await response.json();
+                renderFilters();
+                addUIListeners();
+                updateResults();
+                lucide.createIcons();
+            } catch (e) { console.error("Data Load Failed"); }
+        }
+
+        function createFilterBtn(tag, container) {
+            const btn = document.createElement('button');
+            btn.id = `tag-${tag}`;
+            btn.innerText = tag;
+            btn.className = `px-3 py-1 rounded-full border text-[11px] font-semibold transition-all state-neutral whitespace-nowrap`;
+            btn.onclick = () => toggleTag(tag);
+            container.appendChild(btn);
+            return btn;
+        }
+
+        function renderFilters() {
+            // 1. Genres
+            const gBox = document.getElementById('genre-cloud');
+            if (db.genres) {
+                Object.keys(db.genres).sort().forEach(g => {
+                    if (!tagStates.has(g)) tagStates.set(g, 0);
+                    createFilterBtn(g, gBox);
+                });
+            }
+
+            // 2. Ratings
+            const rBox = document.getElementById('rating-cloud');
+            R_TAGS.forEach(t => {
+                if (!tagStates.has(t)) tagStates.set(t, 0);
+                createFilterBtn(t, rBox);
+            });
+
+            // 3. Vibes
+            const allTags = Object.keys(db.index).filter(t => {
+                const isRating = R_TAGS.some(r => r.toLowerCase() === t);
+                const isGenre = db.genres ? Object.keys(db.genres).some(g => g.toLowerCase() === t) : false;
+                return !isRating && !isGenre && db.index[t].length > 0;
+            });
+            
+            const frequencySorted = [...allTags].sort((a, b) => db.index[b].length - db.index[a].length);
+            
+            // Bucket Logic
+            tiers.top = frequencySorted.slice(0, 30);
+            tiers.mid = frequencySorted.slice(30, 70);
+            const remaining = frequencySorted.slice(70);
+            tiers.tail = remaining.filter(tag => db.index[tag].length >= 4);
+            tiers.niche = remaining.filter(tag => db.index[tag].length < 4);
+
+            document.getElementById('mid-count').innerText = `(${tiers.mid.length})`;
+            document.getElementById('tail-count').innerText = `(${tiers.tail.length})`;
+            document.getElementById('niche-count').innerText = `(${tiers.niche.length})`;
+
+            // Initial Draw
+            drawTier('top', 'top-vibes');
+            drawTier('mid', 'mid-vibes');
+            drawTier('tail', 'long-tail-vibes');
+            drawTier('niche', 'niche-vibes');
+        }
+
+        function drawTier(tierKey, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            let tags = [...tiers[tierKey]];
+            const currentSort = sidebarSorts[tierKey];
+
+            // Sorting Logic
+            if (currentSort === 'alpha') {
+                tags.sort((a, b) => a.localeCompare(b));
+            } else if (currentSort === 'alpha-desc') {
+                tags.sort((a, b) => b.localeCompare(a));
+            } else if (currentSort === 'freq') {
+                tags.sort((a, b) => db.index[b].length - db.index[a].length);
+            } else if (currentSort === 'freq-asc') {
+                tags.sort((a, b) => db.index[a].length - db.index[b].length);
+            }
+
+            // Update Button UI
+            updateSortButtons(tierKey);
+
+            tags.forEach(tag => {
+                if (!tagStates.has(tag)) tagStates.set(tag, 0);
+                createFilterBtn(tag, container);
+                updateBtnState(tag); 
+            });
+        }
+
+        function updateSortButtons(tierKey) {
+            const current = sidebarSorts[tierKey];
+            const freqBtn = document.getElementById(`${tierKey}-freq`);
+            const alphaBtn = document.getElementById(`${tierKey}-alpha`);
+
+            // Text Updates
+            freqBtn.innerText = current === 'freq-asc' ? 'Least Common' : 'Most Common';
+            alphaBtn.innerText = current === 'alpha-desc' ? 'Z to A' : 'A to Z';
+
+            // Style Updates
+            const activeClass = 'text-blue-600';
+            const inactiveClass = 'text-slate-400 hover:text-blue-400';
+
+            if (current.includes('freq')) {
+                freqBtn.className = `sort-btn ${activeClass}`;
+                alphaBtn.className = `sort-btn ${inactiveClass}`;
+            } else {
+                freqBtn.className = `sort-btn ${inactiveClass}`;
+                alphaBtn.className = `sort-btn ${activeClass}`;
+            }
+        }
+
+        function resortSidebar(tierKey, type) {
+            const current = sidebarSorts[tierKey];
+            let newSort = '';
+
+            // Toggle Logic
+            if (type === 'alpha') {
+                if (current === 'alpha') newSort = 'alpha-desc';
+                else newSort = 'alpha';
+            } else { // type === 'freq'
+                if (current === 'freq') newSort = 'freq-asc';
+                else newSort = 'freq';
+            }
+
+            sidebarSorts[tierKey] = newSort;
+            
+            const containers = { top: 'top-vibes', mid: 'mid-vibes', tail: 'long-tail-vibes', niche: 'niche-vibes' };
+            drawTier(tierKey, containers[tierKey]);
+            syncSidebarStates();
+        }
+
+        function toggleTag(tag) {
+            let next = (tagStates.get(tag) + 1) % 3;
+            tagStates.set(tag, next);
+            updateBtnState(tag);
+            updateResults();
+        }
+
+        function updateBtnState(tag) {
+            const btn = document.getElementById(`tag-${tag}`);
+            if(btn) {
+                const state = tagStates.get(tag);
+                let cls = `px-3 py-1 rounded-full border text-[11px] font-semibold transition-all whitespace-nowrap `;
+                if (state === 0) cls += 'state-neutral';
+                else if (state === 1) cls += 'state-include';
+                else if (state === 2) cls += 'state-exclude';
+                btn.className = cls;
+            }
+        }
+
+        function updateResults() {
+            let ids = Object.keys(db.movies);
+            const query = document.getElementById('search-input').value.toLowerCase();
+
+            if (query) {
+                ids = ids.filter(id => {
+                    const m = db.movies[id];
+                    return `${m.title} ${m.overview}`.toLowerCase().includes(query);
+                });
+            }
+
+            tagStates.forEach((state, tag) => {
+                if (state === 0) return;
+
+                const pool = (db.genres && db.genres[tag]) || db.index[tag.toLowerCase()] || [];
+                const set = new Set(pool);
+
+                if (state === 1) ids = ids.filter(i => set.has(i));
+                if (state === 2) ids = ids.filter(i => !set.has(i));
+            });
+
+            const sortBy = document.getElementById('sort-select').value;
+            if (sortBy === 'random') {
+                ids.sort(() => Math.random() - 0.5);
+            } else {
+                ids.sort((a, b) => {
+                    const m1 = db.movies[a], m2 = db.movies[b];
+                    let v1, v2;
+                    if (sortBy === 'alpha') { 
+                        v1 = m1.title.replace(/^[^a-z0-9]+/i, ''); 
+                        v2 = m2.title.replace(/^[^a-z0-9]+/i, '');
+                    }
+                    else if (sortBy === 'date') { v1 = m1.date; v2 = m2.date; }
+                    else if (sortBy === 'votes') { v1 = m1.votes || 0; v2 = m2.votes || 0; }
+                    else { v1 = m1.rating; v2 = m2.rating; }
+                    return (typeof v1 === 'string' ? v1.localeCompare(v2) : v1 - v2) * sortDir;
+                });
+            }
+
+            currentVisibleIds = ids;
+            
+            // UPDATED: Logic to show "More than 500 titles"
+            const countText = ids.length > 500 ? "More than 500 titles" : `${ids.length} Titles`;
+            document.getElementById('stats').innerText = countText;
+
+            syncSidebarStates();
+            renderPills();
+            renderGrid(ids);
+        }
+
+        function syncSidebarStates() {
+            const availableTags = new Set();
+            
+            currentVisibleIds.forEach(id => {
+                Object.keys(db.index).forEach(t => { 
+                    if(db.index[t].includes(id)) availableTags.add(t); 
+                });
+                if (db.genres) {
+                    Object.keys(db.genres).forEach(g => { 
+                        if(db.genres[g].includes(id)) availableTags.add(g); 
+                    });
+                }
+            });
+
+            tagStates.forEach((state, tag) => {
+                const btn = document.getElementById(`tag-${tag}`);
+                if (!btn) return;
+
+                const isAvailable = availableTags.has(tag) || availableTags.has(tag.toLowerCase());
+
+                if (state === 0 && !isAvailable) {
+                    btn.classList.add('state-disabled');
+                } else {
+                    btn.classList.remove('state-disabled');
+                }
+            });
+        }
+
+        function renderPills() {
+            const container = document.getElementById('pill-container');
+            container.innerHTML = '';
+            tagStates.forEach((state, tag) => {
+                if (state === 0) return;
+                
+                const pill = document.createElement('div');
+                pill.className = `flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border shadow-sm ${state === 1 ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-red-50 border-red-200 text-red-600'}`;
+                
+                const span = document.createElement('span');
+                span.innerText = (state === 2 ? 'NO: ' : '') + tag;
+                pill.appendChild(span);
+
+                const btn = document.createElement('button');
+                btn.className = "hover:opacity-60 transition";
+                btn.onclick = () => resetTag(tag); // Safe closure
+                
+                const icon = document.createElement('i');
+                icon.setAttribute('data-lucide', 'x');
+                icon.className = "w-3 h-3";
+                
+                btn.appendChild(icon);
+                pill.appendChild(btn);
+                
+                container.appendChild(pill);
+            });
+            lucide.createIcons();
+        }
+
+        function resetTag(tag) {
+            tagStates.set(tag, 0);
+            updateBtnState(tag);
+            updateResults();
+        }
+
+        function addUIListeners() {
+            const searchInput = document.getElementById('search-input');
+            searchInput.oninput = updateResults;
+            
+            document.getElementById('clear-search').onclick = () => {
+                searchInput.value = '';
+                updateResults();
+                searchInput.focus();
+            };
+
+            document.getElementById('sort-select').onchange = (e) => {
+                sortDir = (e.target.value === 'alpha') ? 1 : -1;
+                updateSortIcon();
+                updateResults();
+            };
+            
+            document.getElementById('sort-dir').onclick = () => {
+                sortDir *= -1;
+                updateSortIcon();
+                updateResults();
+            };
+        }
+
+        function updateSortIcon() {
+            const icon = document.getElementById('dir-icon');
+            icon.setAttribute('data-lucide', sortDir === 1 ? 'arrow-up-narrow-wide' : 'arrow-down-wide-narrow');
+            lucide.createIcons();
+        }
+
+        function renderGrid(ids) {
+            const grid = document.getElementById('results-grid');
+            if (ids.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-400 font-medium">No movies match your search or vibes.</div>`;
+                return;
+            }
+            grid.innerHTML = ids.map(id => {
+                const m = db.movies[id];
+                const year = (m.date && m.date !== '0000-00-00') ? m.date.split('-')[0] : 'TBA';
+                return `<a href="https://www.themoviedb.org/movie/${id}" target="_blank" class="movie-card group bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm flex flex-col">
+                    <div class="aspect-[2/3] overflow-hidden bg-slate-100 relative"><img src="${m.poster}" class="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy"></div>
+                    <div class="p-4 flex-grow min-h-[110px]">
+                        <h4 class="font-bold text-sm leading-tight text-slate-800 mb-1">${m.title} <span class="text-slate-400 font-normal">(${year})</span></h4>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-blue-600 font-black text-[10px] uppercase tracking-tighter border border-blue-100 px-1 rounded">${m.cert}</span>
+                            <span class="text-slate-400 text-[10px] font-bold italic">
+                                ${m.rating.toFixed(1)}/10 <span class="opacity-60 ml-1">[${m.votes || 0} votes]</span>
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 line-clamp-3 leading-snug">${m.overview}</p>
+                    </div></a>`;
+            }).join('');
+        }
+        init();
+    </script>
+</body>
+</html>
