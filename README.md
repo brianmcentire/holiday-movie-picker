@@ -1,6 +1,8 @@
 # holiday-movie-picker
 Holiday movie selector single page application. Created for a Python and JavaScript learning experience.
 
+Live demo here - https://brianmcentire.github.io/holiday-movie-picker/
+
 # Set Flicks: Holiday Edition 🎬
 
 A curated holiday movie discovery engine built with a high-concurrency Python API client and a zero-dependency static HTML and JS frontend.
