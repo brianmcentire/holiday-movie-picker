@@ -136,22 +136,48 @@
         </section>
     </main>
 
+    <footer class="max-w-7xl mx-auto px-10 mt-16 text-[11px] text-slate-400">
+        This website uses <a href="https://www.themoviedb.org" target="_blank" class="underline hover:text-blue-600">TMDB</a> and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.
+    </footer>
+
     <script>
         let db = { index: {}, movies: {}, genres: {} }, tagStates = new Map(), sortDir = -1;
         let sidebarSorts = { top: 'freq', mid: 'alpha', tail: 'alpha', niche: 'alpha' };
         let tiers = { top: [], mid: [], tail: [], niche: [] };
         const R_TAGS = ['G', 'PG', 'PG-13'];
+        const MIN_TAG_FILMS = 2; // Rarer tags stay searchable but don't get a sidebar button
         let currentVisibleIds = [];
+        const movieTags = {}; // id -> Set of its tags and genres
 
         async function init() {
             try {
                 const response = await fetch('holiday_engine.json');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 db = await response.json();
+                indexMovies();
                 renderFilters();
                 addUIListeners();
                 updateResults();
                 lucide.createIcons();
-            } catch (e) { console.error("Data Load Failed"); }
+            } catch (e) {
+                console.error("Data Load Failed", e);
+                const help = location.protocol === 'file:'
+                    ? 'Browsers block this page from loading its data when opened as a file. Run <code>python3 -m http.server</code> in this folder, then open <a class="text-blue-600 underline" href="http://localhost:8000">localhost:8000</a>.'
+                    : 'Try reloading the page.';
+                document.getElementById('results-grid').innerHTML =
+                    `<div class="col-span-full py-20 text-center text-slate-500 font-medium">Couldn't load the movie list. ${help}</div>`;
+            }
+        }
+
+        function indexMovies() {
+            [db.index, db.genres || {}].forEach(source => {
+                Object.entries(source).forEach(([tag, ids]) => {
+                    ids.forEach(id => (movieTags[id] ||= new Set()).add(tag));
+                });
+            });
+            Object.entries(db.movies).forEach(([id, m]) => {
+                m.searchText = `${m.title} ${m.overview} ${[...movieTags[id]].join(' ')}`.toLowerCase();
+            });
         }
 
         function createFilterBtn(tag, container) {
@@ -185,7 +211,7 @@
             const allTags = Object.keys(db.index).filter(t => {
                 const isRating = R_TAGS.some(r => r.toLowerCase() === t);
                 const isGenre = db.genres ? Object.keys(db.genres).some(g => g.toLowerCase() === t) : false;
-                return !isRating && !isGenre && db.index[t].length > 0;
+                return !isRating && !isGenre && db.index[t].length >= MIN_TAG_FILMS;
             });
             
             const frequencySorted = [...allTags].sort((a, b) => db.index[b].length - db.index[a].length);
@@ -301,10 +327,7 @@
             const query = document.getElementById('search-input').value.toLowerCase();
 
             if (query) {
-                ids = ids.filter(id => {
-                    const m = db.movies[id];
-                    return `${m.title} ${m.overview}`.toLowerCase().includes(query);
-                });
+                ids = ids.filter(id => db.movies[id].searchText.includes(query));
             }
 
             tagStates.forEach((state, tag) => {
@@ -349,16 +372,7 @@
         function syncSidebarStates() {
             const availableTags = new Set();
             
-            currentVisibleIds.forEach(id => {
-                Object.keys(db.index).forEach(t => { 
-                    if(db.index[t].includes(id)) availableTags.add(t); 
-                });
-                if (db.genres) {
-                    Object.keys(db.genres).forEach(g => { 
-                        if(db.genres[g].includes(id)) availableTags.add(g); 
-                    });
-                }
-            });
+            currentVisibleIds.forEach(id => movieTags[id].forEach(t => availableTags.add(t)));
 
             tagStates.forEach((state, tag) => {
                 const btn = document.getElementById(`tag-${tag}`);
@@ -454,7 +468,7 @@
                         <div class="flex items-center gap-2 mb-2">
                             <span class="text-blue-600 font-black text-[10px] uppercase tracking-tighter border border-blue-100 px-1 rounded">${m.cert}</span>
                             <span class="text-slate-400 text-[10px] font-bold italic">
-                                ${m.rating.toFixed(1)}/10 <span class="opacity-60 ml-1">[${m.votes || 0} votes]</span>
+                                ${m.votes ? `${m.rating.toFixed(1)}/10 <span class="opacity-60 ml-1">[${m.votes} votes]</span>` : 'Not yet rated'}
                             </span>
                         </div>
                         <p class="text-[11px] text-slate-500 line-clamp-3 leading-snug">${m.overview}</p>

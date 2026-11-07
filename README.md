@@ -12,7 +12,12 @@ A curated holiday movie discovery engine built with a high-concurrency Python AP
 * **Frontend:** `index.html` is a standalone static site that filters the generated `holiday_engine.json` in real-time.
 
 ### Usage
-1.  Run the builder: `python3 data-builder.py`
-2.  Open `index.html` in any web browser.
+1.  Get a free API Read Access Token from your [TMDB API settings](https://www.themoviedb.org/settings/api).
+2.  Put it in a `.env` file in this folder: `TMDB_API_KEY=your_token`
+3.  Install the dependencies: `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`
+4.  Run the builder: `.venv/bin/python data-builder.py`
+5.  Start a local server with `python3 -m http.server`, then open http://localhost:8000.
+
+Opening `index.html` directly won't work, because browsers block it from loading the data file.
 
 *Data provided by [The Movie Database (TMDB)](https://www.themoviedb.org).*
