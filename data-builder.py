@@ -8,6 +8,8 @@ from collections import defaultdict
 from datetime import date
 from pathlib import Path
 
+import holiday_classifier
+
 # --- CONFIGURATION ---
 BASE_DIR = Path(__file__).resolve().parent
 TOTAL_MAX_LIMIT = 1500       # Safety cap, not a target
@@ -125,6 +127,9 @@ HORROR_GENRES = {"Horror", "Thriller"}
 # Keeps R-rated holiday movies but not erotica
 EXPLICIT_KEYWORDS = re.compile(r"softcore|erotic|sexploitation|sexsploitation|porn")
 
+# Sidebar tags for the classifier's holiday levels; films it calls "none" are left out
+LEVEL_TAGS = {"about": "holiday story", "set_at": "holiday setting", "adjacent": "holiday adjacent"}
+
 # TMDB keywords that say nothing about the movie's content
 JUNK_TAGS = {"aftercreditsstinger", "duringcreditsstinger", "woman director", "holiday"}
 
@@ -183,6 +188,7 @@ async def main():
     movie_metadata = {}
     inverted_index = defaultdict(list)
     genre_index = defaultdict(list)
+    film_info = {}  # What the holiday classifier sees about each film
     failed_lookups = 0
 
     def passes_quick_checks(m, title_pattern):
@@ -220,6 +226,8 @@ async def main():
         for v in movie_vibes: inverted_index[v].append(mid)
         for g in genres: genre_index[g].append(mid)
         add_holiday_tag(mid, holiday_name)
+        film_info[mid] = {"title": m['title'], "year": (m.get('release_date') or '')[:4] or "unknown",
+                          "genres": genres, "keywords": keywords, "overview": m['overview']}
 
     headers = {"Authorization": f"Bearer {load_api_key()}"}
     async with aiohttp.ClientSession(headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as session:
@@ -312,11 +320,30 @@ async def main():
         if not movie_metadata:
             sys.exit("\nBuild failed: no titles found. Keeping the existing holiday_engine.json.")
 
-        output = {"index": inverted_index, "movies": movie_metadata, "genres": genre_index}
+        print("", file=sys.stderr)
+        levels, unsorted = await holiday_classifier.classify_all(film_info, lambda msg: print(msg, file=sys.stderr))
+        left_out = {mid for mid, level in levels.items() if level == "none" and mid not in ALWAYS_INCLUDE}
+        for mid, level in levels.items():
+            if mid not in left_out:
+                inverted_index[LEVEL_TAGS.get(level, LEVEL_TAGS["adjacent"])].append(mid)
+        for mid in left_out:
+            del movie_metadata[mid]
+        for index in (inverted_index, genre_index):
+            for tag in list(index):
+                index[tag] = [mid for mid in index[tag] if mid not in left_out]
+                if not index[tag]: del index[tag]
+        if left_out:
+            print(f"Left out {len(left_out)} films with no real holiday connection (see holiday_levels_review.md).", file=sys.stderr)
+
+        # The page shows a quiet note when films are waiting for a holiday level or the data is stale
+        status = {"built": date.today().isoformat(), "unsorted": unsorted}
+        output = {"index": inverted_index, "movies": movie_metadata, "genres": genre_index, "status": status}
         with open(BASE_DIR / "holiday_engine.json", "w") as f:
             json.dump(output, f, indent=2)
 
         print(f"\nBuild Success: {len(movie_metadata)} titles saved.")
+        if unsorted:
+            print(f"Warning: {unsorted} titles have no holiday level yet.", file=sys.stderr)
         if failed_lookups:
             print(f"Warning: {failed_lookups} movie lookups failed and were skipped.", file=sys.stderr)
 

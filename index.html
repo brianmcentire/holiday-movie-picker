@@ -103,6 +103,11 @@
                 <div id="rating-cloud" class="flex flex-wrap gap-2"></div>
             </div>
 
+            <div id="level-section" class="hidden">
+                <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Holiday Level</h3>
+                <div id="level-cloud" class="flex flex-wrap gap-2"></div>
+            </div>
+
             <div class="-mt-4">
                 <hr class="border-slate-200 mb-2">
                 <p class="text-[10px] text-slate-400 italic leading-tight">
@@ -188,7 +193,7 @@
     </main>
 
     <footer class="max-w-7xl mx-auto px-4 md:px-10 mt-16 text-[11px] text-slate-400">
-        This website uses <a href="https://www.themoviedb.org" target="_blank" class="underline hover:text-blue-600">TMDB</a> and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.
+        This website uses <a href="https://www.themoviedb.org" target="_blank" class="underline hover:text-blue-600">TMDB</a> and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.<span id="status-note" class="hidden"></span>
     </footer>
 
     <script>
@@ -197,11 +202,21 @@
         let sidebarSorts = { ...DEFAULT_SIDEBAR_SORTS };
         let tiers = { top: [], mid: [], tail: [], niche: [] };
         const R_TAGS = ['G', 'PG', 'PG-13', 'R', 'NR', 'TV Movie'];
-        // A fresh page shows every rating except R; ratings combine with OR, since each movie has one
-        const DEFAULT_RATINGS = new Set(R_TAGS.filter(t => t !== 'R'));
-        const isRating = tag => R_TAGS.includes(tag);
-        const defaultStateFor = tag => (DEFAULT_RATINGS.has(tag) ? 1 : 0);
-        const ratingsAtDefault = () => R_TAGS.every(t => tagStates.get(t) === defaultStateFor(t));
+        // From the holiday classifier: how much the holiday matters to each film
+        const LEVEL_HINTS = {
+            'Holiday story': 'The holiday is the story',
+            'Holiday setting': 'Set at the holidays, and the season shapes it',
+            'Holiday adjacent': 'The holidays are just the backdrop',
+        };
+        // Each movie has exactly one rating and one holiday level, so selected values in these groups
+        // combine with OR. A fresh page shows every rating except R, and every holiday level.
+        const GROUPS = {
+            ratings: { tags: R_TAGS, defaults: new Set(R_TAGS.filter(t => t !== 'R')), all: 'All ratings', prefix: 'Rated ' },
+            levels: { tags: Object.keys(LEVEL_HINTS), defaults: new Set(Object.keys(LEVEL_HINTS)), all: 'Every holiday level', prefix: '' },
+        };
+        const groupOf = tag => Object.keys(GROUPS).find(name => GROUPS[name].tags.includes(tag));
+        const defaultStateFor = tag => (GROUPS[groupOf(tag)]?.defaults.has(tag) ? 1 : 0);
+        const groupAtDefault = name => GROUPS[name].tags.every(t => tagStates.get(t) === defaultStateFor(t));
         // Top Rated: a weighted rating, as if every movie also had this many votes at the catalog's
         // average, so a 9.2 from 2 votes doesn't outrank an 8.3 from 5,000
         const WEIGHT_VOTES = 250;
@@ -219,6 +234,7 @@
                 addUIListeners();
                 restoreFromURL();
                 updateResults();
+                showStatusNote();
                 lucide.createIcons();
             } catch (e) {
                 console.error("Data Load Failed", e);
@@ -247,10 +263,11 @@
             });
         }
 
-        function createFilterBtn(tag, container) {
+        function createFilterBtn(tag, container, hint) {
             const btn = document.createElement('button');
             btn.id = `tag-${tag}`;
             btn.innerText = tag;
+            if (hint) btn.title = hint;
             btn.className = `px-3 py-1 rounded-full border text-[11px] font-semibold transition-all state-neutral whitespace-nowrap`;
             btn.onclick = () => toggleTag(tag);
             container.appendChild(btn);
@@ -275,11 +292,22 @@
                 updateBtnState(t);
             });
 
+            // Holiday levels, once the data has them
+            GROUPS.levels.tags = GROUPS.levels.tags.filter(t => db.index[t.toLowerCase()]);
+            GROUPS.levels.defaults = new Set(GROUPS.levels.tags);
+            const lBox = document.getElementById('level-cloud');
+            GROUPS.levels.tags.forEach(t => {
+                if (!tagStates.has(t)) tagStates.set(t, defaultStateFor(t));
+                createFilterBtn(t, lBox, LEVEL_HINTS[t]);
+                updateBtnState(t);
+            });
+            document.getElementById('level-section').classList.toggle('hidden', !GROUPS.levels.tags.length);
+
             // 3. Vibes
             const allTags = Object.keys(db.index).filter(t => {
-                const ratingTag = R_TAGS.some(r => r.toLowerCase() === t);
+                const groupTag = [...R_TAGS, ...Object.keys(LEVEL_HINTS)].some(r => r.toLowerCase() === t);
                 const isGenre = db.genres ? Object.keys(db.genres).some(g => g.toLowerCase() === t) : false;
-                return !ratingTag && !isGenre && db.index[t].length >= MIN_TAG_FILMS;
+                return !groupTag && !isGenre && db.index[t].length >= MIN_TAG_FILMS;
             });
             
             const frequencySorted = [...allTags].sort((a, b) => db.index[b].length - db.index[a].length);
@@ -399,14 +427,17 @@
             }
 
             const poolFor = tag => new Set((db.genres && db.genres[tag]) || db.index[tag.toLowerCase()] || []);
-            const allowedRatings = R_TAGS.filter(t => tagStates.get(t) === 1);
-            if (allowedRatings.length) {
-                const allowed = new Set(allowedRatings.flatMap(t => [...poolFor(t)]));
+            // Within a group, show movies with any selected value; selecting all of them filters nothing,
+            // which keeps films not yet given a holiday level in view
+            Object.values(GROUPS).forEach(group => {
+                const selected = group.tags.filter(t => tagStates.get(t) === 1);
+                if (!selected.length || selected.length === group.tags.length) return;
+                const allowed = new Set(selected.flatMap(t => [...poolFor(t)]));
                 ids = ids.filter(i => allowed.has(i));
-            }
+            });
 
             tagStates.forEach((state, tag) => {
-                if (state === 0 || (state === 1 && isRating(tag))) return;
+                if (state === 0 || (state === 1 && groupOf(tag))) return;
 
                 const pool = (db.genres && db.genres[tag]) || db.index[tag.toLowerCase()] || [];
                 const set = new Set(pool);
@@ -450,8 +481,8 @@
         // --- Shareable URL state ---
         // ?with=Comedy&with=small%20town&without=R&q=snow&sort=rating&dir=asc
         // Repeated params (not comma lists) because some tags contain commas.
-        // Ratings appear only when they differ from the default (all but R), and then in full;
-        // ratings=all means every rating is cleared.
+        // Ratings and holiday levels appear only when they differ from the default, and then in full;
+        // ratings=all or levels=all means every value in that group is cleared.
         const DEFAULT_SORT = 'top';
         // Highest, newest and most first; A to Z for titles
         const SORT_DIRS = { top: -1, date: -1, rating: -1, votes: -1, alpha: 1, random: -1 };
@@ -459,10 +490,12 @@
 
         function buildQuery() {
             const params = new URLSearchParams();
-            const inURL = tag => !isRating(tag) || !ratingsAtDefault();
+            const inURL = tag => !groupOf(tag) || !groupAtDefault(groupOf(tag));
             tagStates.forEach((state, tag) => { if (state === 1 && inURL(tag)) params.append('with', tag); });
             tagStates.forEach((state, tag) => { if (state === 2 && inURL(tag)) params.append('without', tag); });
-            if (!ratingsAtDefault() && R_TAGS.every(t => tagStates.get(t) === 0)) params.set('ratings', 'all');
+            Object.entries(GROUPS).forEach(([name, group]) => {
+                if (group.tags.length && !groupAtDefault(name) && group.tags.every(t => tagStates.get(t) === 0)) params.set(name, 'all');
+            });
             const q = document.getElementById('search-input').value;
             if (q) params.set('q', q);
             const sortBy = document.getElementById('sort-select').value;
@@ -485,10 +518,13 @@
             const params = new URLSearchParams(location.search);
             // Case-insensitive lookup so hand-typed links still work; unknown tags are ignored.
             const known = new Map([...tagStates.keys()].map(t => [t.toLowerCase(), t]));
-            // A link that mentions any rating spells them all out, so start ratings from cleared
-            const linkRatings = params.has('ratings') || [...params.getAll('with'), ...params.getAll('without')]
-                .some(raw => isRating(known.get(raw.trim().toLowerCase())));
-            if (linkRatings) R_TAGS.forEach(t => { tagStates.set(t, 0); updateBtnState(t); });
+            // A link that mentions any rating (or holiday level) spells out that whole group, so start it from cleared
+            const linkedTags = [...params.getAll('with'), ...params.getAll('without')].map(raw => known.get(raw.trim().toLowerCase()));
+            Object.entries(GROUPS).forEach(([name, group]) => {
+                if (params.has(name) || linkedTags.some(t => group.tags.includes(t))) {
+                    group.tags.forEach(t => { tagStates.set(t, 0); updateBtnState(t); });
+                }
+            });
             [['with', 1], ['without', 2]].forEach(([key, state]) => {
                 params.getAll(key).forEach(raw => {
                     const tag = known.get(raw.trim().toLowerCase());
@@ -558,7 +594,7 @@
             document.getElementById('search-input').value = '';
         }
 
-        // "Clear all" pill and empty-state button: tags (ratings back to all but R) + search, keeps the sort.
+        // "Clear all" pill and empty-state button: tags (ratings and levels back to their defaults) + search, keeps the sort.
         function clearFilters() {
             clearTagsAndSearch();
             updateResults();
@@ -589,8 +625,8 @@
 
                 const isAvailable = availableTags.has(tag) || availableTags.has(tag.toLowerCase());
 
-                // Ratings filter each other, so an unselected one (R) is never "unavailable"
-                if (state === 0 && !isAvailable && !isRating(tag)) {
+                // Ratings and levels filter within their group, so an unselected one (R) is never "unavailable"
+                if (state === 0 && !isAvailable && !groupOf(tag)) {
                     btn.classList.add('state-disabled');
                 } else {
                     btn.classList.remove('state-disabled');
@@ -623,18 +659,19 @@
                 container.appendChild(pill);
             };
 
-            // Ratings get one summary pill, and only when changed from the default (all but R)
-            if (!ratingsAtDefault()) {
-                const shown = R_TAGS.filter(t => tagStates.get(t) === 1);
-                const hidden = R_TAGS.filter(t => tagStates.get(t) === 2);
-                const label = (shown.length === 0 || shown.length === R_TAGS.length) && !hidden.length ? 'All ratings'
-                    : shown.length && shown.length < R_TAGS.length ? `Rated ${shown.join(', ')}`
+            // Ratings and holiday levels get one summary pill each, and only when changed from the default
+            Object.entries(GROUPS).forEach(([name, group]) => {
+                if (!group.tags.length || groupAtDefault(name)) return;
+                const shown = group.tags.filter(t => tagStates.get(t) === 1);
+                const hidden = group.tags.filter(t => tagStates.get(t) === 2);
+                const label = (shown.length === 0 || shown.length === group.tags.length) && !hidden.length ? group.all
+                    : shown.length && shown.length < group.tags.length ? `${group.prefix}${shown.join(', ')}`
                     : `NO: ${hidden.join(', ')}`;
-                addPill(label, !shown.length && hidden.length > 0, resetRatings);
-            }
+                addPill(label, !shown.length && hidden.length > 0, () => resetGroup(name));
+            });
 
             tagStates.forEach((state, tag) => {
-                if (state === 0 || isRating(tag)) return;
+                if (state === 0 || groupOf(tag)) return;
                 addPill((state === 2 ? 'NO: ' : '') + tag, state === 2, () => resetTag(tag));
             });
 
@@ -652,9 +689,27 @@
             lucide.createIcons();
         }
 
-        function resetRatings() {
-            R_TAGS.forEach(t => { tagStates.set(t, defaultStateFor(t)); updateBtnState(t); });
+        function resetGroup(name) {
+            GROUPS[name].tags.forEach(t => { tagStates.set(t, defaultStateFor(t)); updateBtnState(t); });
             updateResults();
+        }
+
+        // A quiet line in the footer, shown only when something needs attention: films waiting for a
+        // holiday level, or a movie list that stopped refreshing during the season
+        function showStatusNote() {
+            const status = db.status || {};
+            const notes = [];
+            if (status.unsorted > 0) {
+                notes.push(`${status.unsorted} new ${status.unsorted === 1 ? 'title' : 'titles'} not yet sorted by holiday level`);
+            }
+            const built = status.built && new Date(`${status.built}T12:00:00`);
+            const inSeason = [10, 11].includes(new Date().getMonth()); // November, December
+            if (built && inSeason && Date.now() - built > 10 * 24 * 60 * 60 * 1000) {
+                notes.push(`Movie list last updated ${built.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`);
+            }
+            const el = document.getElementById('status-note');
+            el.innerText = notes.map(n => ` · ${n}`).join('');
+            el.classList.toggle('hidden', !notes.length);
         }
 
         function resetTag(tag) {
