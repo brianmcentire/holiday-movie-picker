@@ -1,0 +1,96 @@
+name: Rebuild movie data
+
+on:
+  schedule:
+    # Mondays at 09:17 UTC, November and December only. An odd minute avoids
+    # the top-of-hour load that delays scheduled runs.
+    - cron: "17 9 * 11,12 1"
+  workflow_dispatch:
+
+# The job pushes to main and starts a Pages build, so don't let two runs overlap.
+concurrency:
+  group: rebuild-data
+  cancel-in-progress: false
+
+permissions:
+  contents: write # commit and push holiday_engine.json
+  pages: write    # request a GitHub Pages build
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build holiday_engine.json
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+        run: python data-builder.py
+
+      # The builder only refuses an empty result. A TMDB outage that fails many
+      # lookups could still produce a much smaller file, so don't publish one.
+      - name: Check the new build isn't much smaller
+        run: |
+          python - <<'PY'
+          import json, subprocess, sys
+          new = len(json.load(open("holiday_engine.json"))["movies"])
+          old = len(json.loads(subprocess.run(
+              ["git", "show", "HEAD:holiday_engine.json"],
+              capture_output=True, text=True, check=True).stdout)["movies"])
+          print(f"Titles: {old} before, {new} now")
+          if new < old * 0.8:
+              sys.exit(f"New build has {new} titles, down from {old}. Not publishing it.")
+          PY
+
+      - name: Commit and push if the data changed
+        id: commit
+        run: |
+          if git diff --quiet -- holiday_engine.json; then
+            echo "Data unchanged, nothing to publish."
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add holiday_engine.json
+          git commit -m "Refresh movie data from TMDB ($(date -u +%Y-%m-%d))"
+          git pull --rebase origin main
+          git push origin HEAD:main
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # Pushes made with GITHUB_TOKEN don't trigger a Pages build, so ask for one.
+      # The site deploys from the main branch, so this builds the commit just pushed.
+      - name: Request a GitHub Pages build
+        if: steps.commit.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method POST "repos/${{ github.repository }}/pages/builds"
+
+      - name: Wait for the Pages build to finish
+        if: steps.commit.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          for _ in $(seq 1 40); do
+            latest=$(gh api "repos/${{ github.repository }}/pages/builds/latest" --jq '"\(.status) \(.commit)"') || latest=""
+            read -r status commit <<< "$latest"
+            echo "Latest Pages build: $status for ${commit:0:7}"
+            if [ "$commit" = "$SHA" ]; then
+              [ "$status" = built ] && exit 0
+              [ "$status" = errored ] && { echo "::error::Pages build failed"; exit 1; }
+            fi
+            sleep 15
+          done
+          echo "::error::Pages build for $SHA didn't finish within 10 minutes"
+          exit 1

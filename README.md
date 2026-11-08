@@ -1,9 +1,7 @@
-# holiday-movie-picker
-Holiday movie selector single page application. Created for a Python and JavaScript learning experience.
+# Season's Screenings 🎬
+*A holiday movie matchmaker.* Created for a Python and JavaScript learning experience.
 
 Live demo here - https://brianmcentire.github.io/holiday-movie-picker/
-
-# Set Flicks: Holiday Edition 🎬
 
 A curated holiday movie discovery engine built with a high-concurrency Python API client and a zero-dependency static HTML and JS frontend.
 
@@ -19,5 +17,16 @@ A curated holiday movie discovery engine built with a high-concurrency Python AP
 5.  Start a local server with `python3 -m http.server`, then open http://localhost:8000.
 
 Opening `index.html` directly won't work, because browsers block it from loading the data file.
+
+### Automatic refresh
+A GitHub Action (`.github/workflows/rebuild-data.yml`) rebuilds `holiday_engine.json` every Monday in November and December. If the data changed, it commits the new file, then rebuilds the live site. You can also start it from the Actions tab.
+
+One-time setup: run `gh secret set TMDB_API_KEY` in this folder and paste your token when prompted.
+
+GitHub pauses scheduled workflows in public repos after 60 days without activity, so each fall, before November, turn it back on with `gh workflow enable rebuild-data.yml`.
+
+### Future ideas
+* **Pick for me:** a button that spotlights one film from the current filters.
+* **Falling snow:** a soothing, gentle snowfall in the page background.
 
 *Data provided by [The Movie Database (TMDB)](https://www.themoviedb.org).*
