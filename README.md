@@ -14,7 +14,7 @@ A curated holiday movie discovery engine built with a high-concurrency Python AP
 2.  Put it in a `.env` file in this folder: `TMDB_API_KEY=your_token`
 3.  Install the dependencies: `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`
 4.  Run the builder: `.venv/bin/python data-builder.py`
-5.  Start a local server with `python3 -m http.server`, then open http://localhost:8000.
+5.  Run `make dev`, then open http://localhost:8000. The page reloads by itself when `index.html` or the data changes. `make dev-stop` stops the server.
 
 Opening `index.html` directly won't work, because browsers block it from loading the data file.
 

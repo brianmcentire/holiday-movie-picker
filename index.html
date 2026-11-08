@@ -69,13 +69,14 @@
 
                 <div class="flex items-center bg-white border border-slate-200 rounded-xl h-12 shadow-sm shrink-0">
                     <select id="sort-select" class="pl-3 pr-8 py-2 text-[10px] font-bold uppercase tracking-widest focus:outline-none bg-transparent cursor-pointer">
-                        <option value="date" selected>Release Date</option>
-                        <option value="alpha">Alphabetical</option>
+                        <option value="top" selected>Top Rated</option>
+                        <option value="date">Release Date</option>
                         <option value="rating">User Rating</option>
                         <option value="votes">Total Votes</option>
+                        <option value="alpha">Alphabetical</option>
                         <option value="random">Random</option>
                     </select>
-                    <button id="sort-dir" class="px-3 border-l border-slate-200 hover:bg-slate-50">
+                    <button id="sort-dir" aria-label="Reverse sort order" class="px-3 h-full border-l border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-default">
                         <i data-lucide="arrow-down-wide-narrow" id="dir-icon" class="w-4 h-4 text-slate-600"></i>
                     </button>
                 </div>
@@ -196,6 +197,14 @@
         let sidebarSorts = { ...DEFAULT_SIDEBAR_SORTS };
         let tiers = { top: [], mid: [], tail: [], niche: [] };
         const R_TAGS = ['G', 'PG', 'PG-13', 'R', 'NR', 'TV Movie'];
+        // A fresh page shows every rating except R; ratings combine with OR, since each movie has one
+        const DEFAULT_RATINGS = new Set(R_TAGS.filter(t => t !== 'R'));
+        const isRating = tag => R_TAGS.includes(tag);
+        const defaultStateFor = tag => (DEFAULT_RATINGS.has(tag) ? 1 : 0);
+        const ratingsAtDefault = () => R_TAGS.every(t => tagStates.get(t) === defaultStateFor(t));
+        // Top Rated: a weighted rating, as if every movie also had this many votes at the catalog's
+        // average, so a 9.2 from 2 votes doesn't outrank an 8.3 from 5,000
+        const WEIGHT_VOTES = 250;
         const MIN_TAG_FILMS = 2; // Rarer tags stay searchable but don't get a sidebar button
         let currentVisibleIds = [];
         const movieTags = {}; // id -> Set of its tags and genres
@@ -214,7 +223,7 @@
             } catch (e) {
                 console.error("Data Load Failed", e);
                 const help = location.protocol === 'file:'
-                    ? 'Browsers block this page from loading its data when opened as a file. Run <code>python3 -m http.server</code> in this folder, then open <a class="text-blue-600 underline" href="http://localhost:8000">localhost:8000</a>.'
+                    ? 'Browsers block this page from loading its data when opened as a file. Run <code>make dev</code> in this folder, then open <a class="text-blue-600 underline" href="http://localhost:8000">localhost:8000</a>.'
                     : 'Try reloading the page.';
                 document.getElementById('results-grid').innerHTML =
                     `<div class="col-span-full py-20 text-center text-slate-500 font-medium">Couldn't load the movie list. ${help}</div>`;
@@ -226,6 +235,12 @@
                 Object.entries(source).forEach(([tag, ids]) => {
                     ids.forEach(id => (movieTags[id] ||= new Set()).add(tag));
                 });
+            });
+            const movies = Object.values(db.movies);
+            const totalVotes = movies.reduce((sum, m) => sum + (m.votes || 0), 0);
+            const avg = totalVotes ? movies.reduce((sum, m) => sum + m.rating * (m.votes || 0), 0) / totalVotes : 0;
+            movies.forEach(m => {
+                m.score = ((m.votes || 0) * m.rating + WEIGHT_VOTES * avg) / ((m.votes || 0) + WEIGHT_VOTES);
             });
             Object.entries(db.movies).forEach(([id, m]) => {
                 m.searchText = `${m.title} ${m.overview} ${[...movieTags[id]].join(' ')}`.toLowerCase();
@@ -255,15 +270,16 @@
             // 2. Ratings
             const rBox = document.getElementById('rating-cloud');
             R_TAGS.forEach(t => {
-                if (!tagStates.has(t)) tagStates.set(t, 0);
+                if (!tagStates.has(t)) tagStates.set(t, defaultStateFor(t));
                 createFilterBtn(t, rBox);
+                updateBtnState(t);
             });
 
             // 3. Vibes
             const allTags = Object.keys(db.index).filter(t => {
-                const isRating = R_TAGS.some(r => r.toLowerCase() === t);
+                const ratingTag = R_TAGS.some(r => r.toLowerCase() === t);
                 const isGenre = db.genres ? Object.keys(db.genres).some(g => g.toLowerCase() === t) : false;
-                return !isRating && !isGenre && db.index[t].length >= MIN_TAG_FILMS;
+                return !ratingTag && !isGenre && db.index[t].length >= MIN_TAG_FILMS;
             });
             
             const frequencySorted = [...allTags].sort((a, b) => db.index[b].length - db.index[a].length);
@@ -382,8 +398,15 @@
                 ids = ids.filter(id => db.movies[id].searchText.includes(query));
             }
 
+            const poolFor = tag => new Set((db.genres && db.genres[tag]) || db.index[tag.toLowerCase()] || []);
+            const allowedRatings = R_TAGS.filter(t => tagStates.get(t) === 1);
+            if (allowedRatings.length) {
+                const allowed = new Set(allowedRatings.flatMap(t => [...poolFor(t)]));
+                ids = ids.filter(i => allowed.has(i));
+            }
+
             tagStates.forEach((state, tag) => {
-                if (state === 0) return;
+                if (state === 0 || (state === 1 && isRating(tag))) return;
 
                 const pool = (db.genres && db.genres[tag]) || db.index[tag.toLowerCase()] || [];
                 const set = new Set(pool);
@@ -405,6 +428,7 @@
                     }
                     else if (sortBy === 'date') { v1 = m1.date; v2 = m2.date; }
                     else if (sortBy === 'votes') { v1 = m1.votes || 0; v2 = m2.votes || 0; }
+                    else if (sortBy === 'top') { v1 = m1.score; v2 = m2.score; }
                     else { v1 = m1.rating; v2 = m2.rating; }
                     return (typeof v1 === 'string' ? v1.localeCompare(v2) : v1 - v2) * sortDir;
                 });
@@ -426,18 +450,24 @@
         // --- Shareable URL state ---
         // ?with=Comedy&with=small%20town&without=R&q=snow&sort=rating&dir=asc
         // Repeated params (not comma lists) because some tags contain commas.
-        const DEFAULT_SORT = 'date';
-        const defaultDirFor = sortBy => (sortBy === 'alpha' ? 1 : -1);
+        // Ratings appear only when they differ from the default (all but R), and then in full;
+        // ratings=all means every rating is cleared.
+        const DEFAULT_SORT = 'top';
+        // Highest, newest and most first; A to Z for titles
+        const SORT_DIRS = { top: -1, date: -1, rating: -1, votes: -1, alpha: 1, random: -1 };
+        const defaultDirFor = sortBy => SORT_DIRS[sortBy] ?? -1;
 
         function buildQuery() {
             const params = new URLSearchParams();
-            tagStates.forEach((state, tag) => { if (state === 1) params.append('with', tag); });
-            tagStates.forEach((state, tag) => { if (state === 2) params.append('without', tag); });
+            const inURL = tag => !isRating(tag) || !ratingsAtDefault();
+            tagStates.forEach((state, tag) => { if (state === 1 && inURL(tag)) params.append('with', tag); });
+            tagStates.forEach((state, tag) => { if (state === 2 && inURL(tag)) params.append('without', tag); });
+            if (!ratingsAtDefault() && R_TAGS.every(t => tagStates.get(t) === 0)) params.set('ratings', 'all');
             const q = document.getElementById('search-input').value;
             if (q) params.set('q', q);
             const sortBy = document.getElementById('sort-select').value;
             if (sortBy !== DEFAULT_SORT) params.set('sort', sortBy);
-            if (sortDir !== defaultDirFor(sortBy)) params.set('dir', sortDir === 1 ? 'asc' : 'desc');
+            if (sortBy !== 'random' && sortDir !== defaultDirFor(sortBy)) params.set('dir', sortDir === 1 ? 'asc' : 'desc');
             return params.toString();
         }
 
@@ -455,6 +485,10 @@
             const params = new URLSearchParams(location.search);
             // Case-insensitive lookup so hand-typed links still work; unknown tags are ignored.
             const known = new Map([...tagStates.keys()].map(t => [t.toLowerCase(), t]));
+            // A link that mentions any rating spells them all out, so start ratings from cleared
+            const linkRatings = params.has('ratings') || [...params.getAll('with'), ...params.getAll('without')]
+                .some(raw => isRating(known.get(raw.trim().toLowerCase())));
+            if (linkRatings) R_TAGS.forEach(t => { tagStates.set(t, 0); updateBtnState(t); });
             [['with', 1], ['without', 2]].forEach(([key, state]) => {
                 params.getAll(key).forEach(raw => {
                     const tag = known.get(raw.trim().toLowerCase());
@@ -513,19 +547,18 @@
         }
 
         // --- Clearing / resetting ---
+        const changedTags = () => [...tagStates].filter(([tag, state]) => state !== defaultStateFor(tag));
+
         function hasActiveFilters() {
-            return [...tagStates.values()].some(s => s !== 0) ||
-                document.getElementById('search-input').value !== '';
+            return changedTags().length > 0 || document.getElementById('search-input').value !== '';
         }
 
         function clearTagsAndSearch() {
-            tagStates.forEach((state, tag) => {
-                if (state !== 0) { tagStates.set(tag, 0); updateBtnState(tag); }
-            });
+            changedTags().forEach(([tag]) => { tagStates.set(tag, defaultStateFor(tag)); updateBtnState(tag); });
             document.getElementById('search-input').value = '';
         }
 
-        // "Clear all" pill and empty-state button: tags + search, keeps the sort.
+        // "Clear all" pill and empty-state button: tags (ratings back to all but R) + search, keeps the sort.
         function clearFilters() {
             clearTagsAndSearch();
             updateResults();
@@ -556,7 +589,8 @@
 
                 const isAvailable = availableTags.has(tag) || availableTags.has(tag.toLowerCase());
 
-                if (state === 0 && !isAvailable) {
+                // Ratings filter each other, so an unselected one (R) is never "unavailable"
+                if (state === 0 && !isAvailable && !isRating(tag)) {
                     btn.classList.add('state-disabled');
                 } else {
                     btn.classList.remove('state-disabled');
@@ -567,19 +601,17 @@
         function renderPills() {
             const container = document.getElementById('pill-container');
             container.innerHTML = '';
-            tagStates.forEach((state, tag) => {
-                if (state === 0) return;
-                
+            const addPill = (label, isExclude, onRemove) => {
                 const pill = document.createElement('div');
-                pill.className = `flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border shadow-sm ${state === 1 ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-red-50 border-red-200 text-red-600'}`;
+                pill.className = `flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border shadow-sm ${isExclude ? 'bg-red-50 border-red-200 text-red-600' : 'bg-blue-50 border-blue-200 text-blue-600'}`;
                 
                 const span = document.createElement('span');
-                span.innerText = (state === 2 ? 'NO: ' : '') + tag;
+                span.innerText = label;
                 pill.appendChild(span);
 
                 const btn = document.createElement('button');
                 btn.className = "hover:opacity-60 transition";
-                btn.onclick = () => resetTag(tag); // Safe closure
+                btn.onclick = onRemove;
                 
                 const icon = document.createElement('i');
                 icon.setAttribute('data-lucide', 'x');
@@ -589,6 +621,21 @@
                 pill.appendChild(btn);
                 
                 container.appendChild(pill);
+            };
+
+            // Ratings get one summary pill, and only when changed from the default (all but R)
+            if (!ratingsAtDefault()) {
+                const shown = R_TAGS.filter(t => tagStates.get(t) === 1);
+                const hidden = R_TAGS.filter(t => tagStates.get(t) === 2);
+                const label = (shown.length === 0 || shown.length === R_TAGS.length) && !hidden.length ? 'All ratings'
+                    : shown.length && shown.length < R_TAGS.length ? `Rated ${shown.join(', ')}`
+                    : `NO: ${hidden.join(', ')}`;
+                addPill(label, !shown.length && hidden.length > 0, resetRatings);
+            }
+
+            tagStates.forEach((state, tag) => {
+                if (state === 0 || isRating(tag)) return;
+                addPill((state === 2 ? 'NO: ' : '') + tag, state === 2, () => resetTag(tag));
             });
 
             if (hasActiveFilters()) {
@@ -603,6 +650,11 @@
                 container.appendChild(clear);
             }
             lucide.createIcons();
+        }
+
+        function resetRatings() {
+            R_TAGS.forEach(t => { tagStates.set(t, defaultStateFor(t)); updateBtnState(t); });
+            updateResults();
         }
 
         function resetTag(tag) {
@@ -622,7 +674,7 @@
             };
 
             document.getElementById('sort-select').onchange = (e) => {
-                sortDir = (e.target.value === 'alpha') ? 1 : -1;
+                sortDir = defaultDirFor(e.target.value);
                 updateSortIcon();
                 updateResults();
             };
@@ -658,7 +710,7 @@
         }
 
         function updateFiltersCount() {
-            const active = [...tagStates.values()].filter(s => s !== 0).length;
+            const active = changedTags().length;
             const badge = document.getElementById('filters-count');
             badge.innerText = active;
             badge.classList.toggle('hidden', active === 0);
@@ -667,6 +719,7 @@
         function updateSortIcon() {
             const icon = document.getElementById('dir-icon');
             icon.setAttribute('data-lucide', sortDir === 1 ? 'arrow-up-narrow-wide' : 'arrow-down-wide-narrow');
+            document.getElementById('sort-dir').disabled = document.getElementById('sort-select').value === 'random';
             lucide.createIcons();
         }
 
