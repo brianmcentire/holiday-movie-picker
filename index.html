@@ -53,21 +53,21 @@
                 <p class="text-blue-600 font-light italic text-sm tracking-tight mt-1">a holiday movie matchmaker</p>
             </div>
 
-            <div class="flex-grow justify-center px-4 hidden lg:flex">
-                <span data-stats class="text-xs font-bold text-slate-400 uppercase tracking-widest">...</span>
+            <div class="flex-none justify-center px-4 hidden lg:flex">
+                <span data-stats class="text-xs font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">...</span>
             </div>
 
-            <div class="flex flex-wrap md:flex-nowrap items-center gap-3 w-full md:w-auto">
-                <div class="relative w-full md:w-80">
-                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                    <input type="text" id="search-input" placeholder="Titles, keywords, or descriptions..." 
-                        class="pl-10 pr-10 py-2 bg-white border border-slate-200 rounded-lg text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <button id="clear-search" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                        <i data-lucide="x-circle" class="w-4 h-4"></i>
+            <div class="flex flex-wrap md:flex-nowrap items-center gap-3 w-full md:w-auto md:flex-1 md:justify-end">
+                <div class="relative w-full md:flex-1 md:min-w-0 md:max-w-[30rem]">
+                    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500"></i>
+                    <input type="text" id="search-input" aria-label="Search movies" placeholder="Search titles, moods, keywords..."
+                        class="h-12 pl-12 pr-11 bg-white border-2 border-blue-200 rounded-xl text-base text-slate-900 placeholder:text-slate-400 w-full shadow-sm hover:border-blue-300 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition">
+                    <button id="clear-search" aria-label="Clear search" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        <i data-lucide="x-circle" class="w-5 h-5"></i>
                     </button>
                 </div>
-                
-                <div class="flex items-center bg-white border border-slate-200 rounded-lg h-10 shadow-sm shrink-0">
+
+                <div class="flex items-center bg-white border border-slate-200 rounded-xl h-12 shadow-sm shrink-0">
                     <select id="sort-select" class="pl-3 pr-8 py-2 text-[10px] font-bold uppercase tracking-widest focus:outline-none bg-transparent cursor-pointer">
                         <option value="date" selected>Release Date</option>
                         <option value="alpha">Alphabetical</option>
@@ -79,7 +79,7 @@
                         <i data-lucide="arrow-down-wide-narrow" id="dir-icon" class="w-4 h-4 text-slate-600"></i>
                     </button>
                 </div>
-                <span data-stats class="lg:hidden ml-auto text-[10px] font-bold text-slate-400 uppercase tracking-widest">...</span>
+                <span data-stats class="md:hidden ml-auto text-[10px] font-bold text-slate-400 uppercase tracking-widest">...</span>
             </div>
         </div>
     </header>
@@ -412,8 +412,7 @@
 
             currentVisibleIds = ids;
             
-            // UPDATED: Logic to show "More than 500 titles"
-            const countText = ids.length > 500 ? "More than 500 titles" : `${ids.length} Titles`;
+            const countText = describeCount(ids.length);
             document.querySelectorAll('[data-stats]').forEach(el => el.innerText = countText);
             document.querySelectorAll('[data-count]').forEach(el => el.innerText = ids.length);
             updateFiltersCount();
@@ -635,6 +634,16 @@
                 updateSortIcon();
                 updateResults();
             };
+        }
+
+        // Rounded counts: "More than 1,000" above 1,000, hundreds below that,
+        // tens below 300, exact below 100 and at round numbers.
+        function describeCount(n) {
+            if (n > 1000) return 'More than 1,000 titles';
+            const step = n < 100 ? 1 : n < 300 ? 10 : 100;
+            const base = Math.floor(n / step) * step;
+            if (base === n) return `${n.toLocaleString('en-US')} ${n === 1 ? 'Title' : 'Titles'}`;
+            return `More than ${base} titles`;
         }
 
         // --- Phone filters sheet ---
