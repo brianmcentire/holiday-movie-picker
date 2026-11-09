@@ -113,6 +113,10 @@
             body { height: auto; display: block; overflow: visible; }
             body > header { position: sticky !important; top: 0; transition: transform 0.25s ease; }
             body.topbar-away > header { transform: translateY(-100%); }
+            /* One row: title, search and sort side by side; the title count gives up its room */
+            body > header > div { flex-direction: row !important; align-items: center !important; }
+            body > header [data-stats] { display: none !important; }
+            body > header > div > div:last-child { flex: 1 1 auto; width: auto !important; }
             body > main { grid-template-columns: clamp(190px, 30%, 280px) minmax(0, 1fr) !important; align-items: start; }
             #filters-panel { position: sticky !important; top: 0; height: 100vh !important; height: 100dvh !important; overscroll-behavior: contain; }
             #results-pane { height: auto; overflow: visible; }
