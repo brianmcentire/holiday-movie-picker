@@ -174,6 +174,9 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 ## Revisit later
 
 - **A friend's address-bar link after a Clear list:** on a device whose list was cleared after the sender's list last changed, the friend's address-bar copy is ignored without a word ("cleared means cleared" can't tell it from your own old bookmark). Saved copies from Save a copy aren't affected. A note offering to restore it anyway would fix it, if it ever comes up.
+- **Films without a holiday level** (when the classifier couldn't run) are hidden by the default Holiday Intensity, though the footer mentions them. They show with Any holiday intensity. Fine as a safe default, or let them through.
+- **TV-G, TV-PG and TV-Y7:** the builder allows them but Content Ratings has no buttons for them, so such a film would be hidden by default and couldn't be picked. None in today's data.
+- **Pill text contrast:** white 10–11px text on the blue, green and red pills is about 3.3–3.8:1, under the 4.5:1 guideline for small text.
 - **The Undo after tapping a bookmark** may be redundant, since tapping the bookmark again removes the movie. Kept for now as feedback.
 - **"Mark them watched too"** in Just look, for couples who watch together while only one of them marks things. Not built.
 - **Mail's subject line:** check on a real iPhone whether Mail uses the share title as the subject.
