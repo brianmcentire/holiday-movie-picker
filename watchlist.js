@@ -49,6 +49,10 @@
         return clean;
     }
 
+    // A list saved by a later version of this file (v 2 and up) can't be read here. This version then leaves it
+    // alone: it shows an empty list and saves nothing over it, so an old tab left open can't erase it.
+    const laterVersion = saved => typeof saved?.v === 'number' && saved.v > 1;
+
     function loadItems() {
         const saved = readJSON(LIST_KEY);
         if (saved?.v !== 1 || !Array.isArray(saved.items)) return [];
@@ -65,8 +69,12 @@
         return Number.isFinite(time) ? time : null;
     }
 
+    // Fields this version doesn't know about (added by a later one) are kept
     function saveItems() {
+        const saved = readJSON(LIST_KEY);
+        if (laterVersion(saved)) return;
         writeJSON(LIST_KEY, {
+            ...(saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {}),
             v: 1,
             items: items.map(item => [Number(item.id), item.watched ? 1 : 0]),
             made: listMade ? minuteISO(listMade) : undefined,
@@ -86,7 +94,11 @@
         };
     }
 
-    const savePrefs = () => writeJSON(PREFS_KEY, { v: 1, ...prefs });
+    function savePrefs() {
+        const saved = readJSON(PREFS_KEY);
+        if (laterVersion(saved)) return;
+        writeJSON(PREFS_KEY, { ...(saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {}), v: 1, ...prefs });
+    }
 
     let items = loadItems(); // [{ id: '771', watched: false }, ...] in the user's order
     let listMade = loadMade();
@@ -141,7 +153,7 @@
     // ---------- Changing the list ----------
     function add(id) {
         id = cleanId(id);
-        if (!id || itemFor(id)) return;
+        if (!id || itemFor(id) || items.length >= MAX_MOVIES) return;
         items.push({ id, watched: false });
         if (items.length === 1) persistStorage();
         changed();
@@ -149,6 +161,7 @@
     }
 
     function remove(id) {
+        id = cleanId(id);
         const index = items.findIndex(item => item.id === id);
         if (index < 0) return;
         const [item] = items.splice(index, 1);
@@ -161,7 +174,7 @@
     }
 
     function setWatched(id, watched) {
-        const item = itemFor(id);
+        const item = itemFor(cleanId(id));
         if (!item || item.watched === !!watched) return;
         item.watched = !!watched;
         changed();
@@ -198,12 +211,23 @@
         syncAddress();
     }
 
-    // Another tab changed the list
-    addEventListener('storage', e => {
-        if (e.key !== LIST_KEY || !started) return;
+    function reloadList() {
         items = loadItems();
         listMade = loadMade();
         clearedAt = loadClearedAt();
+    }
+
+    // Another tab changed the list
+    addEventListener('storage', e => {
+        if (e.key !== LIST_KEY || !started) return;
+        reloadList();
+        changed({ save: false });
+    });
+
+    // Back to a page kept in the back/forward cache: another tab may have changed the list meanwhile
+    addEventListener('pageshow', e => {
+        if (!e.persisted || !started) return;
+        reloadList();
         changed({ save: false });
     });
 
@@ -220,7 +244,7 @@
 
     // updateResults: narrow the movie ids by the two pills
     function filter(ids) {
-        start();
+        try { start(); } catch (e) { console.error(e); }
         if (!filtersOn()) return ids;
         const byId = new Map(items.map(item => [item.id, item]));
         return ids.filter(id => {
@@ -610,7 +634,8 @@
         const wait = ms => { clearTimeout(t.timer); if (timeout) t.timer = setTimeout(t.close, ms); };
         el.addEventListener('pointerenter', () => clearTimeout(t.timer));
         el.addEventListener('focusin', () => clearTimeout(t.timer));
-        el.addEventListener('pointerleave', () => wait(2500));
+        el.addEventListener('focusout', e => { if (!el.contains(e.relatedTarget)) wait(2500); });
+        el.addEventListener('pointerleave', () => { if (!el.contains(document.activeElement)) wait(2500); });
         wait(timeout);
         return t;
     }
@@ -620,7 +645,7 @@
 
     // A note: a title, an optional second line, an optional action, and an x. Notes are sentences to read, so
     // they stay up a while (Undo toasts are quicker).
-    function note(title, { detail = '', action = '', onAction = null, timeout = 8000 } = {}) {
+    function note(title, { detail = '', action = '', onAction = null, timeout = 12000 } = {}) {
         const t = toast(`<p class="wl-toast-msg"><b class="wl-toast-title">${esc(title)}</b>${detail ? `<span class="wl-toast-detail">${esc(detail)}</span>` : ''}</p>`
             + (action ? `<button type="button" class="wl-toast-btn" data-toast="action">${esc(action)}</button>` : '') + DISMISS, { timeout });
         if (action) t.el.querySelector('[data-toast="action"]').onclick = () => { t.close(); onAction(); };
@@ -645,6 +670,7 @@
     let view;
     let viewOpen = false;
     let openedHere = false; // this page added the #watchlist history entry, so closing goes Back
+    let goingBack = false;  // ...and has gone Back already, waiting for the hashchange
     let pageScrollY = 0;
     const $ = selector => view.el.querySelector(selector);
 
@@ -714,7 +740,10 @@
 
     function closeView() {
         if (!viewOpen) return;
-        if (openedHere && readLink()?.open) return history.back(); // the hashchange closes it
+        if (openedHere && readLink()?.open) { // the hashchange closes it
+            if (!goingBack) { goingBack = true; history.back(); }
+            return;
+        }
         endLook();
         hideView();
         setAddress(ownHash());
@@ -770,7 +799,7 @@
 
     // Replace the #watchlist part of the address without a new history entry
     function setAddress(hash) {
-        history.replaceState(history.state, '', location.pathname + location.search + hash);
+        try { history.replaceState(history.state, '', location.pathname + location.search + hash); } catch (e) {}
     }
 
     // ---------- The list in the address ----------
@@ -810,7 +839,8 @@
     // Just look), and not over a hash that isn't the watch list's.
     function syncAddress() {
         if (!started || looking || pendingCopy) return;
-        if (location.hash && !readLink()) return;
+        const link = readLink();
+        if (location.hash && (!link || link.unreadable)) return; // not ours to change
         const hash = ownHash();
         if (location.hash !== hash) setAddress(hash);
     }
@@ -818,7 +848,8 @@
     // The copy in the address, back onto an empty list: a Home Screen app opening for the first time, cleared
     // storage, a private window, or someone pasting an address-bar link to a friend
     function restoreBackup(copy) {
-        const before = items;
+        const had = new Set(items.map(item => item.id));
+        const restored = new Set(copy.items.map(item => item.id).filter(id => !had.has(id)));
         items = cleanItems([...copy.items, ...items]);
         persistStorage();
         changed({ made: copy.made || new Date() });
@@ -826,7 +857,7 @@
         if (!count) return;
         note(`Restored your watchlist · ${plural(count, 'movie')}`, {
             action: 'Undo',
-            onAction: () => { items = before; changed(); },
+            onAction: () => { items = items.filter(item => !restored.has(item.id)); changed(); }, // keeps anything done since
             timeout: 16000,
         });
     }
@@ -836,6 +867,7 @@
     const matchesSearch = (id, query) => !query || (movieFor(id).searchText ?? movieFor(id).title.toLowerCase()).includes(query);
 
     function renderView() {
+        cancelDrag?.(); // the rows are about to be redrawn
         if (!viewOpen) return;
         closeOpenRow();
         view.el.classList.toggle('wl-looking', !!looking);
@@ -953,8 +985,12 @@
     }
 
     // Drag a row by its grip. Rows trade places as it passes their middles; near the top or bottom edge, the
-    // list scrolls along.
+    // list scrolls along. A redraw of the list mid-drag (another tab's change, a row removed a moment before)
+    // drops the drag, through cancelDrag.
+    let cancelDrag = null;
+
     function dragRow(e, row, grip) {
+        cancelDrag?.();
         e.preventDefault();
         const list = row.parentElement;
         const before = [...list.children].map(li => li.dataset.id).join();
@@ -985,6 +1021,7 @@
             row.style.transform = `translateY(${offset}px)`;
         };
         const autoScroll = () => {
+            if (!row.isConnected) return finish(false);
             const box = scroller ? scroller.getBoundingClientRect() : { top: 0, bottom: innerHeight };
             const top = Math.max(box.top, pageMode() ? document.querySelector('body > header').getBoundingClientRect().bottom : box.top);
             const step = pointerY < top + 48 ? -Math.ceil((top + 48 - pointerY) / 6)
@@ -1003,20 +1040,28 @@
             pointerY = ev.clientY;
             place();
         };
-        const end = ev => {
-            if (ev.pointerId !== e.pointerId) return;
+        // The events go to the grip while it holds the pointer and bubble up to the window, which still hears
+        // them if a redraw takes the grip out of the page
+        const finish = apply => {
             cancelAnimationFrame(frame);
-            ['pointermove', 'pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => grip.removeEventListener(type, type === 'pointermove' ? move : end));
+            removeEventListener('pointermove', move);
+            ['pointerup', 'pointercancel'].forEach(type => removeEventListener(type, end));
+            grip.removeEventListener('lostpointercapture', end);
+            cancelDrag = null;
             row.classList.remove('wl-lifted');
             row.style.transform = '';
+            if (!apply || !row.isConnected) return;
             const order = [...list.children].map(li => li.dataset.id);
             if (order.join() !== before) {
                 reorder(order);
                 announce(`${movieFor(row.dataset.id).title}: ${order.indexOf(row.dataset.id) + 1} of ${order.length}`);
             }
         };
-        grip.addEventListener('pointermove', move);
-        ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => grip.addEventListener(type, end));
+        const end = ev => { if (ev.pointerId === e.pointerId) finish(true); };
+        cancelDrag = () => finish(false);
+        addEventListener('pointermove', move);
+        ['pointerup', 'pointercancel'].forEach(type => addEventListener(type, end));
+        grip.addEventListener('lostpointercapture', end);
     }
 
     // A row that just traded places glides into its new spot
@@ -1194,7 +1239,7 @@
         }
         const copied = await copyText(url);
         if (copied) note('Link copied', { detail: "Send it to whoever you're watching with, or to yourself for later. It opens this exact list.", timeout: 12000 });
-        else note("Couldn't copy the link", { detail: 'Your browser blocked the clipboard.', timeout: 8000 });
+        else note("Couldn't copy the link", { detail: 'Your browser blocked the clipboard.' });
     }
 
     async function copyText(text) {
@@ -1287,6 +1332,7 @@
 
     // On arrival (`arriving`) and on every change to the address after
     function route(arriving = false) {
+        goingBack = false;
         const link = readLink();
         // A Home Screen app always launches from the address it was added with, so a saved copy there is a snapshot
         // from that moment, not something just shared: like the list in the address, it only fills an empty list
@@ -1296,7 +1342,7 @@
             pendingCopy = null;
             closeLayer(mergeLayer);
         }
-        if (link?.unreadable) return syncAddress(); // nothing this version can use: ignore it
+        if (link?.unreadable) return; // nothing this version can use: ignore it, and leave it in the address
         // The list in the address comes back only on arrival (so going Back to an older address can't undo a
         // Clear list), only onto an empty list, and only if it wasn't made before the list was cleared here
         if ((link?.backup || launchSnapshot) && arriving && !shownItems().length && link.copy.items.length && !madeBeforeClear(link.copy)) {
@@ -1512,7 +1558,7 @@
         setAddress(ownHash());
         renderView();
         $('#wl-title').focus({ preventScroll: true });
-        if (added) note(`Added ${plural(added, 'movie')} to My Watchlist`, { timeout: 10000 });
+        if (added) note(`Added ${plural(added, 'movie')} to My Watchlist`);
     }
 
     // ---------- The Home Screen tip, iPhone Safari only ----------
@@ -1939,6 +1985,7 @@
     function start() {
         if (started) return;
         started = true;
+        reloadList(); // another tab may have changed it while the page's data loaded
         if (!shownItems().length) resetFilters();
         shownCount = shownItems().length; // no bounce for the count the page opens with
         if (items.length && !listMade) { // a list saved before it kept a time: date it now, once

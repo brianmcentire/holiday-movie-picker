@@ -57,6 +57,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 ### What's stored
 
 - Only TMDB movie IDs, in the user's order, with a watched flag. It's versioned and kept in localStorage, and everything else comes from the page's own data.
+- A tab still running an older version never writes over a list saved by a newer one (a higher `v`), and keeps any fields it doesn't know about.
 - IDs missing from the data stay stored but hidden; nothing breaks on them.
 - The first add asks the browser to keep the storage (`navigator.storage.persist()`).
 
@@ -129,8 +130,10 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - On every browser, the page's address carries a copy of the list, kept up to date as it changes: `#watchlist=1&backup=1&made=…&m=…`, plus `&open=1` while My Watchlist is open. On iPhone, Safari shows only the site's name, so nobody sees it there.
 - **Why:** bookmarks, history and private windows bring the list back with it, and so does reopening a tab after Safari has cleared the site's storage. On iPhone, Add to Home Screen only keeps the copy if the page was loaded with it; see "Add to Home Screen".
 - **Opening an address with `backup=1`:**
-  - Your list is empty: it fills from the copy ("Restored your watchlist", with Undo).
+  - Your list is empty: it fills from the copy ("Restored your watchlist", with Undo). Undo takes out only the movies the copy brought in, so anything added since stays.
   - You already have a list: the copy is ignored.
+  - **Cleared means cleared:** a copy made before Clear list last emptied the list on this device is ignored, so an old bookmark, a reopened tab or a Home Screen app's launch address doesn't bring a cleared list back.
+  - It's read only when the page opens with that address, not when the address changes in an open tab, so going Back can't undo a Clear list.
 
   A friend who's sent an address-bar link and has no list starts with the sender's list, with Undo. That's intended.
 - Share results never carries it.
@@ -161,6 +164,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 
 ## Revisit later
 
+- **A friend's address-bar link after a Clear list:** on a device whose list was cleared after the sender's list last changed, the friend's address-bar copy is ignored without a word ("cleared means cleared" can't tell it from your own old bookmark). Saved copies from Save a copy aren't affected. A note offering to restore it anyway would fix it, if it ever comes up.
 - **The Undo after tapping a bookmark** may be redundant, since tapping the bookmark again removes the movie. Kept for now as feedback.
 - **"Mark them watched too"** in Just look, for couples who watch together while only one of them marks things. Not built.
 - **Mail's subject line:** check on a real iPhone whether Mail uses the share title as the subject.
