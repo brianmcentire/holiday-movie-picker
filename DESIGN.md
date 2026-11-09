@@ -127,9 +127,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 ### The list in the page's address
 
 - On every browser, the page's address carries a copy of the list, kept up to date as it changes: `#watchlist=1&backup=1&made=…&m=…`, plus `&open=1` while My Watchlist is open. On iPhone, Safari shows only the site's name, so nobody sees it there.
-- **Why:**
-  - On iPhone, an app added to the Home Screen gets its own storage, separate from Safari's, so it would otherwise open with an empty list. Add to Home Screen saves the current address, and the manifest has no fixed start address, so the app starts with the copy.
-  - The same copy makes bookmarks, history and private windows bring the list back.
+- **Why:** bookmarks, history and private windows bring the list back with it, and so does reopening a tab after Safari has cleared the site's storage. On iPhone, Add to Home Screen only keeps the copy if the page was loaded with it; see "Add to Home Screen".
 - **Opening an address with `backup=1`:**
   - Your list is empty: it fills from the copy ("Restored your watchlist", with Undo).
   - You already have a list: the copy is ignored.
