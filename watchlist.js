@@ -5,8 +5,9 @@
 // feature, delete this file, manifest.webmanifest, the script tag and those lines.
 //
 // What it keeps on the device (localStorage), and nothing about the movies themselves:
-//   watchlist       {"v":1,"items":[[771,0],[10719,1]],"made":"2026-11-09T19:41Z"}
-//                   TMDB ids in the user's order with 1 for watched, and when the list last changed
+//   watchlist       {"v":1,"items":[[771,0],[10719,1]],"made":"2026-11-09T19:41Z","clearedAt":"2026-11-10T02:15:09.411Z"}
+//                   TMDB ids in the user's order with 1 for watched, when the list last changed, and when Clear
+//                   list last emptied it here (so an older copy in the address doesn't bring it back)
 //   watchlistPrefs  {"v":1,...}  the two filter pills, Hide watched, and the Home Screen tip
 // Titles, posters and the rest come from the page's own data (db.movies). Ids the data doesn't have are kept but
 // not shown, so a movie that drops out of the data comes back if it returns.
@@ -58,11 +59,18 @@
     const loadMade = () => parseMade(readJSON(LIST_KEY)?.made);
     const minuteISO = date => `${date.toISOString().slice(0, 16)}Z`; // 2026-11-09T19:41Z
 
+    // When Clear list last emptied the list on this device, in milliseconds, or null
+    function loadClearedAt() {
+        const time = Date.parse(readJSON(LIST_KEY)?.clearedAt);
+        return Number.isFinite(time) ? time : null;
+    }
+
     function saveItems() {
         writeJSON(LIST_KEY, {
             v: 1,
             items: items.map(item => [Number(item.id), item.watched ? 1 : 0]),
             made: listMade ? minuteISO(listMade) : undefined,
+            clearedAt: clearedAt === null ? undefined : new Date(clearedAt).toISOString(),
         });
     }
 
@@ -82,6 +90,7 @@
 
     let items = loadItems(); // [{ id: '771', watched: false }, ...] in the user's order
     let listMade = loadMade();
+    let clearedAt = loadClearedAt();
     const prefs = loadPrefs();
 
     // Ask the browser not to clear the site's storage when space runs low (a no-op where unsupported)
@@ -194,6 +203,7 @@
         if (e.key !== LIST_KEY || !started) return;
         items = loadItems();
         listMade = loadMade();
+        clearedAt = loadClearedAt();
         changed({ save: false });
     });
 
@@ -773,8 +783,9 @@
     //     made         when the list last changed: ISO 8601 in UTC, to the minute
     //     m            the movies in order, by TMDB id; a trailing w marks one watched
     //     open=1       My Watchlist is open (there for a Home Screen app added with the sheet showing)
-    // Opening it on an empty list restores the list, with Undo; on a list that has movies, it's quietly replaced
-    // by that list's own copy, and it never brings up the Shared with you card. An empty list has no copy.
+    // Opening it on an empty list restores the list, with Undo, unless it was made before Clear list last emptied
+    // the list here; on a list that has movies, it's quietly replaced by that list's own copy, and it never brings
+    // up the Shared with you card. An empty list has no copy. A Home Screen app ignores open=1 at launch.
     // 'all' keeps it in every browser, 'ios' only on iPhone and iPad (Safari or a Home Screen app), 'off' nowhere.
     const LIST_IN_ADDRESS = 'all';
 
@@ -1118,9 +1129,13 @@
 
     // Clearing goes back to the main screen (the same way Done and x close My Watchlist), with focus on the
     // results and Undo at the bottom. Undo brings the list back without reopening it.
+    // Cleared means cleared: the time is remembered, so a copy in the address made before it (a Home Screen
+    // app's launch address, an old bookmark) doesn't bring the list back. Undo forgets that time again.
     function clearList() {
         const cleared = items;
+        const clearedBefore = clearedAt;
         items = [];
+        clearedAt = Date.now();
         changed();
         const results = document.getElementById('results-pane');
         if (results) {
@@ -1130,6 +1145,7 @@
         closeView();
         offerUndo('Cleared My Watchlist', () => {
             items = cleanItems([...cleared, ...items]); // anything added since stays too
+            clearedAt = clearedBefore;
             changed();
         });
     }
@@ -1261,6 +1277,14 @@
     // "9 movies, made Sun, Nov 9 at 2:41 PM"
     const copySummary = (count, made) => `${plural(count, 'movie')}${made ? `, made ${madeWhen(made)}` : ''}`;
 
+    // A copy made before Clear list last emptied the list here is what was cleared, so it stays cleared. Once the
+    // list has been cleared, a copy with no readable time counts as older too. (made is to the minute, so a copy
+    // from the same minute as the clear counts as older.)
+    const madeBeforeClear = copy => clearedAt !== null && (!copy.made || copy.made.getTime() <= clearedAt);
+
+    // Running as an app added to the Home Screen (or installed), not in a browser tab
+    const homeScreenApp = () => navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+
     // On arrival (`arriving`) and on every change to the address after
     function route(arriving = false) {
         const link = readLink();
@@ -1270,10 +1294,14 @@
             closeLayer(mergeLayer);
         }
         if (link?.unreadable) return syncAddress(); // nothing this version can use: ignore it
-        // The list in the address comes back only on arrival, so going Back to an older address can't undo a
-        // Clear list
-        if (link?.backup && arriving && !shownItems().length && link.copy.items.length) restoreBackup(link.copy);
-        if (link?.open) {
+        // The list in the address comes back only on arrival (so going Back to an older address can't undo a
+        // Clear list), only onto an empty list, and only if it wasn't made before the list was cleared here
+        if (link?.backup && arriving && !shownItems().length && link.copy.items.length && !madeBeforeClear(link.copy)) {
+            restoreBackup(link.copy);
+        }
+        // A Home Screen app always launches from the address it was added with; open=1 there would reopen My
+        // Watchlist on every launch, so the app starts on the main screen (a browser tab still reopens it)
+        if (link?.open && !(arriving && homeScreenApp())) {
             endLook();
             openView();
         } else if (viewOpen) {
@@ -1493,8 +1521,7 @@
 
     function tipApplies() {
         const ua = navigator.userAgent;
-        const homeScreen = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
-        return !prefs.tipDone && !homeScreen && /iPhone/.test(ua) && /Safari\//.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(ua);
+        return !prefs.tipDone && !homeScreenApp() && /iPhone/.test(ua) && /Safari\//.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(ua);
     }
 
     function firstAddTip(title) {
