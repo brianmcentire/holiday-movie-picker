@@ -30,8 +30,12 @@
         .state-disabled { display: none; } 
 
         .movie-card:hover { transform: translateY(-4px); transition: all 0.2s; }
+        /* The filters scroll on their own; their thin scrollbar shows only while the pointer is over them */
+        .sidebar-scroll { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+        .sidebar-scroll:hover { scrollbar-color: #cbd5e1 transparent; }
         .sidebar-scroll::-webkit-scrollbar { width: 4px; }
-        .sidebar-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; }
+        .sidebar-scroll:hover::-webkit-scrollbar-thumb { background: #cbd5e1; }
         .sort-btn { transition: color 0.2s; }
         #search-input:placeholder-shown + #clear-search { display: none; }
 
