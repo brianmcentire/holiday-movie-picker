@@ -557,7 +557,8 @@
         }
 
         function toggleTag(tag) {
-            let next = (tagStates.get(tag) + 1) % 3;
+            // Holiday Intensity buttons are answers you pick or don't, so they switch on and off; others also exclude
+            let next = tag in LEVEL_HINTS ? (tagStates.get(tag) === 1 ? 0 : 1) : (tagStates.get(tag) + 1) % 3;
             tagStates.set(tag, next);
             updateBtnState(tag);
             updateResults();
@@ -691,6 +692,15 @@
                     if (tag) { tagStates.set(tag, state); updateBtnState(tag); }
                 });
             });
+            // Older links could exclude a holiday intensity (without=Holiday adjacent); it's now on/off only. Excluded
+            // ones become unpicked, and if that leaves none picked, the rest are picked, which shows the same movies.
+            const levels = GROUPS.levels.tags;
+            const excluded = levels.filter(t => tagStates.get(t) === 2);
+            if (excluded.length) {
+                excluded.forEach(t => tagStates.set(t, 0));
+                if (!levels.some(t => tagStates.get(t) === 1)) levels.filter(t => !excluded.includes(t)).forEach(t => tagStates.set(t, 1));
+                levels.forEach(updateBtnState);
+            }
 
             const q = params.get('q');
             if (q) document.getElementById('search-input').value = q;
