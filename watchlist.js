@@ -1677,6 +1677,8 @@
         .wl-count.wl-bump { animation: wl-bump 0.4s ease-out; }
         @media (max-width: 1023px) {
             body.wl-has-list #wl-fab { display: flex; }
+            /* Hidden while a sheet or card is open; sideways, the sheet is narrower and the button showed beside it */
+            body.wl-modal-open #wl-fab { visibility: hidden; }
             /* Room under the last row of results for the floating button */
             body.wl-has-list #results-pane { padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
         }
