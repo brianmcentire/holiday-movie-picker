@@ -39,10 +39,7 @@ GitHub pauses scheduled workflows in public repos after 60 days without activity
 * **Pick for me:** a button that spotlights one film from the current filters.
 * **Falling snow:** a soothing, gentle snowfall in the page background.
 * **Released filter:** a group like Content Ratings with plain decade buttons (Before 1970 · '70s & '80s · '90s & 2000s · 2010 & later), all on by default, so people who skip older movies can turn them off. Factual labels on purpose: names like "Retro" make a judgment, and whether a film feels dated depends on the film and the viewer (A Christmas Story and Die Hard still play for kids who can't stand Christmas Vacation).
-* **Watch list:** a "+" on each card adds a movie to a personal list for the season, stored on the device with no accounts or servers. A "My list" view lets you drag to reorder, check off what you've watched, and filter to Unwatched, Watched or All. Watched rows fade somewhat, so they stay readable but you can see at a glance what's done.
-  * **Keeping it from getting lost:** ask the browser to keep the site's storage (`navigator.storage.persist()`); add an app manifest so "Add to Home Screen" works, which exempts the list from Safari's 7-day clearing on iPhone; and keep the list (order and checkmarks) in the page address while viewing it, so bookmarks, open tabs and history double as backups, and opening such a link restores a cleared list.
-  * **One quiet line at the top of the list:** "3 of 9 watched · Save a copy · ✓ saved Dec 4". Save a copy opens the share sheet on phones (Notes, Messages, email) and copies the link on desktop. The status turns into a gentle nudge ("Changes since your last save") only after the list has changed noticeably.
-  * **Sharing:** the same list link lets family see the same lineup.
+* **Watch list:** designed and being built; the decisions and the reasons for them are in [DESIGN.md](DESIGN.md).
 * **Ageless exceptions:** a short hand-picked list of older films that play for every generation (the Charlie Brown, Rudolph, Grinch and Frosty specials, maybe It's a Wonderful Life) that stays visible even when Before 1970 is off.
 
 *Data provided by [The Movie Database (TMDB)](https://www.themoviedb.org).*
