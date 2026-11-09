@@ -1288,7 +1288,10 @@
     // On arrival (`arriving`) and on every change to the address after
     function route(arriving = false) {
         const link = readLink();
-        if (link?.copy && !link.backup) return receiveCopy(link.copy); // someone's saved copy
+        // A Home Screen app always launches from the address it was added with, so a saved copy there is a snapshot
+        // from that moment, not something just shared: like the list in the address, it only fills an empty list
+        const launchSnapshot = arriving && homeScreenApp() && link?.copy && !link.backup;
+        if (link?.copy && !link.backup && !launchSnapshot) return receiveCopy(link.copy); // someone's saved copy
         if (pendingCopy) { // Back took the saved copy out of the address while its card was up
             pendingCopy = null;
             closeLayer(mergeLayer);
@@ -1296,7 +1299,7 @@
         if (link?.unreadable) return syncAddress(); // nothing this version can use: ignore it
         // The list in the address comes back only on arrival (so going Back to an older address can't undo a
         // Clear list), only onto an empty list, and only if it wasn't made before the list was cleared here
-        if (link?.backup && arriving && !shownItems().length && link.copy.items.length && !madeBeforeClear(link.copy)) {
+        if ((link?.backup || launchSnapshot) && arriving && !shownItems().length && link.copy.items.length && !madeBeforeClear(link.copy)) {
             restoreBackup(link.copy);
         }
         // A Home Screen app always launches from the address it was added with; open=1 there would reopen My
@@ -1518,10 +1521,13 @@
     // sheet; closing either one closes both for good. Never shown once the site is on the Home Screen.
     const TIP_TEXT = `Add Season’s Screenings to your Home Screen: open Safari’s Share menu ${icon('share', 13, { stroke: 2.25, label: 'Share', cls: 'wl-inline-icon' })} and choose <b>Add to Home Screen</b>.`;
     let tipToast = null;
+    // Off for now: iPhone saves the address the page was loaded with, so a Home Screen app added after building a
+    // list would start empty, and Safari and the app would keep separate lists. See DESIGN.md, "Add to Home Screen".
+    const HOME_SCREEN_TIP = false;
 
     function tipApplies() {
         const ua = navigator.userAgent;
-        return !prefs.tipDone && !homeScreenApp() && /iPhone/.test(ua) && /Safari\//.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(ua);
+        return HOME_SCREEN_TIP && !prefs.tipDone && !homeScreenApp() && /iPhone/.test(ua) && /Safari\//.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(ua);
     }
 
     function firstAddTip(title) {
