@@ -1,6 +1,6 @@
 {
   "name": "Season's Screenings",
-  "short_name": "Screenings",
+  "short_name": "Season's Screenings",
   "description": "Find your next holiday movie by mood, rating and holiday.",
   "scope": "./",
   "display": "standalone",

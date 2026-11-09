@@ -1516,7 +1516,7 @@
     // Add to Home Screen lives in Safari's Share menu, not behind the page's Share results, so the tip names it
     // with Safari's own icon. It pops up once, right after the very first add, and sits at the bottom of the list
     // sheet; closing either one closes both for good. Never shown once the site is on the Home Screen.
-    const TIP_TEXT = `Your list, one tap away: open Safari’s Share menu ${icon('share', 13, { stroke: 2.25, label: 'Share', cls: 'wl-inline-icon' })} and choose <b>Add to Home Screen</b>.`;
+    const TIP_TEXT = `Add Season’s Screenings to your Home Screen: open Safari’s Share menu ${icon('share', 13, { stroke: 2.25, label: 'Share', cls: 'wl-inline-icon' })} and choose <b>Add to Home Screen</b>.`;
     let tipToast = null;
 
     function tipApplies() {
