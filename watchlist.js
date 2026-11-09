@@ -99,6 +99,10 @@
         eye: '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
         eyeOff: '<path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/>',
         externalLink: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+        chevronLeft: '<path d="m15 18-6-6 6-6"/>',
+        trash: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
+        popcorn: '<path d="M18 8a2 2 0 0 0 0-4 2 2 0 0 0-4 0 2 2 0 0 0-4 0 2 2 0 0 0-4 0 2 2 0 0 0 0 4"/><path d="M10 22 9 8"/><path d="m14 22 1-14"/><path d="M20 8c.5 0 .9.4.8 1l-2.6 12c-.1.5-.7 1-1.2 1H7c-.6 0-1.1-.4-1.2-1L3.2 9c-.1-.6.3-1 .8-1Z"/>',
+        grip: '<circle cx="9" cy="5" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="9" cy="19" r="1.6"/><circle cx="15" cy="5" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="15" cy="19" r="1.6"/>',
     };
 
     function icon(name, size, { fill = 'none', stroke = 2, cls = '', label = '' } = {}) {
@@ -118,8 +122,13 @@
     function remove(id) {
         const index = items.findIndex(item => item.id === id);
         if (index < 0) return;
-        items.splice(index, 1);
+        const [item] = items.splice(index, 1);
         changed();
+        offerUndo(`Removed ${movieFor(id)?.title ?? 'a movie'}`, () => {
+            if (itemFor(item.id)) return;
+            items.splice(Math.min(index, items.length), 0, item); // back in its place, watched or not
+            changed();
+        });
     }
 
     function setWatched(id, watched) {
@@ -152,6 +161,7 @@
         refreshChrome();
         if (refilter) window.updateResults?.();
         else markCards();
+        renderView();
     }
 
     // Another tab changed the list
@@ -259,6 +269,7 @@
 
     function cardsRedrawn() {
         markCards();
+        if (pageMode()) renderView(); // the search may have changed, and on the page it narrows the list
     }
 
     function markCards() {
@@ -375,14 +386,17 @@
         document.documentElement.classList.toggle('wl-locked', !!top);
         document.body.classList.toggle('wl-modal-open', !!top);
         for (const el of document.body.children) {
-            if (el.tagName !== 'SCRIPT' && el.id !== 'wl-toasts') el.inert = !!top && el !== top.el;
+            if (el.tagName !== 'SCRIPT' && el.id !== 'wl-toasts' && el.id !== 'wl-live') el.inert = !!top && el !== top.el;
         }
     }
 
+    // Escape closes the top layer, or the My Watchlist page (unless typing in the search)
     addEventListener('keydown', e => {
-        if (e.key !== 'Escape' || !openLayers.length) return;
+        if (e.key !== 'Escape' || !started) return;
+        if (openLayers.length) openLayers[openLayers.length - 1].dismiss();
+        else if (viewOpen && !e.target.closest?.('input, select, textarea')) closeView();
+        else return;
         e.preventDefault();
-        openLayers[openLayers.length - 1].dismiss();
     });
 
     // A drag that ends a gesture shouldn't also count as a tap on whatever it ended over
@@ -493,11 +507,579 @@
         }
     }
 
-    // Everything that shows whether the list has movies in it
+    // ---------- The My List buttons: floating on phones and tablets, in the header row on laptops ----------
+    let fab;
+    let headerButton;
+    let shownCount = 0;
+
+    function buildButtons() {
+        fab = document.createElement('button');
+        fab.type = 'button';
+        fab.id = 'wl-fab';
+        fab.innerHTML = `${icon('bookmark', 17, { fill: 'currentColor' })}<span class="wl-fab-label">My List</span><span class="wl-count"></span>`;
+        fab.onclick = showMyWatchlist;
+        document.body.appendChild(fab);
+
+        headerButton = document.createElement('button');
+        headerButton.type = 'button';
+        headerButton.id = 'wl-header-button';
+        headerButton.innerHTML = `${icon('bookmark', 16, { fill: 'currentColor' })}<span class="wl-fab-label">My Watchlist</span><span class="wl-count"></span>`;
+        headerButton.onclick = () => (viewOpen ? closeView() : showMyWatchlist());
+        document.getElementById('sort-dir')?.parentElement?.after(headerButton); // beside search and sort
+    }
+
+    // Everything that shows whether the list has movies in it, and how many
     function refreshChrome() {
         const count = shownItems().length;
         document.body.classList.toggle('wl-has-list', count > 0);
         document.getElementById('wl-filters')?.classList.toggle('hidden', count === 0);
+        [[fab, 'My List'], [headerButton, 'My Watchlist']].forEach(([btn, name]) => {
+            if (!btn) return;
+            const counter = btn.querySelector('.wl-count');
+            counter.textContent = count;
+            if (count !== shownCount) replay(counter, 'wl-bump'); // a little bounce when it changes
+            btn.setAttribute('aria-label', `${name}, ${plural(count, 'movie')}`);
+        });
+        shownCount = count;
+    }
+
+    // ---------- Toasts: Undo and short notes, at the bottom of the screen ----------
+    let toastBox;
+    let liveRegion;
+
+    function buildToasts() {
+        toastBox = document.createElement('div');
+        toastBox.id = 'wl-toasts';
+        liveRegion = document.createElement('div');
+        liveRegion.id = 'wl-live';
+        liveRegion.className = 'wl-sr';
+        liveRegion.setAttribute('aria-live', 'polite');
+        document.body.append(toastBox, liveRegion);
+    }
+
+    // Tell screen readers about something that changed out of their sight
+    function announce(text) {
+        liveRegion.textContent = '';
+        setTimeout(() => { liveRegion.textContent = text; }, 50);
+    }
+
+    // A toast stays up for `timeout` ms, longer while it's pointed at or focused
+    function toast(html, { cls = '', timeout = 0 } = {}) {
+        const el = document.createElement('div');
+        el.className = `wl-toast ${cls}`;
+        el.innerHTML = html;
+        toastBox.appendChild(el);
+        const t = { el, timer: 0, close() { clearTimeout(t.timer); el.remove(); } };
+        const wait = ms => { clearTimeout(t.timer); if (timeout) t.timer = setTimeout(t.close, ms); };
+        el.addEventListener('pointerenter', () => clearTimeout(t.timer));
+        el.addEventListener('focusin', () => clearTimeout(t.timer));
+        el.addEventListener('pointerleave', () => wait(2500));
+        wait(timeout);
+        return t;
+    }
+
+    // A note with an optional second line and an optional action button
+    function note(title, { detail = '', action = '', onAction = null, timeout = 4000 } = {}) {
+        const t = toast(`<p class="wl-toast-msg"><b>${esc(title)}</b>${detail ? `<span class="wl-toast-detail">${esc(detail)}</span>` : ''}</p>`
+            + (action ? `<button type="button" class="wl-toast-btn">${esc(action)}</button>` : ''), { timeout });
+        if (action) t.el.querySelector('button').onclick = () => { t.close(); onAction(); };
+        announce(detail ? `${title}. ${detail}` : title);
+        return t;
+    }
+
+    let undoToast = null;
+    function offerUndo(message, undo) {
+        undoToast?.close();
+        const t = undoToast = toast(`<p class="wl-toast-msg">${esc(message)}</p><button type="button" class="wl-toast-btn">Undo</button>`,
+            { cls: 'wl-toast-pill', timeout: 6000 });
+        t.el.querySelector('button').onclick = () => { t.close(); undo(); };
+        announce(`${message}. Undo is at the bottom of the screen.`);
+    }
+
+    // ---------- My Watchlist: its own page on laptops, a sheet on phones and tablets ----------
+    // The address's #watchlist opens it, so Back closes it.
+    const pageMQ = matchMedia('(min-width: 1024px)');
+    const pageMode = () => pageMQ.matches;
+    let view;
+    let viewOpen = false;
+    let openedHere = false; // this page added the #watchlist history entry, so closing goes Back
+    let pageScrollY = 0;
+    const $ = selector => view.el.querySelector(selector);
+
+    function buildView() {
+        view = createLayer('wl-view', 'wl-panel', () => closeView());
+        view.panel.setAttribute('aria-labelledby', 'wl-title');
+        view.panel.innerHTML = `
+            <div class="wl-head">
+                <div class="wl-grabber" aria-hidden="true"></div>
+                <button type="button" class="wl-back" data-wl="close">${icon('chevronLeft', 12, { stroke: 2.5 })}All movies</button>
+                <div class="wl-titlebar">
+                    <span class="wl-title-icon">${icon('popcorn', 22)}</span>
+                    <h2 id="wl-title" tabindex="-1">My Watchlist</h2>
+                    <button type="button" class="wl-close" data-wl="close" aria-label="Close My Watchlist">${icon('x', 22)}</button>
+                    <p class="wl-summary"><span class="wl-progress"></span><span class="wl-matching"></span> <span class="wl-sep" aria-hidden="true">·</span> <button type="button" class="wl-link" data-wl="hide"></button> <span class="wl-sep" aria-hidden="true">·</span> <button type="button" class="wl-link" data-wl="save">Save a copy</button></p>
+                    <span class="wl-hint">Drag to set the order. Tick the circle once you've watched it.</span>
+                </div>
+            </div>
+            <div class="wl-scroll">
+                <ol class="wl-rows" aria-label="Movies on My Watchlist"></ol>
+                <p class="wl-empty" hidden></p>
+                <div class="wl-clear-row"><button type="button" class="wl-clear" data-wl="clear">Clear list</button></div>
+                <p class="wl-credit">This website uses <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a> and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</p>
+            </div>
+            <span id="wl-grip-help" class="wl-sr">Use the up and down arrow keys to move it.</span>`;
+        // On the page, it sits in the flow after the results
+        document.querySelector('body > main')?.after(view.el);
+        view.panel.addEventListener('click', onViewClick);
+        view.panel.addEventListener('pointerdown', onViewPointerDown);
+        view.panel.addEventListener('keydown', onViewKeyDown);
+        dragToClose($('.wl-head'), view.panel, () => closeView(), () => !pageMode());
+        pageMQ.addEventListener('change', () => { if (viewOpen) { applyMode(); renderView(); } });
+    }
+
+    function showMyWatchlist() {
+        if (location.hash === '#watchlist') return openView();
+        openedHere = true;
+        location.hash = 'watchlist'; // the hashchange opens it
+    }
+
+    function openView() {
+        if (!started) return;
+        if (!viewOpen) {
+            viewOpen = true;
+            pageScrollY = scrollY;
+            view.returnTo = document.activeElement;
+        }
+        renderView();
+        applyMode();
+    }
+
+    function closeView() {
+        if (!viewOpen) return;
+        if (openedHere && location.hash === '#watchlist') return history.back(); // the hashchange closes it
+        setAddress('');
+        hideView();
+    }
+
+    function hideView() {
+        if (!viewOpen) return;
+        viewOpen = false;
+        openedHere = false;
+        closeOpenRow();
+        const wasPage = document.body.classList.contains('wl-page-open');
+        document.body.classList.remove('wl-page-open');
+        if (openLayers.includes(view)) {
+            closeLayer(view); // the sheet slides away, and focus goes back
+        } else {
+            view.el.hidden = true;
+            view.el.classList.remove('wl-shown');
+            if (view.returnTo?.isConnected) view.returnTo.focus({ preventScroll: true });
+        }
+        if (wasPage) scrollTo(0, pageScrollY);
+    }
+
+    // Page or sheet by the window's width, again whenever it crosses over
+    function applyMode() {
+        const sheet = viewOpen && !pageMode();
+        const page = viewOpen && pageMode();
+        view.panel.setAttribute('role', sheet ? 'dialog' : 'region');
+        if (sheet) view.panel.setAttribute('aria-modal', 'true');
+        else view.panel.removeAttribute('aria-modal');
+        if (sheet && !openLayers.includes(view)) {
+            const returnTo = view.returnTo;
+            openLayer(view, $('#wl-title'));
+            view.returnTo = returnTo;
+        }
+        if (page) {
+            if (openLayers.includes(view)) {
+                openLayers.splice(openLayers.indexOf(view), 1);
+                updateModal();
+            }
+            clearTimeout(view.timer);
+            view.el.hidden = false;
+            view.el.classList.add('wl-shown');
+            if (!document.body.classList.contains('wl-page-open')) {
+                document.body.classList.add('wl-page-open');
+                scrollTo(0, 0);
+                $('#wl-title').focus({ preventScroll: true });
+            }
+        }
+        document.body.classList.toggle('wl-page-open', page);
+    }
+
+    // Replace the #watchlist part of the address without a new history entry
+    function setAddress(hash) {
+        history.replaceState(history.state, '', location.pathname + location.search + hash);
+    }
+
+    // The header's search narrows the list on the page, with the same matching as the results
+    const searchInput = () => document.getElementById('search-input');
+    const matchesSearch = (id, query) => !query || (movieFor(id).searchText ?? movieFor(id).title.toLowerCase()).includes(query);
+
+    function renderView() {
+        if (!viewOpen) return;
+        closeOpenRow();
+        const all = shownItems();
+        const rawQuery = pageMode() ? searchInput()?.value.trim() ?? '' : '';
+        const query = rawQuery.toLowerCase();
+        const rows = all.filter(item => !(prefs.hideWatched && item.watched) && matchesSearch(item.id, query));
+
+        const watched = all.filter(item => item.watched).length;
+        $('.wl-summary').hidden = !all.length;
+        $('.wl-progress').textContent = `${watched} of ${all.length} watched`;
+        $('.wl-matching').textContent = query ? ` · ${rows.length} ${rows.length === 1 ? 'matches' : 'match'} “${rawQuery}”` : '';
+        $('[data-wl="hide"]').textContent = prefs.hideWatched ? 'Show watched' : 'Hide watched';
+
+        const list = $('.wl-rows');
+        const focus = rememberFocus(list);
+        list.innerHTML = rows.map(rowHTML).join('');
+        restoreFocus(list, focus);
+
+        const empty = $('.wl-empty');
+        empty.hidden = rows.length > 0;
+        empty.textContent = rows.length ? ''
+            : !all.length ? (pageMode() ? 'Nothing on your list yet. Point at a poster and click its bookmark to add it.'
+                : 'Nothing on your list yet. Tap a poster, then Add to My Watchlist.')
+            : query ? `Nothing on your list matches “${rawQuery}”.`
+            : "You've watched everything on your list.";
+        $('.wl-clear-row').hidden = !all.length;
+    }
+
+    function rowHTML(item) {
+        const m = movieFor(item.id);
+        const title = esc(m.title);
+        return `<li class="wl-row${item.watched ? ' wl-row-watched' : ''}" data-id="${item.id}">
+            <button type="button" class="wl-row-delete" tabindex="-1" aria-hidden="true">${icon('trash', 16)}Remove</button>
+            <div class="wl-row-main">
+                <button type="button" class="wl-tick" aria-pressed="${item.watched}" aria-label="Watched: ${title}">${icon('check', 15, { stroke: 3 })}</button>
+                <a class="wl-info" href="${tmdbURL(item.id)}" target="_blank" rel="noopener" draggable="false">
+                    ${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" draggable="false">` : '<span class="wl-noposter"></span>'}
+                    <span class="wl-text">
+                        <span class="wl-name">${title} <span class="wl-year">(${yearOf(m)})</span></span>
+                        <span class="wl-meta"><span class="wl-cert">${esc(m.cert)}</span><span class="wl-rating">${ratingOf(m)}</span></span>
+                        <span class="wl-overview">${esc(m.overview)}</span>
+                    </span>
+                </a>
+                <button type="button" class="wl-x" aria-label="Remove ${title} from My Watchlist">${icon('x', 15, { stroke: 2.5 })}</button>
+                <button type="button" class="wl-grip" aria-label="Move ${title}" aria-describedby="wl-grip-help">${icon('grip', 20, { fill: 'currentColor', stroke: 0 })}</button>
+            </div>
+        </li>`;
+    }
+
+    // Keep keyboard focus on the same control across a redraw, or on its neighbor if its row went away
+    function rememberFocus(list) {
+        const active = document.activeElement;
+        const row = active?.closest?.('.wl-row');
+        if (!row || !list.contains(row)) return null;
+        return { id: row.dataset.id, index: [...list.children].indexOf(row), cls: [...active.classList].find(c => c.startsWith('wl-')) };
+    }
+
+    function restoreFocus(list, focus) {
+        if (!focus) return;
+        const row = list.querySelector(`.wl-row[data-id="${focus.id}"]`) || list.children[Math.min(focus.index, list.children.length - 1)];
+        (row?.querySelector(`.${focus.cls}`) || $('#wl-title')).focus();
+    }
+
+    function onViewClick(e) {
+        const action = e.target.closest('[data-wl]')?.dataset.wl;
+        if (action === 'close') return closeView();
+        if (action === 'hide') return toggleHideWatched();
+        if (action === 'save') return saveCopy();
+        if (action === 'clear') return askToClear();
+        const row = e.target.closest('.wl-row');
+        if (!row || row.classList.contains('wl-removing')) return;
+        const id = row.dataset.id;
+        if (e.target.closest('.wl-tick')) setWatched(id, !itemFor(id)?.watched);
+        else if (e.target.closest('.wl-x')) remove(id);
+        else if (e.target.closest('.wl-row-delete')) removeRow(row);
+    }
+
+    function toggleHideWatched() {
+        prefs.hideWatched = !prefs.hideWatched;
+        savePrefs();
+        renderView();
+    }
+
+    function onViewPointerDown(e) {
+        const row = e.target.closest('.wl-row');
+        if (openRow && row !== openRow) closeOpenRow();
+        if (e.button > 0 || !row || row.classList.contains('wl-removing')) return;
+        const grip = e.target.closest('.wl-grip');
+        if (grip) dragRow(e, row, grip);
+        else if (!pageMode() && !e.target.closest('.wl-tick, .wl-x, .wl-row-delete')) swipeRow(e, row);
+    }
+
+    // The grip and the arrow keys move a movie up or down
+    function onViewKeyDown(e) {
+        const grip = e.target.closest('.wl-grip');
+        if (!grip || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+        e.preventDefault();
+        const row = grip.closest('.wl-row');
+        const order = [...row.parentElement.children].map(li => li.dataset.id);
+        const from = order.indexOf(row.dataset.id);
+        const to = from + (e.key === 'ArrowUp' ? -1 : 1);
+        if (to < 0 || to >= order.length) return;
+        order.splice(to, 0, ...order.splice(from, 1));
+        reorder(order);
+        announce(`${movieFor(row.dataset.id).title}: ${to + 1} of ${order.length}`);
+    }
+
+    // Drag a row by its grip. Rows trade places as it passes their middles; near the top or bottom edge, the
+    // list scrolls along.
+    function dragRow(e, row, grip) {
+        e.preventDefault();
+        const list = row.parentElement;
+        const before = [...list.children].map(li => li.dataset.id).join();
+        const scroller = pageMode() ? null : $('.wl-scroll');
+        const scrollPos = () => (scroller ? scroller.scrollTop : scrollY);
+        let base = e.clientY + scrollPos(); // where the pointer would be if the row hadn't moved
+        let pointerY = e.clientY;
+        let frame = 0;
+        try { grip.setPointerCapture(e.pointerId); } catch (err) {}
+        row.classList.add('wl-lifted');
+
+        // The neighbors move around the row, not the row itself: taking the row out of the page, even for a
+        // moment, would end the pointer capture and lose the drag
+        const place = () => {
+            let offset = pointerY + scrollPos() - base;
+            for (let next = row.nextElementSibling; next && offset > next.offsetHeight / 2; next = row.nextElementSibling) {
+                row.before(next);
+                base += next.offsetHeight;
+                offset -= next.offsetHeight;
+                slideFrom(next, row.offsetHeight);
+            }
+            for (let prev = row.previousElementSibling; prev && offset < -prev.offsetHeight / 2; prev = row.previousElementSibling) {
+                row.after(prev);
+                base -= prev.offsetHeight;
+                offset += prev.offsetHeight;
+                slideFrom(prev, -row.offsetHeight);
+            }
+            row.style.transform = `translateY(${offset}px)`;
+        };
+        const autoScroll = () => {
+            const box = scroller ? scroller.getBoundingClientRect() : { top: 0, bottom: innerHeight };
+            const top = Math.max(box.top, pageMode() ? document.querySelector('body > header').getBoundingClientRect().bottom : box.top);
+            const step = pointerY < top + 48 ? -Math.ceil((top + 48 - pointerY) / 6)
+                : pointerY > box.bottom - 48 ? Math.ceil((pointerY - box.bottom + 48) / 6) : 0;
+            if (step) {
+                if (scroller) scroller.scrollTop += step;
+                else scrollBy(0, step);
+                place();
+            }
+            frame = requestAnimationFrame(autoScroll);
+        };
+        frame = requestAnimationFrame(autoScroll);
+
+        const move = ev => {
+            if (ev.pointerId !== e.pointerId) return;
+            pointerY = ev.clientY;
+            place();
+        };
+        const end = ev => {
+            if (ev.pointerId !== e.pointerId) return;
+            cancelAnimationFrame(frame);
+            ['pointermove', 'pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => grip.removeEventListener(type, type === 'pointermove' ? move : end));
+            row.classList.remove('wl-lifted');
+            row.style.transform = '';
+            const order = [...list.children].map(li => li.dataset.id);
+            if (order.join() !== before) {
+                reorder(order);
+                announce(`${movieFor(row.dataset.id).title}: ${order.indexOf(row.dataset.id) + 1} of ${order.length}`);
+            }
+        };
+        grip.addEventListener('pointermove', move);
+        ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => grip.addEventListener(type, end));
+    }
+
+    // A row that just traded places glides into its new spot
+    function slideFrom(el, dy) {
+        el.style.transition = 'none';
+        el.style.transform = `translateY(${dy}px)`;
+        void el.offsetWidth;
+        el.style.transition = 'transform 0.15s ease';
+        el.style.transform = '';
+    }
+
+    // Phones: swipe a row left. A short swipe shows Remove; a long one removes it; less than a nudge springs back.
+    // Rows keep touch-action: pan-y, so the browser still scrolls the list natively and cancels the swipe when
+    // the finger goes up or down instead.
+    const REVEAL = 112; // how far a short swipe opens a row
+    let openRow = null;
+
+    function swipeRow(e, row) {
+        const main = row.querySelector('.wl-row-main');
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const from = row === openRow ? -REVEAL : 0;
+        let dx = from;
+        let swiping = false;
+        const move = ev => {
+            if (ev.pointerId !== e.pointerId) return;
+            const mx = ev.clientX - startX;
+            const my = ev.clientY - startY;
+            if (!swiping) {
+                if (Math.abs(mx) < 10 && Math.abs(my) < 10) return; // not a gesture yet
+                if (Math.abs(my) > Math.abs(mx)) return finish(ev); // up or down: that's scrolling
+                swiping = true;
+                row.classList.add('wl-swiping');
+            }
+            dx = Math.min(0, from + mx);
+            main.style.transform = `translateX(${dx}px)`;
+        };
+        const finish = ev => {
+            if (ev.pointerId !== e.pointerId) return;
+            removeEventListener('pointermove', move);
+            removeEventListener('pointerup', finish);
+            removeEventListener('pointercancel', finish);
+            if (!swiping) return;
+            suppressClick();
+            row.classList.remove('wl-swiping');
+            main.style.transform = '';
+            const released = ev.type === 'pointerup';
+            const distance = released ? -dx : -from; // a cancelled swipe goes back to how it was
+            if (distance > row.offsetWidth * 0.5) removeRow(row, dx);
+            else if (distance > 56) openSwipedRow(row);
+            else closeOpenRow();
+        };
+        addEventListener('pointermove', move);
+        addEventListener('pointerup', finish);
+        addEventListener('pointercancel', finish);
+    }
+
+    function openSwipedRow(row) {
+        if (openRow && openRow !== row) closeOpenRow();
+        openRow = row;
+        row.classList.add('wl-open');
+    }
+
+    function closeOpenRow() {
+        openRow?.classList.remove('wl-open');
+        openRow = null;
+    }
+
+    // Slide the row away, close the gap, then take the movie off the list
+    function removeRow(row, fromX) {
+        row.classList.add('wl-removing');
+        if (openRow === row) openRow = null;
+        const main = row.querySelector('.wl-row-main');
+        main.style.transition = 'none';
+        main.style.transform = `translateX(${fromX ?? -REVEAL}px)`;
+        void main.offsetWidth;
+        main.style.transition = '';
+        main.style.transform = `translateX(${-row.offsetWidth}px)`;
+        row.style.height = `${row.offsetHeight}px`;
+        setTimeout(() => { row.style.height = '0px'; }, 180);
+        setTimeout(() => remove(row.dataset.id), 360);
+    }
+
+    // ---------- Clear list, after asking ----------
+    let confirmLayer;
+
+    function buildConfirm() {
+        confirmLayer = createLayer('wl-confirm', 'wl-card wl-card-center', () => closeLayer(confirmLayer));
+        confirmLayer.panel.setAttribute('aria-labelledby', 'wl-confirm-title');
+        confirmLayer.panel.addEventListener('click', e => {
+            const action = e.target.closest('[data-confirm]')?.dataset.confirm;
+            if (action === 'save') saveCopy();
+            else if (action === 'clear') { closeLayer(confirmLayer); clearList(); }
+            else if (action === 'cancel') closeLayer(confirmLayer);
+        });
+    }
+
+    // "this phone" on a phone, "this browser" anywhere else
+    const onPhone = () => matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
+
+    function askToClear() {
+        const n = shownItems().length;
+        confirmLayer.panel.innerHTML = `<h3 id="wl-confirm-title" class="wl-card-title" tabindex="-1">Clear My Watchlist?</h3>
+            <p class="wl-card-text">This takes ${n === 1 ? 'the one movie' : `all ${n} movies`} off ${onPhone() ? 'this phone' : 'this browser'}’s list. Save a copy first if you might want it back later.</p>
+            <button type="button" class="wl-btn wl-btn-soft" data-confirm="save">Save a copy first</button>
+            <button type="button" class="wl-btn wl-btn-red" data-confirm="clear">Clear list</button>
+            <button type="button" class="wl-btn wl-btn-plain" data-confirm="cancel">Cancel</button>`;
+        openLayer(confirmLayer, confirmLayer.panel.querySelector('h3'));
+    }
+
+    function clearList() {
+        const cleared = items;
+        items = [];
+        changed();
+        offerUndo('Cleared My Watchlist', () => {
+            items = cleanItems([...cleared, ...items]); // anything added since stays too
+            changed();
+        });
+    }
+
+    // ---------- Save a copy: the whole list as a link ----------
+    // Saved-copy links are permanent from day one (see the rule on shared links in index.html):
+    //   #watchlist=1&made=2026-11-09T19:41Z&m=771,10719w,13342
+    //     watchlist=1  the format's version. Links keep opening forever; a different kind of link gets a new number.
+    //     made         when the copy was made: ISO 8601 in UTC, to the minute, with the Z
+    //     m            the movies in the list's order, by TMDB id; a trailing w marks one watched
+    // Read with URLSearchParams, so more keys can be added later without a new version; readers ignore keys
+    // they don't know, and a missing or garbled made just means no date.
+    function savedCopyURL(made) {
+        const m = items.map(item => item.id + (item.watched ? 'w' : '')).join(',');
+        return `${location.origin}${location.pathname}#watchlist=1&made=${made.toISOString().slice(0, 16)}Z&m=${m}`;
+    }
+
+    // "Sun, Nov 9 at 2:41 PM" in the viewer's own time zone and language, with the year when it isn't this one
+    function madeWhen(date) {
+        const year = date.getFullYear() === new Date().getFullYear() ? {} : { year: 'numeric' };
+        const day = date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', ...year });
+        return `${day} at ${date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
+    }
+
+    // The share sheet on touch screens, elsewhere the clipboard. iPhone's share sheet shows only the title (cut off
+    // at about 30 characters, so just the date) and the site, never the link; the text goes with the link into
+    // the message.
+    async function saveCopy() {
+        const made = new Date();
+        made.setSeconds(0, 0); // the link says the minute; show the same
+        const url = savedCopyURL(made);
+        const count = shownItems().length;
+        if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+            try {
+                await navigator.share({
+                    title: `Season's Screenings · ${made.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`,
+                    text: `Holiday movie picks from Season's Screenings: ${plural(count, 'movie')}, made ${madeWhen(made)}`,
+                    url,
+                });
+                return;
+            } catch (e) {
+                if (e.name === 'AbortError') return; // the sheet was dismissed
+            }
+        }
+        const copied = await copyText(url);
+        if (copied) note('Link copied', { detail: 'Keep it somewhere safe, like a note or an email to yourself. Opening it brings this list back.', timeout: 6000 });
+        else note("Couldn't copy the link", { detail: 'Your browser blocked the clipboard.' });
+    }
+
+    async function copyText(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch (e) {
+            const area = document.createElement('textarea');
+            area.value = text;
+            area.setAttribute('readonly', '');
+            area.style.position = 'fixed';
+            area.style.opacity = '0';
+            document.body.appendChild(area);
+            area.select();
+            let copied = false;
+            try { copied = document.execCommand('copy'); } catch (err) {}
+            area.remove();
+            return copied;
+        }
+    }
+
+    // ---------- The address: #watchlist ----------
+    function route() {
+        if (location.hash === '#watchlist') openView();
+        else if (viewOpen) {
+            hideView();
+            window.syncURL?.(); // Back restored an older address; the page's own state wins
+        }
     }
 
     // ---------- Styles ----------
@@ -613,8 +1195,204 @@
             .wl-peek-add, .wl-peek-pair { margin-top: 12px; }
         }
 
+        /* ----- The My List buttons ----- */
+        #wl-fab, #wl-header-button {
+            display: none; align-items: center; gap: 8px; padding: 0 8px 0 14px; border: 0; background: #2563eb; color: #ffffff;
+            font: inherit; cursor: pointer;
+        }
+        #wl-fab {
+            position: fixed; z-index: 60; right: 12px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); height: 44px; border-radius: 999px;
+            box-shadow: 0 10px 24px -6px rgba(37,99,235,0.55), 0 4px 10px rgba(15,23,42,0.18);
+        }
+        #wl-header-button { flex: none; height: 48px; border-radius: 12px; box-shadow: 0 4px 12px -4px rgba(37,99,235,0.5); }
+        #wl-fab:hover, #wl-header-button:hover, body.wl-page-open #wl-header-button { background: #1d4ed8; }
+        .wl-fab-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap; }
+        #wl-header-button .wl-fab-label { font-size: 10px; }
+        .wl-count {
+            min-width: 24px; height: 24px; padding: 0 6px; box-sizing: border-box; border-radius: 999px; background: #ffffff; color: #2563eb;
+            font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center;
+        }
+        #wl-header-button .wl-count { font-size: 11px; }
+        @keyframes wl-bump { 0% { transform: scale(1); } 40% { transform: scale(1.4); } 100% { transform: scale(1); } }
+        .wl-count.wl-bump { animation: wl-bump 0.4s ease-out; }
+        @media (max-width: 1023px) {
+            body.wl-has-list #wl-fab { display: flex; }
+            /* Room under the last row of results for the floating button */
+            body.wl-has-list #results-pane { padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+        }
+        @media (max-width: 1023px) and (orientation: landscape) and (max-height: 500px) {
+            #wl-fab { right: 16px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+        }
+        @media (min-width: 1024px) {
+            body.wl-has-list #wl-header-button { display: flex; }
+        }
+
+        /* ----- Toasts ----- */
+        #wl-toasts {
+            position: fixed; z-index: 100; left: 12px; right: 12px; bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+            display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none;
+        }
+        @media (max-width: 1023px) {
+            body.wl-has-list:not(.wl-modal-open) #wl-toasts { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); } /* above My List */
+        }
+        @media (max-width: 1023px) and (orientation: landscape) and (max-height: 500px) {
+            body.wl-has-list:not(.wl-modal-open) #wl-toasts { bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+        }
+        @media (min-width: 1024px) { #wl-toasts { bottom: 24px; } }
+        .wl-toast {
+            pointer-events: auto; position: relative; box-sizing: border-box; width: 100%; max-width: 440px; display: flex; align-items: center; gap: 10px;
+            padding: 10px 8px 10px 14px; border-radius: 12px; background: #0f172a; color: #e2e8f0; box-shadow: 0 10px 30px rgba(15,23,42,0.35);
+            font-size: 12px; line-height: 1.45; animation: wl-toast-in 0.2s ease-out;
+        }
+        @keyframes wl-toast-in { from { opacity: 0; transform: translateY(8px); } }
+        .wl-toast-msg { flex: 1; min-width: 0; margin: 0; }
+        .wl-toast-msg b { display: block; color: #ffffff; }
+        .wl-toast-detail { display: block; }
+        .wl-toast-pill { min-height: 48px; padding: 6px 6px 6px 18px; border-radius: 999px; }
+        .wl-toast-pill .wl-toast-msg { font-size: 13px; font-weight: 600; color: #ffffff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .wl-toast-btn {
+            flex: none; height: 36px; padding: 0 14px; border: 0; border-radius: 999px; background: rgba(255,255,255,0.12); color: #93c5fd; cursor: pointer;
+            font: inherit; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
+        }
+        .wl-toast-btn:hover { background: rgba(255,255,255,0.2); }
+        .wl-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+        /* ----- My Watchlist: a sheet on phones and tablets ----- */
+        .wl-panel {
+            position: absolute; left: 0; right: 0; top: 44px; bottom: 0; max-width: 640px; margin: 0 auto; display: flex; flex-direction: column;
+            overflow: hidden; background: #ffffff; border-radius: 16px 16px 0 0; box-shadow: 0 -10px 30px rgba(15,23,42,0.25);
+            transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        #wl-view.wl-shown .wl-panel { transform: none; }
+        @media (orientation: landscape) and (max-height: 500px) { .wl-panel { top: 8px; } }
+        .wl-head { flex: none; padding: 8px 16px 10px; border-bottom: 1px solid #e2e8f0; touch-action: none; -webkit-user-select: none; user-select: none; }
+        .wl-head .wl-grabber { margin-bottom: 8px; }
+        .wl-back, .wl-hint, .wl-credit { display: none; }
+        .wl-titlebar { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; }
+        .wl-title-icon { display: flex; color: #2563eb; }
+        .wl-titlebar h2 { flex: 1; margin: 0; font-size: 20px; font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase; color: #0f172a; }
+        .wl-close {
+            flex: none; width: 44px; height: 44px; margin: -6px -10px -6px 0; padding: 0; border: 0; background: none; color: #94a3b8; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .wl-summary { flex-basis: 100%; margin: 2px 0 0; font-size: 12px; color: #64748b; }
+        .wl-summary[hidden] { display: none; }
+        .wl-sep { color: #cbd5e1; }
+        .wl-link { padding: 0; border: 0; background: none; font: inherit; font-weight: 700; color: #2563eb; cursor: pointer; }
+        .wl-link:hover { color: #1d4ed8; }
+        .wl-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-bottom: env(safe-area-inset-bottom, 0px); }
+        .wl-rows { list-style: none; margin: 0; padding: 0; }
+        .wl-row { position: relative; overflow: hidden; border-bottom: 1px solid #f1f5f9; background: #ffffff; transition: height 0.18s ease; }
+        .wl-row-delete {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px; padding: 0 22px 0 0; border: 0;
+            background: #ef4444; color: #ffffff; font: inherit; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer;
+        }
+        .wl-row:not(.wl-swiping):not(.wl-open):not(.wl-removing) .wl-row-delete { visibility: hidden; }
+        .wl-row-main {
+            position: relative; display: flex; align-items: center; gap: 10px; padding: 9px 4px 9px 16px; background: #ffffff;
+            touch-action: pan-y; -webkit-user-select: none; user-select: none; transition: transform 0.2s ease;
+        }
+        .wl-row.wl-swiping .wl-row-main { transition: none; }
+        .wl-row.wl-open .wl-row-main { transform: translateX(-112px); }
+        .wl-row.wl-open .wl-row-main, .wl-row.wl-swiping .wl-row-main, .wl-row.wl-removing .wl-row-main { box-shadow: 6px 0 12px -6px rgba(15,23,42,0.25); }
+        .wl-row.wl-lifted { z-index: 2; overflow: visible; box-shadow: 0 12px 28px -8px rgba(15,23,42,0.35); }
+        .wl-row.wl-lifted .wl-row-main { background: #f8fafc; }
+        .wl-tick {
+            flex: none; width: 28px; height: 28px; box-sizing: border-box; padding: 0; display: flex; align-items: center; justify-content: center;
+            border: 2px solid #cbd5e1; border-radius: 999px; background: #ffffff; color: transparent; cursor: pointer;
+        }
+        .wl-tick:hover { border-color: #16a34a; }
+        .wl-tick[aria-pressed="true"], .wl-row-watched .wl-tick-static { border: 0; background: #16a34a; color: #ffffff; }
+        .wl-info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; -webkit-user-drag: none; }
+        .wl-row-watched .wl-info { opacity: 0.5; }
+        .wl-info img, .wl-info .wl-noposter { flex: none; width: 40px; height: 60px; object-fit: cover; border-radius: 6px; background: #f1f5f9; }
+        .wl-text { display: block; min-width: 0; }
+        .wl-name { display: block; font-size: 13px; font-weight: 700; line-height: 1.25; color: #1e293b; }
+        .wl-text .wl-meta { display: flex; }
+        .wl-overview { display: none; }
+        .wl-x {
+            flex: none; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;
+            border: 0; border-radius: 8px; background: #f1f5f9; color: #64748b; cursor: pointer;
+        }
+        .wl-x:hover { background: #e2e8f0; color: #334155; }
+        .wl-grip {
+            flex: none; width: 36px; height: 44px; margin: -8px 0; padding: 0; display: flex; align-items: center; justify-content: center;
+            border: 0; background: none; color: #cbd5e1; cursor: grab; touch-action: none;
+        }
+        .wl-grip:hover { color: #94a3b8; }
+        .wl-lifted .wl-grip { cursor: grabbing; color: #64748b; }
+        /* A mouse gets the x on the row it points at; touch screens swipe, so there it stays out of sight
+           (but not out of reach of a keyboard or screen reader) */
+        @media (hover: hover) and (pointer: fine) {
+            .wl-row:not(:hover) .wl-x:not(:focus-visible) { opacity: 0; }
+        }
+        @media (max-width: 1023px) and (hover: none), (max-width: 1023px) and (pointer: coarse) {
+            .wl-x:not(:focus-visible) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+        }
+        .wl-empty { margin: 0; padding: 36px 24px; text-align: center; font-size: 13px; line-height: 1.5; color: #64748b; }
+        .wl-empty[hidden], .wl-clear-row[hidden] { display: none; }
+        .wl-clear-row { padding: 18px 0; text-align: center; }
+        .wl-clear {
+            padding: 6px 10px; border: 0; background: none; color: #94a3b8; cursor: pointer;
+            font: inherit; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+        }
+        .wl-clear:hover { color: #ef4444; }
+
+        /* ----- My Watchlist: its own page on laptops, in place of the filters and results ----- */
+        @media (min-width: 1024px) {
+            body.wl-page-open > main { display: none; }
+            #wl-view { position: static; z-index: auto; }
+            #wl-view .wl-backdrop, .wl-grabber, .wl-close, .wl-title-icon, .wl-row-delete { display: none; }
+            .wl-panel {
+                position: static; max-width: 1280px; margin: 0 auto; padding: 0 40px; box-sizing: border-box; display: block; overflow: visible;
+                background: none; border-radius: 0; box-shadow: none; transform: none; transition: none;
+            }
+            .wl-head { padding: 0; border: 0; touch-action: auto; -webkit-user-select: auto; user-select: auto; }
+            .wl-back {
+                display: flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none; color: #94a3b8; cursor: pointer;
+                font: inherit; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+            }
+            .wl-back:hover { color: #2563eb; }
+            .wl-titlebar { flex-wrap: nowrap; align-items: baseline; gap: 16px; max-width: 860px; margin-top: 12px; padding-bottom: 14px; border-bottom: 1px solid #e2e8f0; }
+            .wl-titlebar h2 { flex: none; font-size: 28px; }
+            .wl-summary { flex-basis: auto; margin: 0; }
+            .wl-hint { display: block; margin-left: auto; font-size: 10px; font-style: italic; color: #94a3b8; white-space: nowrap; }
+            .wl-scroll { max-width: 860px; overflow: visible; padding: 0; }
+            .wl-row { background: none; }
+            .wl-row-main { gap: 16px; padding: 12px 0; background: none; touch-action: auto; }
+            .wl-row.wl-lifted .wl-row-main { background: #ffffff; }
+            .wl-info { gap: 16px; }
+            .wl-info img, .wl-info .wl-noposter { width: 56px; height: 84px; border-radius: 8px; }
+            .wl-name { font-size: 16px; }
+            .wl-overview { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; margin-top: 6px; font-size: 12px; line-height: 1.4; color: #64748b; }
+            .wl-grip { width: 28px; }
+            .wl-clear-row { text-align: left; padding: 18px 0 0; }
+            .wl-clear { padding-left: 0; }
+            .wl-credit { display: block; margin: 40px 0 0; font-size: 11px; color: #94a3b8; }
+            .wl-credit a { text-decoration: underline; }
+        }
+
+        /* ----- Cards over the page: Clear list, and a saved list opening ----- */
+        .wl-card {
+            position: absolute; left: 12px; right: 12px; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); max-width: 420px; margin: 0 auto;
+            box-sizing: border-box; padding: 16px 16px 14px; background: #ffffff; border-radius: 16px; box-shadow: 0 16px 40px rgba(15,23,42,0.35);
+            opacity: 0; transform: translateY(16px); transition: opacity 0.2s, transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .wl-layer:has(.wl-card) .wl-backdrop { background: rgba(15,23,42,0.35); }
+        .wl-layer.wl-shown .wl-card { opacity: 1; transform: none; }
+        .wl-card-center { left: 24px; right: 24px; top: 50%; bottom: auto; max-width: 360px; padding: 20px 18px 16px; border-radius: 18px; text-align: center; transform: translateY(-45%); }
+        .wl-layer.wl-shown .wl-card-center { transform: translateY(-50%); }
+        .wl-card-title { margin: 0; font-size: 17px; font-weight: 800; color: #0f172a; }
+        .wl-card-text { margin: 6px 0 16px; font-size: 12.5px; line-height: 1.45; color: #64748b; }
+        .wl-card .wl-btn + .wl-btn { margin-top: 8px; }
+        .wl-card .wl-btn-plain { margin-top: 4px; }
+        @media (min-width: 1024px) {
+            .wl-card { top: 50%; bottom: auto; transform: translateY(-45%); }
+            .wl-layer.wl-shown .wl-card { transform: translateY(-50%); }
+        }
+
         @media (prefers-reduced-motion: reduce) {
-            .wl-layer *, .wl-mark, .wl-mark svg { transition: none !important; animation: none !important; }
+            .wl-layer *, .wl-mark, .wl-mark svg, .wl-count, .wl-toast { transition: none !important; animation: none !important; }
         }
     `;
     const style = document.createElement('style');
@@ -628,17 +1406,24 @@
         if (started) return;
         started = true;
         if (!shownItems().length) resetFilters();
+        shownCount = shownItems().length; // no bounce for the count the page opens with
         buildFilterSection();
+        buildButtons();
+        buildToasts();
+        buildView();
         buildPeek();
+        buildConfirm();
         watchGrid();
         refreshChrome();
+        addEventListener('hashchange', route);
+        queueMicrotask(route); // once this first updateResults is done
     }
 
     window.watchlist = {
         // Hooks for index.html
         filter, addPills, hasActiveFilters, clearFilters,
         // For the console and tests
-        add, remove, toggle, setWatched, reorder, peek: openPeek,
+        add, remove, toggle, setWatched, reorder, clear: clearList, peek: openPeek, open: showMyWatchlist, close: () => closeView(),
         items: () => items.map(item => ({ ...item })),
     };
 })();
