@@ -527,6 +527,7 @@
         headerButton = document.createElement('button');
         headerButton.type = 'button';
         headerButton.id = 'wl-header-button';
+        headerButton.title = 'My Watchlist';
         headerButton.innerHTML = `${icon('bookmark', 16, { fill: 'currentColor' })}<span class="wl-fab-label">My Watchlist</span><span class="wl-count"></span>`;
         headerButton.onclick = () => (viewOpen && !looking ? closeView() : showMyWatchlist());
         document.getElementById('sort-dir')?.parentElement?.after(headerButton); // beside search and sort
@@ -688,6 +689,7 @@
         openedHere = false;
         endLook();
         closeOpenRow();
+        if (openLayers.includes(confirmLayer)) closeLayer(confirmLayer); // Clear list asked about this list
         const wasPage = document.body.classList.contains('wl-page-open');
         document.body.classList.remove('wl-page-open');
         if (openLayers.includes(view)) {
@@ -804,7 +806,7 @@
     function restoreFocus(list, focus) {
         if (!focus) return;
         const row = list.querySelector(`.wl-row[data-id="${focus.id}"]`) || list.children[Math.min(focus.index, list.children.length - 1)];
-        (row?.querySelector(`.${focus.cls}`) || $('#wl-title')).focus();
+        (row?.querySelector(`.${focus.cls}`) || row?.querySelector('.wl-info') || $('#wl-title')).focus();
     }
 
     function onViewClick(e) {
@@ -1550,6 +1552,11 @@
         }
         @media (min-width: 1024px) {
             body.wl-has-list #wl-header-button { display: flex; }
+        }
+        /* Narrow laptops: just the bookmark and the count, so the search keeps its room */
+        @media (min-width: 1024px) and (max-width: 1279px) {
+            #wl-header-button .wl-fab-label { display: none; }
+            #wl-header-button { padding-left: 12px; }
         }
 
         /* ----- Toasts ----- */
