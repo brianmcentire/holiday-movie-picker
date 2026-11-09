@@ -920,6 +920,9 @@
             lucide.createIcons();
         }
 
+        // Movie text goes into HTML; titles like 'The Simpsons Meet the Bocellis in "Feliz Navidad"' need escaping
+        const escapeHTML = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
         function renderGrid(ids) {
             const grid = document.getElementById('results-grid');
             if (ids.length === 0) {
@@ -939,16 +942,16 @@
                 const m = db.movies[id];
                 const year = (m.date && m.date !== '0000-00-00') ? m.date.split('-')[0] : 'TBA';
                 return `<a href="https://www.themoviedb.org/movie/${id}" target="_blank" class="movie-card group bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm flex flex-col">
-                    <div class="aspect-[2/3] overflow-hidden bg-slate-100 relative"><img src="${m.poster}" alt="${m.title} poster" class="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy">${m.date > today ? comingSoon(m.date) : ''}</div>
+                    <div class="aspect-[2/3] overflow-hidden bg-slate-100 relative"><img src="${m.poster}" alt="${escapeHTML(m.title)} poster" class="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy">${m.date > today ? comingSoon(m.date) : ''}</div>
                     <div class="card-body p-4 flex-grow min-h-[110px]">
-                        <h4 class="font-bold text-sm leading-tight text-slate-800 mb-1">${m.title} <span class="text-slate-400 font-normal">(${year})</span></h4>
+                        <h4 class="font-bold text-sm leading-tight text-slate-800 mb-1">${escapeHTML(m.title)} <span class="text-slate-400 font-normal">(${year})</span></h4>
                         <div class="flex items-center gap-2 mb-2">
                             <span class="text-blue-600 font-black text-[10px] uppercase tracking-tighter border border-blue-100 px-1 rounded">${m.cert}</span>
                             <span class="text-slate-400 text-[10px] font-bold italic">
                                 ${m.votes ? `${m.rating.toFixed(1)}/10 <span class="card-detail opacity-60 ml-1">[${m.votes} votes]</span>` : 'Not yet rated'}
                             </span>
                         </div>
-                        <p class="card-detail text-[11px] text-slate-500 line-clamp-3 leading-snug">${m.overview}</p>
+                        <p class="card-detail text-[11px] text-slate-500 line-clamp-3 leading-snug">${escapeHTML(m.overview)}</p>
                     </div></a>`;
             }).join('');
         }
