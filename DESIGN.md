@@ -26,6 +26,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - **Clear filters** and **Reset filters**, not Clear all and Reset, so nobody worries a button might delete their watch list.
 - **My Watchlist** where there's room: the laptop button, page and sheet titles, the filters section, tooltips. **My List** where it's tight: the phone's floating button and the "On My List" pill.
 - **Made**, not Saved, for when a saved copy was created.
+- **Friendly, never a warning.** No "keep it safe" or "don't lose it": it sounds scary and promises what a website can't guarantee.
 
 ## Phones and tablets
 
@@ -37,7 +38,8 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   - The filters stay pinned beside the results and scroll on their own. A swipe that starts on the filters never moves the page.
   - The top bar is one row (title, search, sort). It slides away while scrolling down and comes straight back on any scroll up.
   - Why: locked to the screen with two scrolling halves, the page never scrolled, so Safari's bars never collapsed and little room was left.
-  - Upright phones keep the two scrolling halves.
+  - Upright phones keep the two scrolling halves. Turning a phone upright again puts the page back at the top; otherwise a page scrolled sideways would hide the top bar with no way back.
+- **Smaller posters in the grid:** phones and tablets load TMDB's 342-pixel posters instead of the 500-pixel ones, which is plenty for those card sizes. Each is about 60% smaller, with under half the pixels to decode while scrolling, and scrolling on an iPhone went from laggy to smooth. The one-per-row view and laptops keep the 500-pixel posters.
 - **Laptops:** the filters' scrollbar appears only while the pointer is over them. It sat between filters and results looking like a stray mark. The results scroll with the page (wheel or the window's scrollbar).
 
 ## Usage stats
@@ -84,7 +86,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - Each row has a circle to mark it watched. Rows reorder by the drag grip.
 - Removing: on phones, swipe a row left, with Undo; on laptops, × on hover.
 - On the laptop page, the top bar's search narrows the list. The rule is that the top bar acts on whatever is below it.
-- **Clear list:** a quiet button at the bottom. It asks first and offers **Save a copy first**; after clearing, Undo shows for a few seconds.
+- **Clear list:** a quiet button at the bottom. It asks first and offers **Save a copy first**. Once confirmed, My Watchlist closes and you're back on the main screen, not looking at an empty list. Undo shows there and brings the list back without reopening it.
 - There's no "saved on" date in the list, and no "changes since your last save" nudge. The site can't know whether a copy was actually kept, since Save a copy only opens the share sheet or copies a link.
 
 ### Filters
@@ -99,7 +101,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 
 ### Saved copies and sharing a list
 
-- **Save a copy** opens the share sheet on phones and copies the link on laptops.
+- **Save a copy** opens the share sheet on phones and copies the link on laptops. When it copies, it says "Link copied" and "Send it to whoever you're watching with, or to yourself for later. It opens this exact list."
 - The link is `#watchlist=1&made=2026-11-09T19:41Z&m=771,10719w,…`:
   - `watchlist=1` is the format version;
   - `made` is when the copy was made, in ISO 8601 universal time to the minute;
@@ -121,6 +123,19 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   - **Add the rest**, with a count, adds every showing movie not yet on your list. The count drops as you bookmark, and the button goes away at 0, leaving **Done**.
 - **Watched marks when bringing a list in:** adding never changes your own marks, and movies added to an existing list come in unwatched. Why: couples share lists. A restore carries the marks; adding means "I want to watch these too".
 
+### The list in the page's address
+
+- On every browser, the page's address carries a copy of the list, kept up to date as it changes: `#watchlist=1&backup=1&made=…&m=…`, plus `&open=1` while My Watchlist is open. On iPhone, Safari shows only the site's name, so nobody sees it there.
+- **Why:**
+  - On iPhone, an app added to the Home Screen gets its own storage, separate from Safari's, so it would otherwise open with an empty list. Add to Home Screen saves the current address, and the manifest has no fixed start address, so the app starts with the copy.
+  - The same copy makes bookmarks, history and private windows bring the list back.
+- **Opening an address with `backup=1`:**
+  - Your list is empty: it fills from the copy ("Restored your watchlist", with Undo).
+  - You already have a list: the copy is ignored.
+
+  A friend who's sent an address-bar link and has no list starts with the sender's list, with Undo. That's intended.
+- Share results never carries it.
+
 ### Add to Home Screen
 
 - **Where the tip shows:**
@@ -131,7 +146,11 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - **Wording:** "Added The Apartment." then, on its own line, "Your list, one tap away: open Safari's Share menu ⬆ and choose Add to Home Screen."
   - It names Safari's Share menu, with Safari's icon, because Add to Home Screen exists only there. Our Share results button can't do it.
   - "Keep your list safe" was dropped: it sounded scary and isn't a guarantee.
-- **Why it matters:** opened from the Home Screen, the site runs full screen without Safari's bars, and Safari doesn't clear its storage after 7 days without a visit. The site has a web app manifest that makes this work.
+- **Why it matters:** opened from the Home Screen, the site runs full screen without Safari's bars, and Safari doesn't clear its storage after 7 days without a visit. The site has a web app manifest that makes this work. On first launch, the Home Screen app fills its own empty list from the address (see above).
+
+### Toasts
+
+- Notes that are sentences or instructions stay on screen twice as long as the short "Removed X · Undo" ones, and have an × to close them early.
 
 ## Decided against
 
