@@ -166,7 +166,8 @@ async def fetch_movie_details(session, semaphore, movie_id):
     data = await fetch_with_retry(session, url, params, semaphore)
     if not data: return None
     
-    keywords = [k['name'] for k in data.get('keywords', {}).get('keywords', [])]
+    # Spacing tidied ("family business " → "family business"); the page's links match tags ignoring spacing
+    keywords = [' '.join(k['name'].split()) for k in data.get('keywords', {}).get('keywords', [])]
     
     # Explicit Genre Mapping
     raw_genres = data.get('genres', [])

@@ -13,8 +13,10 @@
     const GOATCOUNTER_CODE = 'seasons-screenings'; // seasons-screenings.goatcounter.com
 
     const host = location.hostname;
-    const local = ['localhost', '127.0.0.1'].includes(host) || host.endsWith('.local')
-        || /^(10|192\.168|172\.(1[6-9]|2\d|3[01]))\./.test(host);
+    // This computer, private networks (including Tailscale's 100.64/10 and IPv6's), and home network names
+    const local = !host.includes('.') // localhost, a bare computer name, an IPv6 address, or a file
+        || /\.(local|localhost|lan|home\.arpa|internal|test)$/.test(host)
+        || /^(0|10|127|192\.168|172\.(1[6-9]|2\d|3[01])|169\.254|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7]))\./.test(host);
     const live = GOATCOUNTER_CODE !== '' && !local;
 
     // Only the app's own parameters (drops fbclid, utm_* and the like), sorted so the same
