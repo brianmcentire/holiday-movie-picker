@@ -137,17 +137,17 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   A friend who's sent an address-bar link and has no list starts with the sender's list, with Undo. That's intended.
 - Share results never carries it.
 
-### Add to Home Screen
+### Add to Home Screen (tip off for now)
 
-- **Where the tip shows:**
-  - once, right after the very first add, as a note above the floating button;
-  - at the bottom of the list on phones.
-
-  It's iPhone Safari only, never shown again once closed, and hidden when the site is already on the Home Screen.
-- **Wording:** "Added The Apartment." then, on its own line, "Your list, one tap away: open Safari's Share menu ⬆ and choose Add to Home Screen."
+- **The Home Screen tip is built but switched off** (`HOME_SCREEN_TIP` in `watchlist.js`). Two findings on iOS 27 made it a poor promise for now:
+  - **iPhone saves the address the page was loaded with,** not the one the page updates afterwards. A list built after the page loaded isn't in that address, so the Home Screen app starts empty. A page reloaded with the list in its address does carry it (tested on the simulator).
+  - **A Home Screen app keeps its own storage, separate from Safari's,** and links someone texts you always open in Safari. People who use both would have two lists drifting apart.
+- **When it's back, the tip will read:** "Added Klaus." then, on its own line, "Add Season's Screenings to your Home Screen: open Safari's Share menu ⬆ and choose Add to Home Screen."
   - It names Safari's Share menu, with Safari's icon, because Add to Home Screen exists only there. Our Share results button can't do it.
-  - "Keep your list safe" was dropped: it sounded scary and isn't a guarantee.
-- **Why it matters:** opened from the Home Screen, the site runs full screen without Safari's bars, and Safari doesn't clear its storage after 7 days without a visit. The site has a web app manifest that makes this work. On first launch, the Home Screen app fills its own empty list from the address (see above).
+  - The planned places are once right after the very first add, and at the bottom of the list on phones. It's iPhone Safari only, and never shown once closed or once the site is on the Home Screen.
+- **The app name is "Season's Screenings"** (the manifest's `short_name`), and the manifest has no fixed start address.
+- **A Home Screen app's launch address only fills an empty list.** It always opens at the address it was added with, so any list in that address (the backup copy or a shared copy) is a snapshot from then. It's never shown as "Shared with you", and it never reopens My Watchlist at launch.
+- **Why it would matter:** opened from the Home Screen, the site runs full screen without Safari's bars, and Safari doesn't clear its storage after 7 days without a visit. The list in the address already helps with the 7-day clearing in Safari, since reopening the tab or a history entry brings it back.
 
 ### Toasts
 
@@ -166,3 +166,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - **The Undo after tapping a bookmark** may be redundant, since tapping the bookmark again removes the movie. Kept for now as feedback.
 - **"Mark them watched too"** in Just look, for couples who watch together while only one of them marks things. Not built.
 - **Mail's subject line:** check on a real iPhone whether Mail uses the share title as the subject.
+- **Bringing back the Home Screen tip** needs two things first:
+  - **Show me how:** a button in the tip that reloads the page with the list in its address, then shows the Share-menu steps, so the new app starts with the list.
+  - **Paste a list:** a way to get a list someone texted you into the Home Screen app, since links open in Safari.
+- **iPhone Safari bookmarks** may save the loaded address the same way Add to Home Screen does. If so, a bookmark on iPhone won't always carry the list. Test before relying on it.
