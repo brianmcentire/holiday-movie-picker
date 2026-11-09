@@ -7,6 +7,6 @@ ROOT = Path(__file__).resolve().parent
 port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
 
 server = Server()
-for pattern in ("*.html", "*.json", "*.svg", "*.png"):
+for pattern in ("*.html", "*.js", "*.json", "*.webmanifest", "*.svg", "*.png"):
     server.watch(str(ROOT / pattern))
 server.serve(root=str(ROOT), host="localhost", port=port)
