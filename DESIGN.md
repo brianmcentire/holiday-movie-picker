@@ -14,6 +14,12 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - **Fun and light.** No accounts, no servers, no build step.
 - **Libraries are pinned:** Tailwind 3.4.17 and lucide 1.70.0. Loaded as "latest", a new release could change or drop icons with no change here.
 
+## Updates and caching
+
+- GitHub Pages marks every file fresh for 10 minutes, then browsers check whether it changed (cheap when it hasn't). Visitors get a release within about 10 minutes, with no cache-busting needed. Open tabs and the Home Screen app pick it up on their next reload or launch, and reloading loses nothing: the list is stored on the device and the filters are in the address.
+- The page and each module are cached separately. When a release changes `index.html` and `watchlist.js` in ways that must match, add a version to the script's address (`watchlist.js?v=2`) in the same commit.
+- No service worker: an offline cache layer would make stale versions more likely, not less.
+
 ## Words
 
 - **Holiday Intensity**, not Holiday Level. Level felt impersonal. The buttons read as answers under it ("It's the story", "It's the setting", "It's adjacent"). The summary chip says "Any holiday intensity". The hidden names in links stay "Holiday story" and so on.
