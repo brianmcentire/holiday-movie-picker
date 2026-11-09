@@ -646,10 +646,12 @@
 
         function shareURL() {
             const qs = buildQuery();
+            if (location.hash.startsWith('#watchlist')) return location.origin + location.pathname + (qs ? `?${qs}` : ''); // watch list hook: shared links never carry the watch list
             return location.origin + location.pathname + (qs ? `?${qs}` : '') + location.hash;
         }
 
         function syncURL() {
+            if (location.hash.startsWith('#watchlist')) { const url = shareURL() + location.hash; if (url !== location.href) history.replaceState(history.state, '', url); return; } // watch list hook: the address keeps it
             const url = shareURL();
             if (url !== location.href) history.replaceState(history.state, '', url);
         }

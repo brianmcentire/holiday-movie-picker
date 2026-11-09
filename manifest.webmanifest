@@ -2,7 +2,6 @@
   "name": "Season's Screenings",
   "short_name": "Screenings",
   "description": "Find your next holiday movie by mood, rating and holiday.",
-  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f8fafc",
