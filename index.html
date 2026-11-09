@@ -337,6 +337,17 @@
             };
             addEventListener('scroll', update, { passive: true });
             sideways.addEventListener('change', update);
+
+            // A swipe that starts on the filters scrolls only the filters. iPhone hands a swipe to the page when
+            // the filters are already at their top or bottom, so keep them a pixel away from either end.
+            const filters = document.getElementById('filters-panel');
+            filters.addEventListener('touchstart', () => {
+                if (!sideways.matches) return;
+                const end = filters.scrollHeight - filters.clientHeight;
+                if (end <= 1) return;
+                if (filters.scrollTop <= 0) filters.scrollTop = 1;
+                else if (filters.scrollTop >= end) filters.scrollTop = end - 1;
+            }, { passive: true });
         }
 
         async function init() {
