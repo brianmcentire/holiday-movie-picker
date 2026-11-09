@@ -40,6 +40,9 @@
         .sidebar-scroll:hover::-webkit-scrollbar-thumb { background: #cbd5e1; }
         .sort-btn { transition: color 0.2s; }
         #search-input:placeholder-shown + #clear-search { display: none; }
+        @media (prefers-reduced-motion: reduce) {
+            *, ::before, ::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+        }
         #sort-select:focus-visible { outline: 2px solid #93c5fd; outline-offset: -2px; border-radius: 0.75rem 0 0 0.75rem; }
 
         /* Phones and tablets: a split screen, filters on the left and results on the right, each scrolling on its own */
@@ -645,7 +648,10 @@
         // (the watch list asks when only the list changed, so ticking a movie off doesn't reshuffle the page)
         let randomRank = new Map();
 
+        let searchTimer = 0;
+
         function updateResults(options) {
+            clearTimeout(searchTimer); // anything waiting on the search box is done now
             const ids = matchingIds();
 
             const sortBy = document.getElementById('sort-select').value;
@@ -960,7 +966,11 @@
         function addUIListeners() {
             const searchInput = document.getElementById('search-input');
             if (matchMedia('(max-width: 767px)').matches) searchInput.placeholder = 'Search'; // The full hint doesn't fit on phones
-            searchInput.oninput = updateResults;
+            // Redrawn once typing pauses: with most movies matching, each redraw takes a phone a good fraction of a second
+            searchInput.oninput = () => {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(updateResults, 120);
+            };
             
             document.getElementById('clear-search').onclick = () => {
                 searchInput.value = '';
