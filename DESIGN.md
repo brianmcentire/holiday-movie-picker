@@ -10,6 +10,8 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   - Put a version number in any new encoded format from day one.
   - Today that covers the query params `with`, `without`, `ratings`, `levels`, `q`, `sort` and `dir`. It also covers the watch list's `#watchlist` links below.
   - Filter buttons appear in links by their hidden names ("Holiday story"), not their labels, so labels can change freely.
+  - Tags in links match ignoring case and spacing. A link to a tag that has since lost its sidebar button (a weekly data refresh can leave it with one film) still filters by it.
+  - **The group defaults are part of the link format.** Links leave out Content Ratings and Holiday Intensity when they're at their defaults (every rating but R; the story and the setting), so changing a default, or adding a level, would quietly change what old links show. Don't, unless old links are taught the old defaults.
 - **New features come in as modules that can come back out.** Usage stats live in `analytics.js`, and the watch list lives in `watchlist.js`. Each loads with one script tag and touches `index.html` only through a few lines marked `watch list hook`. Removing a feature means deleting its file, its tag and those lines.
 - **Fun and light.** No accounts, no servers, no build step.
 - **Libraries are pinned:** Tailwind 3.4.17 and lucide 1.70.0. Loaded as "latest", a new release could change or drop icons with no change here.
@@ -29,6 +31,12 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - **Made**, not Saved, for when a saved copy was created.
 - **Friendly, never a warning.** No "keep it safe" or "don't lose it": it sounds scary and promises what a website can't guarantee.
 
+## Search and results
+
+- **Search ignores case, accents, curly quotes and extra spaces.** iPhone types it’s with a curly apostrophe and adds a space after a tapped suggestion; neither should hide movies. "cafe" finds Café. The link keeps the search exactly as typed.
+- **Nothing found, but hidden:** when the only matches are hidden by Content Ratings or Holiday Intensity (searching "die hard" with R and It's adjacent off), the empty results say "2 movies match, hidden by Content Ratings and Holiday Intensity." with **Show them**, which turns on every rating (or intensity) and keeps the search.
+- **Random** is a fair shuffle, made again on every filter or search change, but not when only the watch list changes (ticking a movie off doesn't reshuffle the page).
+
 ## Phones and tablets
 
 - **Folding the filters.** A **‹** at the top right of the filters folds them into a slim strip. The strip shows **›**, the word Filters and how many filters are on; tap anywhere on it to reopen. The device remembers the choice.
@@ -36,7 +44,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - **Long tags wrap** in the narrow filters column instead of making it scroll sideways.
 - **Sideways phones** (landscape, no taller than 500px):
   - The whole page scrolls, so Safari tucks its own bars away.
-  - The filters stay pinned beside the results and scroll on their own. A swipe that starts on the filters never moves the page.
+  - The filters stay pinned beside the results and scroll on their own. A swipe that starts on the filters never moves the page. While the top bar shows, the filters sit just below it, so it never covers their top.
   - The top bar is one row (title, search, sort). It slides away while scrolling down and comes straight back on any scroll up.
   - Why: locked to the screen with two scrolling halves, the page never scrolled, so Safari's bars never collapsed and little room was left.
   - Upright phones keep the two scrolling halves. Turning a phone upright again puts the page back at the top; otherwise a page scrolled sideways would hide the top bar with no way back.

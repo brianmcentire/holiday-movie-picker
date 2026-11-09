@@ -205,7 +205,7 @@
         const refilter = filtersOn(); // the results depend on the list right now
         if (!shownItems().length) resetFilters(); // an empty list has nothing to filter by
         refreshChrome();
-        if (refilter) window.updateResults?.();
+        if (refilter) window.updateResults?.({ keepOrder: true }); // only the list changed: Random keeps its order
         else markCards();
         renderView();
         syncAddress();
@@ -864,6 +864,8 @@
 
     // The header's search narrows the list on the page, with the same matching as the results
     const searchInput = () => document.getElementById('search-input');
+    // The page's own search normalizer (accents, curly quotes, spaces), when it has one
+    const searchQuery = raw => (typeof searchKey === 'function' ? searchKey(raw) : raw.trim().toLowerCase());
     const matchesSearch = (id, query) => !query || (movieFor(id).searchText ?? movieFor(id).title.toLowerCase()).includes(query);
 
     function renderView() {
@@ -874,7 +876,7 @@
         if (looking) return renderLook();
         const all = shownItems();
         const rawQuery = pageMode() ? searchInput()?.value.trim() ?? '' : '';
-        const query = rawQuery.toLowerCase();
+        const query = searchQuery(rawQuery);
         const rows = all.filter(item => !(prefs.hideWatched && item.watched) && matchesSearch(item.id, query));
 
         $('#wl-title').textContent = 'My Watchlist';
@@ -1477,7 +1479,7 @@
 
     // The saved list's rows that are showing: watched ones can be hidden, and on the page the search narrows them
     function lookRows() {
-        const query = pageMode() ? (searchInput()?.value.trim() ?? '').toLowerCase() : '';
+        const query = pageMode() ? searchQuery(searchInput()?.value ?? '') : '';
         return looking.items.filter(item => movieFor(item.id) && !(lookHideWatched && item.watched) && matchesSearch(item.id, query));
     }
 
