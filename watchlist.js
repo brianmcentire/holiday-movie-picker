@@ -636,7 +636,7 @@
                 <div class="wl-clear-row"><button type="button" class="wl-clear" data-wl="clear">Clear list</button></div>
                 <p class="wl-credit">This website uses <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a> and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</p>
             </div>
-            <div class="wl-look-bar"><button type="button" class="wl-btn wl-btn-blue" data-wl="add-new"></button><button type="button" class="wl-btn" data-wl="close">Done</button></div>
+            <div class="wl-look-bar"><button type="button" class="wl-btn wl-btn-blue" data-wl="add-rest">${icon('bookmarkPlus', 17, { stroke: 2.25 })}Add the rest<span class="wl-count"></span></button><button type="button" class="wl-btn" data-wl="close">Done</button></div>
             <div class="wl-sheet-tip" hidden>
                 <span class="wl-tip-badge">${icon('share', 16)}</span>
                 <p>${TIP_TEXT}</p>
@@ -817,7 +817,7 @@
         if (action === 'clear') return askToClear();
         if (action === 'tip-close') return dismissTip();
         if (action === 'look-hide') return toggleLookHideWatched();
-        if (action === 'add-new') return addAllFromLook();
+        if (action === 'add-rest') return addAllFromLook();
         if (action === 'add-one') return addOneFromLook(e.target.closest('.wl-row').dataset.id);
         const row = e.target.closest('.wl-row');
         if (looking || !row || row.classList.contains('wl-removing')) return;
@@ -1076,7 +1076,7 @@
             try {
                 await navigator.share({
                     title: `My Watchlist · ${madeShort(made)}`,
-                    text: `My selections from Season's Screenings: ${plural(count, 'movie')}, made ${madeWhen(made)}`,
+                    text: `My watchlist from Season's Screenings: ${plural(count, 'movie')}, made ${madeWhen(made)}`,
                     url,
                 });
                 return;
@@ -1204,9 +1204,9 @@
         if (count) note('Restored your watchlist', { detail: copySummary(count, copy.made), action: 'Open', onAction: showMyWatchlist, timeout: 8000 });
     }
 
-    // Movies brought in from a saved list (Add N new, or one at a time while just looking) come in unwatched,
-    // whatever the saved list says. Set to true to bring its watched marks along. The marks on movies already
-    // on the user's list never change either way.
+    // Movies brought in from a saved list (Add N new on the card; Add the rest, or one at a time, while just
+    // looking) come in unwatched, whatever the saved list says. Set to true to bring its watched marks along.
+    // The marks on movies already on the user's list never change either way.
     const NEW_MOVIES_KEEP_SAVED_WATCHED_MARKS = false;
 
     // Add the movies the user doesn't have yet, after their own, in the saved order. Returns how many.
@@ -1286,6 +1286,7 @@
     function startLook(copy) {
         looking = copy;
         lookHideWatched = false;
+        $('[data-wl="add-rest"] .wl-count').textContent = ''; // a new list: no bounce for its first count
         history.replaceState({ ...(history.state || {}), wlLook: true }, '');
         if (viewOpen) renderView();
         else openView();
@@ -1325,9 +1326,15 @@
         $('.wl-empty').hidden = rows.length > 0;
         $('.wl-empty').textContent = rows.length ? '' : 'Nothing to show here with watched movies hidden.';
 
-        const addButton = $('[data-wl="add-new"]');
+        // Add the rest, with a count that keeps up as bookmarks are tapped or watched ones hidden
+        const addButton = $('[data-wl="add-rest"]');
+        const counter = addButton.querySelector('.wl-count');
+        if (counter.textContent !== String(fresh)) {
+            if (counter.textContent) replay(counter, 'wl-bump');
+            counter.textContent = fresh;
+        }
         addButton.hidden = !fresh;
-        addButton.innerHTML = `${icon('bookmarkPlus', 17, { stroke: 2.25 })}Add ${fresh} new`;
+        addButton.setAttribute('aria-label', `Add the rest: ${plural(fresh, 'movie')}`);
     }
 
     // Read-only: the saved list's watched mark, and a bookmark that's solid if the movie is already on the
@@ -1369,7 +1376,7 @@
         });
     }
 
-    // Add N new: bring them in, then show the user's own list with them at the end
+    // Add the rest: bring in every movie showing that the user doesn't have, then show their own list with them at the end
     function addAllFromLook() {
         const added = addFromCopy(lookRows());
         endLook();
@@ -1711,6 +1718,7 @@
             padding: 12px 16px calc(18px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid #e2e8f0; background: #ffffff;
         }
         .wl-look-bar .wl-btn[hidden] { display: none; }
+        .wl-look-bar .wl-count { margin-left: 2px; letter-spacing: 0; }
         .wl-look-bar .wl-btn[hidden] + .wl-btn { grid-column: 1 / -1; }
 
         /* ----- My Watchlist: its own page on laptops, in place of the filters and results ----- */
