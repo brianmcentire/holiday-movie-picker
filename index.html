@@ -21,6 +21,7 @@
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script src="https://unpkg.com/lucide@1.70.0/dist/umd/lucide.min.js"></script>
     <script src="analytics.js"></script>
+    <script src="watchlist.js"></script> <!-- watch list hook -->
     <style>
         .frosted { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); }
         .state-neutral { background: white; color: #64748b; border-color: #e2e8f0; cursor: pointer; }
@@ -580,6 +581,7 @@
                 if (state === 1) ids = ids.filter(i => set.has(i));
                 if (state === 2) ids = ids.filter(i => !set.has(i));
             });
+            ids = window.watchlist?.filter(ids) ?? ids; // watch list hook
 
             const sortBy = document.getElementById('sort-select').value;
             if (sortBy === 'random') {
@@ -723,12 +725,14 @@
         const changedTags = () => [...tagStates].filter(([tag, state]) => state !== defaultStateFor(tag));
 
         function hasActiveFilters() {
+            if (window.watchlist?.hasActiveFilters()) return true; // watch list hook
             return changedTags().length > 0 || document.getElementById('search-input').value !== '';
         }
 
         function clearTagsAndSearch() {
             changedTags().forEach(([tag]) => { tagStates.set(tag, defaultStateFor(tag)); updateBtnState(tag); });
             document.getElementById('search-input').value = '';
+            window.watchlist?.clearFilters(); // watch list hook
         }
 
         // "Clear filters" pill and empty-state button: tags (ratings and levels back to their defaults) + search, keeps the sort.
@@ -812,6 +816,7 @@
                 if (state === 0 || groupOf(tag)) return;
                 addPill((state === 2 ? 'NO: ' : '') + tag, state === 2, () => resetTag(tag));
             });
+            window.watchlist?.addPills(addPill); // watch list hook
             document.getElementById('filters-panel').dataset.active = container.children.length; // shown on the folded strip
 
             if (hasActiveFilters()) {
