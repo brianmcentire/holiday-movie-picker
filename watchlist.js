@@ -101,7 +101,6 @@
         externalLink: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
         chevronLeft: '<path d="m15 18-6-6 6-6"/>',
         trash: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
-        popcorn: '<path d="M18 8a2 2 0 0 0 0-4 2 2 0 0 0-4 0 2 2 0 0 0-4 0 2 2 0 0 0-4 0 2 2 0 0 0 0 4"/><path d="M10 22 9 8"/><path d="m14 22 1-14"/><path d="M20 8c.5 0 .9.4.8 1l-2.6 12c-.1.5-.7 1-1.2 1H7c-.6 0-1.1-.4-1.2-1L3.2 9c-.1-.6.3-1 .8-1Z"/>',
         clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
         // Safari's Share icon, which the Home Screen tip points to (not the page's own Share results icon)
         share: '<path d="M12 2v13"/><path d="m16 6-4-4-4 4"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>',
@@ -619,7 +618,7 @@
                 <div class="wl-grabber" aria-hidden="true"></div>
                 <button type="button" class="wl-back" data-wl="close">${icon('chevronLeft', 12, { stroke: 2.5 })}All movies</button>
                 <div class="wl-titlebar">
-                    <span class="wl-title-icon">${icon('popcorn', 22)}</span>
+                    <span class="wl-title-icon">${icon('bookmark', 22, { fill: 'currentColor' })}</span>
                     <p class="wl-kicker">Shared with you</p>
                     <h2 id="wl-title" tabindex="-1">My Watchlist</h2>
                     <button type="button" class="wl-close" data-wl="close" aria-label="Close">${icon('x', 22)}</button>
