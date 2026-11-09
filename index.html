@@ -375,6 +375,10 @@
                 updateResults();
                 showStatusNote();
                 lucide.createIcons();
+                // Tailwind's in-browser compiler can lose classes when several of its rebuilds overlap during
+                // start-up (seen on iPhone Safari: square buttons, unstyled chips). Setting its config asks for one
+                // complete rebuild, so do that once the first render has settled.
+                setTimeout(() => { if (window.tailwind) tailwind.config = tailwind.config; }, 100);
             } catch (e) {
                 console.error("Data Load Failed", e);
                 const help = location.protocol === 'file:'
