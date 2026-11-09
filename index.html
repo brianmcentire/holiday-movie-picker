@@ -103,6 +103,20 @@
         @media (min-width: 640px) and (max-width: 1023px) {
             body.filters-folded #results-grid[data-view="grid"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
         }
+
+        /* Phones turned sideways: the page scrolls as one, so Safari can tuck its bars away. The filters stay pinned
+           beside the results and scroll on their own; the top bar slides off while scrolling down and back on any
+           scroll up. 4 across, 5 with the filters folded. */
+        @media (max-width: 1023px) and (orientation: landscape) and (max-height: 500px) {
+            body { height: auto; display: block; overflow: visible; }
+            body > header { position: sticky !important; top: 0; transition: transform 0.25s ease; }
+            body.topbar-away > header { transform: translateY(-100%); }
+            body > main { grid-template-columns: clamp(190px, 30%, 280px) minmax(0, 1fr) !important; align-items: start; }
+            #filters-panel { position: sticky !important; top: 0; height: 100vh !important; height: 100dvh !important; overscroll-behavior: contain; }
+            #results-pane { height: auto; overflow: visible; }
+            #results-grid[data-view="grid"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+            body.filters-folded #results-grid[data-view="grid"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen pb-20">
@@ -302,8 +316,30 @@
             });
         }
 
+        // --- Phones turned sideways: the top bar slides away while scrolling down, and back on any scroll up ---
+        function setUpSlidingTopBar() {
+            const sideways = matchMedia('(max-width: 1023px) and (orientation: landscape) and (max-height: 500px)');
+            const header = document.querySelector('body > header');
+            let lastY = 0;
+            const update = () => {
+                // Clamped, so iPhone's bounce past the top or bottom doesn't read as a change of direction
+                const y = Math.min(Math.max(scrollY, 0), document.documentElement.scrollHeight - innerHeight);
+                if (!sideways.matches || y <= header.offsetHeight) {
+                    document.body.classList.remove('topbar-away');
+                    lastY = y;
+                    return;
+                }
+                if (Math.abs(y - lastY) < 6) return; // wait for a deliberate move, not jitter
+                document.body.classList.toggle('topbar-away', y > lastY);
+                lastY = y;
+            };
+            addEventListener('scroll', update, { passive: true });
+            sideways.addEventListener('change', update);
+        }
+
         async function init() {
             setUpFiltersFold();
+            setUpSlidingTopBar();
             try {
                 const response = await fetch('holiday_engine.json');
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
