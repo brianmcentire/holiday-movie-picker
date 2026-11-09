@@ -102,6 +102,9 @@
         chevronLeft: '<path d="m15 18-6-6 6-6"/>',
         trash: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
         popcorn: '<path d="M18 8a2 2 0 0 0 0-4 2 2 0 0 0-4 0 2 2 0 0 0-4 0 2 2 0 0 0-4 0 2 2 0 0 0 0 4"/><path d="M10 22 9 8"/><path d="m14 22 1-14"/><path d="M20 8c.5 0 .9.4.8 1l-2.6 12c-.1.5-.7 1-1.2 1H7c-.6 0-1.1-.4-1.2-1L3.2 9c-.1-.6.3-1 .8-1Z"/>',
+        clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+        // Safari's Share icon, which the Home Screen tip points to (not the page's own Share results icon)
+        share: '<path d="M12 2v13"/><path d="m16 6-4-4-4 4"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>',
         grip: '<circle cx="9" cy="5" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="9" cy="19" r="1.6"/><circle cx="15" cy="5" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="15" cy="19" r="1.6"/>',
     };
 
@@ -117,6 +120,7 @@
         items.push({ id, watched: false });
         if (items.length === 1) persistStorage();
         changed();
+        firstAddTip(movieFor(id)?.title ?? 'it');
     }
 
     function remove(id) {
@@ -524,7 +528,7 @@
         headerButton.type = 'button';
         headerButton.id = 'wl-header-button';
         headerButton.innerHTML = `${icon('bookmark', 16, { fill: 'currentColor' })}<span class="wl-fab-label">My Watchlist</span><span class="wl-count"></span>`;
-        headerButton.onclick = () => (viewOpen ? closeView() : showMyWatchlist());
+        headerButton.onclick = () => (viewOpen && !looking ? closeView() : showMyWatchlist());
         document.getElementById('sort-dir')?.parentElement?.after(headerButton); // beside search and sort
     }
 
@@ -580,7 +584,7 @@
 
     // A note with an optional second line and an optional action button
     function note(title, { detail = '', action = '', onAction = null, timeout = 4000 } = {}) {
-        const t = toast(`<p class="wl-toast-msg"><b>${esc(title)}</b>${detail ? `<span class="wl-toast-detail">${esc(detail)}</span>` : ''}</p>`
+        const t = toast(`<p class="wl-toast-msg"><b class="wl-toast-title">${esc(title)}</b>${detail ? `<span class="wl-toast-detail">${esc(detail)}</span>` : ''}</p>`
             + (action ? `<button type="button" class="wl-toast-btn">${esc(action)}</button>` : ''), { timeout });
         if (action) t.el.querySelector('button').onclick = () => { t.close(); onAction(); };
         announce(detail ? `${title}. ${detail}` : title);
@@ -615,17 +619,27 @@
                 <button type="button" class="wl-back" data-wl="close">${icon('chevronLeft', 12, { stroke: 2.5 })}All movies</button>
                 <div class="wl-titlebar">
                     <span class="wl-title-icon">${icon('popcorn', 22)}</span>
+                    <p class="wl-kicker">Shared with you</p>
                     <h2 id="wl-title" tabindex="-1">My Watchlist</h2>
-                    <button type="button" class="wl-close" data-wl="close" aria-label="Close My Watchlist">${icon('x', 22)}</button>
+                    <button type="button" class="wl-close" data-wl="close" aria-label="Close">${icon('x', 22)}</button>
                     <p class="wl-summary"><span class="wl-progress"></span><span class="wl-matching"></span> <span class="wl-sep" aria-hidden="true">·</span> <button type="button" class="wl-link" data-wl="hide"></button> <span class="wl-sep" aria-hidden="true">·</span> <button type="button" class="wl-link" data-wl="save">Save a copy</button></p>
+                    <p class="wl-look-summary"></p>
+                    <p class="wl-made"></p>
+                    <p class="wl-look-note"></p>
                     <span class="wl-hint">Drag to set the order. Tick the circle once you've watched it.</span>
                 </div>
             </div>
             <div class="wl-scroll">
-                <ol class="wl-rows" aria-label="Movies on My Watchlist"></ol>
+                <ol class="wl-rows"></ol>
                 <p class="wl-empty" hidden></p>
                 <div class="wl-clear-row"><button type="button" class="wl-clear" data-wl="clear">Clear list</button></div>
                 <p class="wl-credit">This website uses <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a> and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</p>
+            </div>
+            <div class="wl-look-bar"><button type="button" class="wl-btn wl-btn-blue" data-wl="add-new"></button><button type="button" class="wl-btn" data-wl="close">Done</button></div>
+            <div class="wl-sheet-tip" hidden>
+                <span class="wl-tip-badge">${icon('share', 16)}</span>
+                <p>${TIP_TEXT}</p>
+                <button type="button" class="wl-tip-close" data-wl="tip-close" aria-label="Hide this tip">${icon('x', 16)}</button>
             </div>
             <span id="wl-grip-help" class="wl-sr">Use the up and down arrow keys to move it.</span>`;
         // On the page, it sits in the flow after the results
@@ -638,6 +652,11 @@
     }
 
     function showMyWatchlist() {
+        if (looking) { // from a saved list to the user's own
+            endLook();
+            setAddress('#watchlist');
+            return renderView();
+        }
         if (location.hash === '#watchlist') return openView();
         openedHere = true;
         location.hash = 'watchlist'; // the hashchange opens it
@@ -650,6 +669,7 @@
             pageScrollY = scrollY;
             view.returnTo = document.activeElement;
         }
+        tipToast?.close(); // the sheet has the same tip at its bottom
         renderView();
         applyMode();
     }
@@ -657,6 +677,7 @@
     function closeView() {
         if (!viewOpen) return;
         if (openedHere && location.hash === '#watchlist') return history.back(); // the hashchange closes it
+        endLook();
         setAddress('');
         hideView();
     }
@@ -665,6 +686,7 @@
         if (!viewOpen) return;
         viewOpen = false;
         openedHere = false;
+        endLook();
         closeOpenRow();
         const wasPage = document.body.classList.contains('wl-page-open');
         document.body.classList.remove('wl-page-open');
@@ -719,11 +741,15 @@
     function renderView() {
         if (!viewOpen) return;
         closeOpenRow();
+        view.el.classList.toggle('wl-looking', !!looking);
+        if (looking) return renderLook();
         const all = shownItems();
         const rawQuery = pageMode() ? searchInput()?.value.trim() ?? '' : '';
         const query = rawQuery.toLowerCase();
         const rows = all.filter(item => !(prefs.hideWatched && item.watched) && matchesSearch(item.id, query));
 
+        $('#wl-title').textContent = 'My Watchlist';
+        $('.wl-rows').setAttribute('aria-label', 'Movies on My Watchlist');
         const watched = all.filter(item => item.watched).length;
         $('.wl-summary').hidden = !all.length;
         $('.wl-progress').textContent = `${watched} of ${all.length} watched`;
@@ -743,6 +769,7 @@
             : query ? `Nothing on your list matches “${rawQuery}”.`
             : "You've watched everything on your list.";
         $('.wl-clear-row').hidden = !all.length;
+        $('.wl-sheet-tip').hidden = pageMode() || !all.length || !tipApplies();
     }
 
     function rowHTML(item) {
@@ -786,8 +813,12 @@
         if (action === 'hide') return toggleHideWatched();
         if (action === 'save') return saveCopy();
         if (action === 'clear') return askToClear();
+        if (action === 'tip-close') return dismissTip();
+        if (action === 'look-hide') return toggleLookHideWatched();
+        if (action === 'add-new') return addAllFromLook();
+        if (action === 'add-one') return addOneFromLook(e.target.closest('.wl-row').dataset.id);
         const row = e.target.closest('.wl-row');
-        if (!row || row.classList.contains('wl-removing')) return;
+        if (looking || !row || row.classList.contains('wl-removing')) return;
         const id = row.dataset.id;
         if (e.target.closest('.wl-tick')) setWatched(id, !itemFor(id)?.watched);
         else if (e.target.closest('.wl-x')) remove(id);
@@ -803,7 +834,7 @@
     function onViewPointerDown(e) {
         const row = e.target.closest('.wl-row');
         if (openRow && row !== openRow) closeOpenRow();
-        if (e.button > 0 || !row || row.classList.contains('wl-removing')) return;
+        if (looking || e.button > 0 || !row || row.classList.contains('wl-removing')) return; // a saved list is read-only
         const grip = e.target.closest('.wl-grip');
         if (grip) dragRow(e, row, grip);
         else if (!pageMode() && !e.target.closest('.wl-tick, .wl-x, .wl-row-delete')) swipeRow(e, row);
@@ -812,7 +843,7 @@
     // The grip and the arrow keys move a movie up or down
     function onViewKeyDown(e) {
         const grip = e.target.closest('.wl-grip');
-        if (!grip || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+        if (looking || !grip || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
         e.preventDefault();
         const row = grip.closest('.wl-row');
         const order = [...row.parentElement.children].map(li => li.dataset.id);
@@ -1029,9 +1060,11 @@
         return `${day} at ${date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
     }
 
+    // "Nov 9, 2:41 PM"
+    const madeShort = date => `${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}, ${date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
+
     // The share sheet on touch screens, elsewhere the clipboard. iPhone's share sheet shows only the title (cut off
-    // at about 30 characters, so just the date) and the site, never the link; the text goes with the link into
-    // the message.
+    // at about 30 characters) and the site, never the link; the text goes with the link into the message.
     async function saveCopy() {
         const made = new Date();
         made.setSeconds(0, 0); // the link says the minute; show the same
@@ -1040,8 +1073,8 @@
         if (navigator.share && matchMedia('(pointer: coarse)').matches) {
             try {
                 await navigator.share({
-                    title: `Season's Screenings · ${made.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`,
-                    text: `Holiday movie picks from Season's Screenings: ${plural(count, 'movie')}, made ${madeWhen(made)}`,
+                    title: `My Watchlist · ${madeShort(made)}`,
+                    text: `My selections from Season's Screenings: ${plural(count, 'movie')}, made ${madeWhen(made)}`,
                     url,
                 });
                 return;
@@ -1073,13 +1106,305 @@
         }
     }
 
-    // ---------- The address: #watchlist ----------
+    // ---------- Opening links: #watchlist and saved copies ----------
+    // What the address's #watchlist part asks for: { open } for #watchlist, { copy } for a saved copy that has
+    // movies, { unreadable } for any other #watchlist link (a later version, or garbage), null for anything else
+    function readLink() {
+        const hash = location.hash.slice(1);
+        if (!/^watchlist(?=$|[=&])/.test(hash)) return null;
+        const params = new URLSearchParams(hash);
+        const version = params.get('watchlist');
+        if (version === '') return { open: true };
+        if (version !== '1') return { unreadable: true };
+        const copy = { items: parseMovies(params.get('m')), made: parseMade(params.get('made')) };
+        return copy.items.length ? { copy } : { unreadable: true };
+    }
+
+    // "771,10719w,13342" → [{ id: '771', watched: false }, { id: '10719', watched: true }, ...]; unreadable entries are skipped
+    function parseMovies(text) {
+        return cleanItems((text || '').split(',').map(part => {
+            const match = /^\s*(\d{1,9})(w?)\s*$/i.exec(part);
+            return match && { id: match[1], watched: match[2] !== '' };
+        }));
+    }
+
+    // "2026-11-09T19:41Z" → a Date; missing or garbled → null
+    function parseMade(text) {
+        const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?Z$/.exec(text || '');
+        if (!match) return null;
+        const [year, month, day, hour, minute] = match.slice(1).map(Number);
+        const date = new Date(Date.UTC(year, month - 1, day, hour, minute));
+        // Date.UTC rolls Feb 31 over into March; that's garbled, not a date
+        return date.getUTCMonth() === month - 1 && date.getUTCDate() === day && hour < 24 && minute < 60 ? date : null;
+    }
+
+    // "2 days ago", "yesterday", "5 minutes ago": roughly how long ago, in the viewer's language
+    function madeAgo(date) {
+        const relative = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+        const minutes = Math.round((Date.now() - date) / 60000);
+        if (minutes < -5) return ''; // made "in the future": a clock is off, so leave it out
+        if (minutes < 1) return relative.format(0, 'second');
+        const midnight = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        const days = Math.round((midnight(new Date()) - midnight(date)) / 86400000);
+        if (days < 1) return minutes < 60 ? relative.format(-minutes, 'minute') : relative.format(-Math.floor(minutes / 60), 'hour');
+        if (days < 7) return relative.format(-days, 'day');
+        if (days < 35) return relative.format(-Math.floor(days / 7), 'week');
+        if (days < 365) return relative.format(-Math.max(1, Math.round(days / 30.4)), 'month');
+        return relative.format(-Math.floor(days / 365), 'year');
+    }
+
+    // Made Sun, Nov 9 at 2:41 PM · 2 days ago
+    function madeLine(date) {
+        const ago = madeAgo(date);
+        return `${icon('clock', 13)}<span>Made <b>${esc(madeWhen(date))}</b>${ago ? ` · ${esc(ago)}` : ''}</span>`;
+    }
+
+    // "9 movies, made Sun, Nov 9 at 2:41 PM"
+    const copySummary = (count, made) => `${plural(count, 'movie')}${made ? `, made ${madeWhen(made)}` : ''}`;
+
+    // Where the address goes once a saved link has been dealt with
+    const restingHash = () => (viewOpen && !looking ? '#watchlist' : '');
+
     function route() {
-        if (location.hash === '#watchlist') openView();
-        else if (viewOpen) {
-            hideView();
-            window.syncURL?.(); // Back restored an older address; the page's own state wins
+        const link = readLink();
+        if (!link) {
+            if (mergeLayer && openLayers.includes(mergeLayer)) closeLayer(mergeLayer);
+            if (viewOpen) {
+                hideView();
+                window.syncURL?.(); // Back restored an older address; the page's own state wins
+            }
+        } else if (link.open) {
+            endLook();
+            openView();
+        } else if (link.unreadable) {
+            setAddress(restingHash()); // nothing this version can use: ignore it
+        } else {
+            receiveCopy(link.copy);
         }
+    }
+
+    // Someone opened a saved copy of a list: their own from another phone or browser, or someone else's
+    function receiveCopy(copy) {
+        if (!shownItems().length) return restoreCopy(copy);
+        if (!copy.items.some(item => movieFor(item.id))) return setAddress(restingHash());
+        if (history.state?.wlLook) return startLook(copy); // reloaded while just looking
+        showMergeCard(copy);
+    }
+
+    // Onto an empty list it comes back exactly as saved, watched marks and all (and any movies the data
+    // doesn't have, kept out of sight as usual)
+    function restoreCopy(copy) {
+        items = cleanItems([...copy.items, ...items]);
+        persistStorage();
+        setAddress(restingHash());
+        changed();
+        const count = shownItems().length;
+        if (count) note('Restored your watchlist', { detail: copySummary(count, copy.made), action: 'Open', onAction: showMyWatchlist, timeout: 8000 });
+    }
+
+    // Movies brought in from a saved list (Add N new, or one at a time while just looking) come in unwatched,
+    // whatever the saved list says. Set to true to bring its watched marks along. The marks on movies already
+    // on the user's list never change either way.
+    const NEW_MOVIES_KEEP_SAVED_WATCHED_MARKS = false;
+
+    // Add the movies the user doesn't have yet, after their own, in the saved order. Returns how many.
+    function addFromCopy(list) {
+        const fresh = list.filter(item => movieFor(item.id) && !itemFor(item.id))
+            .map(item => ({ id: item.id, watched: NEW_MOVIES_KEEP_SAVED_WATCHED_MARKS && item.watched }));
+        if (!fresh.length) return 0;
+        if (!items.length) persistStorage();
+        items = cleanItems([...items, ...fresh]);
+        changed();
+        return fresh.length;
+    }
+
+    // ----- The card for a saved list when the user already has one: Add N new, Just look, or No thanks -----
+    let mergeLayer;
+    let pendingCopy = null;
+
+    function buildMergeCard() {
+        mergeLayer = createLayer('wl-merge', 'wl-card', declineCopy);
+        mergeLayer.panel.setAttribute('aria-labelledby', 'wl-merge-title');
+        mergeLayer.panel.addEventListener('click', e => {
+            const action = e.target.closest('[data-merge]')?.dataset.merge;
+            if (action === 'add') addAllFromCard();
+            else if (action === 'look') lookFromCard();
+            else if (action === 'no') declineCopy();
+        });
+    }
+
+    function showMergeCard(copy) {
+        pendingCopy = copy;
+        const known = copy.items.filter(item => movieFor(item.id));
+        const fresh = known.filter(item => !itemFor(item.id)).length;
+        const watched = known.filter(item => item.watched).length;
+        const posters = known.slice(0, 6).map(item => movieFor(item.id).poster);
+        const more = known.length - posters.length;
+        // A line about the link itself (when it was made) sits under the heading, like the restore note's detail
+        mergeLayer.panel.innerHTML = `
+            <p class="wl-kicker">Shared with you</p>
+            <h3 id="wl-merge-title" class="wl-card-title" tabindex="-1">${plural(known.length, 'movie')}, ${watched} watched</h3>
+            ${copy.made ? `<p class="wl-made">${madeLine(copy.made)}</p>` : ''}
+            <div class="wl-strip" aria-hidden="true">${posters.map(src => (src ? `<img src="${esc(src)}" alt="">` : '<span class="wl-noposter"></span>')).join('')}${more > 0 ? `<span class="wl-strip-more">+${more}</span>` : ''}</div>
+            <p class="wl-card-text">You already have ${plural(shownItems().length, 'movie')} on your list. ${fresh ? `${fresh} of these ${fresh === 1 ? 'is' : 'are'} new to it.` : 'All of these are on it already.'}</p>
+            ${fresh ? `<button type="button" class="wl-btn wl-btn-blue" data-merge="add">${icon('bookmarkPlus', 17, { stroke: 2.25 })}Add ${fresh} new</button>` : ''}
+            <div class="wl-card-pair">
+                <button type="button" class="wl-btn wl-btn-soft" data-merge="look">Just look</button>
+                <button type="button" class="wl-btn" data-merge="no">${fresh ? 'No thanks' : 'Done'}</button>
+            </div>`;
+        openLayer(mergeLayer, mergeLayer.panel.querySelector('h3'));
+    }
+
+    function addAllFromCard() {
+        const added = addFromCopy(pendingCopy.items);
+        pendingCopy = null;
+        closeLayer(mergeLayer);
+        setAddress(restingHash());
+        if (added) note(`Added ${plural(added, 'movie')} to My Watchlist`, { action: 'Open', onAction: showMyWatchlist, timeout: 6000 });
+    }
+
+    function lookFromCard() {
+        const copy = pendingCopy;
+        pendingCopy = null;
+        closeLayer(mergeLayer);
+        startLook(copy);
+    }
+
+    function declineCopy() {
+        pendingCopy = null;
+        closeLayer(mergeLayer);
+        setAddress(restingHash());
+    }
+
+    // ----- Just look: the saved list in My Watchlist's place, read-only, without touching the user's -----
+    // The saved link stays in the address (with a note in the history entry), so a reload comes back to it.
+    let looking = null; // the saved list on show: { items, made }
+    let lookHideWatched = false;
+
+    function startLook(copy) {
+        looking = copy;
+        lookHideWatched = false;
+        history.replaceState({ ...(history.state || {}), wlLook: true }, '');
+        if (viewOpen) renderView();
+        else openView();
+    }
+
+    function endLook() {
+        if (!looking) return;
+        looking = null;
+        const state = { ...(history.state || {}) };
+        delete state.wlLook;
+        history.replaceState(state, '');
+    }
+
+    // The saved list's rows that are showing: watched ones can be hidden, and on the page the search narrows them
+    function lookRows() {
+        const query = pageMode() ? (searchInput()?.value.trim() ?? '').toLowerCase() : '';
+        return looking.items.filter(item => movieFor(item.id) && !(lookHideWatched && item.watched) && matchesSearch(item.id, query));
+    }
+
+    function renderLook() {
+        const known = looking.items.filter(item => movieFor(item.id));
+        const watched = known.filter(item => item.watched).length;
+        const rows = lookRows();
+        const fresh = rows.filter(item => !itemFor(item.id)).length; // the add button adds what's showing
+
+        $('#wl-title').textContent = `${plural(known.length, 'movie')}, ${watched} watched`;
+        $('.wl-look-summary').innerHTML = watched || lookHideWatched
+            ? `<button type="button" class="wl-link" data-wl="look-hide">${lookHideWatched ? 'Show watched' : 'Hide watched'}</button>` : '';
+        $('.wl-made').innerHTML = looking.made ? madeLine(looking.made) : '';
+        $('.wl-look-note').textContent = `${mouseDevice.matches ? 'Click' : 'Tap'} a bookmark to add to your list.`;
+
+        const list = $('.wl-rows');
+        list.setAttribute('aria-label', 'Movies on the saved watchlist');
+        const focus = rememberFocus(list);
+        list.innerHTML = rows.map(lookRowHTML).join('');
+        restoreFocus(list, focus);
+        $('.wl-empty').hidden = rows.length > 0;
+        $('.wl-empty').textContent = rows.length ? '' : 'Nothing to show here with watched movies hidden.';
+
+        const addButton = $('[data-wl="add-new"]');
+        addButton.hidden = !fresh;
+        addButton.innerHTML = `${icon('bookmarkPlus', 17, { stroke: 2.25 })}Add ${fresh} new`;
+    }
+
+    // Read-only: the saved list's watched mark, and a bookmark that's solid if the movie is already on the
+    // user's list, or adds it if not
+    function lookRowHTML(item) {
+        const m = movieFor(item.id);
+        const title = esc(m.title);
+        const mark = itemFor(item.id)
+            ? `<span class="wl-onlist" role="img" aria-label="Already on your list" title="Already on your list">${icon('bookmark', 15, { fill: 'currentColor' })}</span>`
+            : `<button type="button" class="wl-addone" data-wl="add-one" aria-label="Add ${title} to My Watchlist" title="Add to My Watchlist">${icon('bookmarkPlus', 15, { stroke: 2.25 })}</button>`;
+        return `<li class="wl-row${item.watched ? ' wl-row-watched' : ''}" data-id="${item.id}">
+            <div class="wl-row-main">
+                <span class="wl-tick wl-tick-static" role="img" aria-label="${item.watched ? 'Watched' : 'Not watched'}">${icon('check', 15, { stroke: 3 })}</span>
+                <a class="wl-info" href="${tmdbURL(item.id)}" target="_blank" rel="noopener" draggable="false">
+                    ${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" draggable="false">` : '<span class="wl-noposter"></span>'}
+                    <span class="wl-text">
+                        <span class="wl-name">${title} <span class="wl-year">(${yearOf(m)})</span></span>
+                        <span class="wl-meta"><span class="wl-cert">${esc(m.cert)}</span><span class="wl-rating">${ratingOf(m)}</span></span>
+                        <span class="wl-overview">${esc(m.overview)}</span>
+                    </span>
+                </a>
+                ${mark}
+            </div>
+        </li>`;
+    }
+
+    function toggleLookHideWatched() {
+        lookHideWatched = !lookHideWatched;
+        renderView();
+    }
+
+    // A row's bookmark adds that movie right away (it turns solid and the count bounces), with Undo
+    function addOneFromLook(id) {
+        const item = looking?.items.find(entry => entry.id === id);
+        if (!item || !addFromCopy([item])) return;
+        offerUndo(`Added ${movieFor(id).title}`, () => {
+            items = items.filter(entry => entry.id !== id);
+            changed();
+        });
+    }
+
+    // Add N new: bring them in, then show the user's own list with them at the end
+    function addAllFromLook() {
+        const added = addFromCopy(lookRows());
+        endLook();
+        setAddress('#watchlist');
+        renderView();
+        $('#wl-title').focus({ preventScroll: true });
+        if (added) note(`Added ${plural(added, 'movie')} to My Watchlist`, { timeout: 5000 });
+    }
+
+    // ---------- The Home Screen tip, iPhone Safari only ----------
+    // Add to Home Screen lives in Safari's Share menu, not behind the page's Share results, so the tip names it
+    // with Safari's own icon. It pops up once, right after the very first add, and sits at the bottom of the list
+    // sheet; closing either one closes both for good. Never shown once the site is on the Home Screen.
+    const TIP_TEXT = `Your list, one tap away: open Safari’s Share menu ${icon('share', 13, { stroke: 2.25, label: 'Share', cls: 'wl-inline-icon' })} and choose <b>Add to Home Screen</b>.`;
+    let tipToast = null;
+
+    function tipApplies() {
+        const ua = navigator.userAgent;
+        const homeScreen = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+        return !prefs.tipDone && !homeScreen && /iPhone/.test(ua) && /Safari\//.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(ua);
+    }
+
+    function firstAddTip(title) {
+        if (prefs.tipShown || !tipApplies()) return;
+        prefs.tipShown = true;
+        savePrefs();
+        tipToast = toast(`<p class="wl-toast-msg"><b class="wl-toast-title">Added ${esc(title)}.</b>${TIP_TEXT}</p>`
+            + `<button type="button" class="wl-toast-x" aria-label="Hide this tip">${icon('x', 16, { stroke: 2.5 })}</button>`, { cls: 'wl-toast-tip', timeout: 20000 });
+        tipToast.el.querySelector('.wl-toast-x').onclick = dismissTip;
+    }
+
+    function dismissTip() {
+        prefs.tipDone = true;
+        savePrefs();
+        tipToast?.close();
+        tipToast = null;
+        renderView();
     }
 
     // ---------- Styles ----------
@@ -1246,8 +1571,14 @@
         }
         @keyframes wl-toast-in { from { opacity: 0; transform: translateY(8px); } }
         .wl-toast-msg { flex: 1; min-width: 0; margin: 0; }
-        .wl-toast-msg b { display: block; color: #ffffff; }
-        .wl-toast-detail { display: block; }
+        .wl-toast-msg b { color: #ffffff; }
+        .wl-toast-title, .wl-toast-detail { display: block; }
+        .wl-toast-title { margin-bottom: 1px; }
+        .wl-toast-x { flex: none; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; background: none; color: #94a3b8; cursor: pointer; }
+        .wl-inline-icon { display: inline-block; vertical-align: -2px; } /* Tailwind makes every svg a block */
+        /* The Home Screen tip points down at the My List button */
+        .wl-toast-tip { align-self: flex-end; padding: 10px 6px 10px 14px; }
+        .wl-toast-tip::after { content: ''; position: absolute; right: 52px; bottom: -6px; width: 12px; height: 12px; background: #0f172a; transform: rotate(45deg); }
         .wl-toast-pill { min-height: 48px; padding: 6px 6px 6px 18px; border-radius: 999px; }
         .wl-toast-pill .wl-toast-msg { font-size: 13px; font-weight: 600; color: #ffffff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .wl-toast-btn {
@@ -1338,6 +1669,43 @@
         }
         .wl-clear:hover { color: #ef4444; }
 
+        /* The Home Screen tip at the bottom of the sheet */
+        .wl-sheet-tip { flex: none; display: flex; align-items: center; gap: 10px; padding: 12px 6px calc(12px + env(safe-area-inset-bottom, 0px)) 16px; border-top: 1px solid #e2e8f0; background: #ffffff; }
+        .wl-sheet-tip[hidden] { display: none; }
+        .wl-sheet-tip p { flex: 1; margin: 0; font-size: 11px; line-height: 1.35; color: #64748b; }
+        .wl-sheet-tip b { color: #334155; }
+        .wl-tip-badge { flex: none; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #eff6ff; color: #2563eb; }
+        .wl-tip-close { flex: none; width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; background: none; color: #94a3b8; cursor: pointer; }
+
+        /* ----- Just looking at a saved list: read-only, in My Watchlist's place ----- */
+        .wl-kicker, .wl-look-summary, .wl-made, .wl-look-note, .wl-look-bar { display: none; }
+        .wl-kicker { margin: 0; font-size: 10px; font-weight: 800; color: #2563eb; text-transform: uppercase; letter-spacing: 0.1em; }
+        .wl-made { align-items: center; gap: 6px; margin: 5px 0 0; font-size: 12px; color: #475569; }
+        .wl-made svg { flex: none; color: #64748b; }
+        .wl-made b { color: #1e293b; }
+        /* Shared with you / 9 movies, 3 watched  Hide watched / Made ... / Tap a bookmark ... */
+        #wl-view.wl-looking .wl-titlebar { position: relative; align-items: baseline; column-gap: 10px; padding-right: 36px; }
+        #wl-view.wl-looking .wl-close { position: absolute; top: -6px; right: -10px; margin: 0; }
+        #wl-view.wl-looking .wl-kicker, #wl-view.wl-looking .wl-look-note { display: block; flex-basis: 100%; }
+        #wl-view.wl-looking .wl-look-summary { display: block; }
+        #wl-view.wl-looking .wl-made:not(:empty) { display: flex; flex-basis: 100%; }
+        #wl-view.wl-looking .wl-titlebar h2 { flex: none; margin-top: 4px; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; text-transform: none; }
+        #wl-view.wl-looking :is(.wl-title-icon, .wl-summary, .wl-hint, .wl-clear-row, .wl-sheet-tip) { display: none; }
+        .wl-look-summary { margin: 0; font-size: 12px; white-space: nowrap; }
+        .wl-look-note { margin: 6px 0 0; font-size: 11.5px; color: #64748b; }
+        .wl-tick-static { cursor: default; border-color: #e2e8f0; }
+        .wl-tick-static:hover { border-color: #e2e8f0; }
+        .wl-onlist, .wl-addone { flex: none; width: 30px; height: 30px; margin-right: 8px; box-sizing: border-box; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 999px; }
+        .wl-onlist { background: #2563eb; color: #ffffff; }
+        .wl-addone { border: 1px solid #bfdbfe; background: #eff6ff; color: #2563eb; cursor: pointer; }
+        .wl-addone:hover { background: #dbeafe; }
+        #wl-view.wl-looking .wl-look-bar {
+            flex: none; display: grid; grid-template-columns: 1.5fr 1fr; gap: 10px;
+            padding: 12px 16px calc(18px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid #e2e8f0; background: #ffffff;
+        }
+        .wl-look-bar .wl-btn[hidden] { display: none; }
+        .wl-look-bar .wl-btn[hidden] + .wl-btn { grid-column: 1 / -1; }
+
         /* ----- My Watchlist: its own page on laptops, in place of the filters and results ----- */
         @media (min-width: 1024px) {
             body.wl-page-open > main { display: none; }
@@ -1370,6 +1738,13 @@
             .wl-clear { padding-left: 0; }
             .wl-credit { display: block; margin: 40px 0 0; font-size: 11px; color: #94a3b8; }
             .wl-credit a { text-decoration: underline; }
+            #wl-view.wl-looking .wl-titlebar { flex-wrap: wrap; row-gap: 0; padding-right: 0; }
+            #wl-view.wl-looking .wl-titlebar h2 { font-size: 24px; }
+            #wl-view.wl-looking .wl-look-bar {
+                position: sticky; bottom: 0; max-width: 420px; padding: 14px 0 20px; border: 0;
+                background: linear-gradient(rgba(248,250,252,0), #f8fafc 30%);
+            }
+            .wl-onlist, .wl-addone { margin-right: 0; }
         }
 
         /* ----- Cards over the page: Clear list, and a saved list opening ----- */
@@ -1386,6 +1761,16 @@
         .wl-card-text { margin: 6px 0 16px; font-size: 12.5px; line-height: 1.45; color: #64748b; }
         .wl-card .wl-btn + .wl-btn { margin-top: 8px; }
         .wl-card .wl-btn-plain { margin-top: 4px; }
+        .wl-card .wl-kicker { display: block; }
+        .wl-card .wl-card-title { margin-top: 4px; }
+        .wl-card .wl-made { display: flex; margin-top: 6px; font-size: 12.5px; }
+        .wl-card > .wl-btn-blue { margin-top: 14px; }
+        .wl-card-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .wl-card-pair .wl-btn + .wl-btn { margin-top: 0; }
+        .wl-strip { display: flex; align-items: center; gap: 6px; margin-top: 12px; }
+        .wl-strip img, .wl-strip .wl-noposter { width: 38px; height: 57px; object-fit: cover; border-radius: 5px; box-shadow: 0 1px 3px rgba(15,23,42,0.25); }
+        .wl-strip-more { margin-left: 2px; font-size: 12px; font-weight: 700; color: #94a3b8; }
+        #wl-merge .wl-card-text { margin: 10px 0 0; font-size: 12px; }
         @media (min-width: 1024px) {
             .wl-card { top: 50%; bottom: auto; transform: translateY(-45%); }
             .wl-layer.wl-shown .wl-card { transform: translateY(-50%); }
@@ -1413,6 +1798,7 @@
         buildView();
         buildPeek();
         buildConfirm();
+        buildMergeCard();
         watchGrid();
         refreshChrome();
         addEventListener('hashchange', route);
