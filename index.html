@@ -18,8 +18,8 @@
     <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="Season's Screenings: a holiday movie matchmaker, with posters for Elf, How the Grinch Stole Christmas and Home Alone">
     <meta name="twitter:card" content="summary_large_image">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script src="https://unpkg.com/lucide@1.70.0/dist/umd/lucide.min.js"></script>
     <script src="analytics.js"></script>
     <style>
         .frosted { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); }
@@ -500,6 +500,8 @@
         }
 
         // --- Shareable URL state ---
+        // People save and pass these links around, so every link ever shared must keep working:
+        // only add params or values, never rename or remove one, and ignore what isn't recognized.
         // ?with=Comedy&with=small%20town&without=R&q=snow&sort=rating&dir=asc
         // Repeated params (not comma lists) because some tags contain commas.
         // Ratings and holiday levels appear only when they differ from the default, and then in full;
