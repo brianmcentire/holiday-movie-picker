@@ -67,6 +67,42 @@
             #results-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             #results-grid[data-view="one"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
+
+        /* Phones and tablets: ‹ folds the filters into a slim strip to give the results more room, › opens them */
+        #filters-panel > .fold-anchor + * { margin-top: 0 !important; }
+        @media (max-width: 1023px) {
+            .fold-anchor { position: sticky; top: 9px; height: 0; margin-top: -5px; z-index: 5; }
+            #filters-fold {
+                position: absolute; top: 0; right: -2px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+                border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #475569; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            }
+            #filters-fold .fold-icon-show, .filters-folded #filters-fold .fold-icon-hide { display: none; }
+            .filters-folded #filters-fold .fold-icon-show { display: block; }
+            /* Room for the button beside the first heading */
+            #level-section h3, #level-section.hidden + div h3 { padding-right: 30px; }
+
+            body.filters-folded > main { grid-template-columns: 30px minmax(0, 1fr) !important; }
+            body.filters-folded #filters-panel {
+                display: flex; flex-direction: column; align-items: center; gap: 12px;
+                padding: 9px 0 0 !important; overflow: hidden; cursor: pointer;
+            }
+            body.filters-folded #filters-panel > :not(.fold-anchor) { display: none; }
+            body.filters-folded .fold-anchor { position: static; height: 26px; margin: 0 !important; }
+            body.filters-folded #filters-fold { position: static; }
+            body.filters-folded #filters-panel::after {
+                content: 'Filters'; writing-mode: vertical-rl; transform: rotate(180deg);
+                font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.12em;
+            }
+            /* How many filters are on, under the label */
+            body.filters-folded #filters-panel[data-active]:not([data-active="0"])::before {
+                content: attr(data-active); order: 1; min-width: 18px; height: 18px; border-radius: 999px; background: #3b82f6; color: #ffffff;
+                font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center;
+            }
+            body.filters-folded #results-grid[data-view="grid"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (min-width: 640px) and (max-width: 1023px) {
+            body.filters-folded #results-grid[data-view="grid"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen pb-20">
@@ -114,6 +150,11 @@
 
     <main class="max-w-7xl mx-auto px-4 md:px-10 grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-12">
         <aside id="filters-panel" class="lg:col-span-1 space-y-8 lg:sticky top-28 h-fit max-h-[calc(100vh-120px)] overflow-y-auto sidebar-scroll pr-4 pb-10">
+            <div class="fold-anchor lg:hidden">
+                <button id="filters-fold" type="button" aria-controls="filters-panel" aria-expanded="true" aria-label="Hide filters" title="Hide filters">
+                    <i data-lucide="chevron-left" class="fold-icon-hide w-4 h-4"></i><i data-lucide="chevron-right" class="fold-icon-show w-4 h-4"></i>
+                </button>
+            </div>
             <div id="level-section" class="hidden">
                 <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Holiday Intensity</h3>
                 <div id="level-cloud" class="flex flex-wrap gap-2"></div>
@@ -238,7 +279,31 @@
         let currentVisibleIds = [];
         const movieTags = {}; // id -> Set of its tags and genres
 
+        // --- Phones and tablets: fold the filters into a slim strip; remembered on this device ---
+        function setFiltersFolded(folded) {
+            document.body.classList.toggle('filters-folded', folded);
+            const btn = document.getElementById('filters-fold');
+            const label = folded ? 'Show filters' : 'Hide filters';
+            btn.setAttribute('aria-expanded', String(!folded));
+            btn.setAttribute('aria-label', label);
+            btn.title = label;
+            try { localStorage.setItem('filtersFolded', folded ? '1' : '0'); } catch (e) {}
+        }
+
+        function setUpFiltersFold() {
+            let folded = false;
+            try { folded = localStorage.getItem('filtersFolded') === '1'; } catch (e) {}
+            setFiltersFolded(folded);
+            document.getElementById('filters-fold').onclick = () => setFiltersFolded(!document.body.classList.contains('filters-folded'));
+            // Folded, the whole strip opens them
+            document.getElementById('filters-panel').addEventListener('click', e => {
+                if (document.body.classList.contains('filters-folded') && matchMedia('(max-width: 1023px)').matches
+                    && !e.target.closest('#filters-fold')) setFiltersFolded(false);
+            });
+        }
+
         async function init() {
+            setUpFiltersFold();
             try {
                 const response = await fetch('holiday_engine.json');
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -698,6 +763,7 @@
                 if (state === 0 || groupOf(tag)) return;
                 addPill((state === 2 ? 'NO: ' : '') + tag, state === 2, () => resetTag(tag));
             });
+            document.getElementById('filters-panel').dataset.active = container.children.length; // shown on the folded strip
 
             if (hasActiveFilters()) {
                 const clear = document.createElement('button');
