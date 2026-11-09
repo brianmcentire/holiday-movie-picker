@@ -344,7 +344,16 @@
                 lastY = y;
             };
             addEventListener('scroll', update, { passive: true });
-            sideways.addEventListener('change', update);
+
+            // Upright phones and tablets lock the page to the screen and scroll the two halves instead, so a page
+            // left scrolled (from scrolling sideways, then turning upright, or a restored scroll position) would
+            // hide the top bar with no way to scroll back. Put it back at the top.
+            const lockedLayout = matchMedia('(max-width: 1023px)');
+            const backToTop = () => {
+                if (lockedLayout.matches && !sideways.matches && scrollY !== 0) requestAnimationFrame(() => scrollTo(0, 0));
+            };
+            sideways.addEventListener('change', () => { update(); backToTop(); });
+            addEventListener('pageshow', backToTop);
 
             // A swipe that starts on the filters scrolls only the filters. iPhone hands a swipe to the page when
             // the filters are already at their top or bottom, so keep them a pixel away from either end.
