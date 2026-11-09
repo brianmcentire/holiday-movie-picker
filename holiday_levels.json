@@ -755,6 +755,18 @@
   "version": 2,
   "year": "2022"
  },
+ "1028938": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "A meta Christmas romantic comedy about a director of Christmas movies living out holiday-movie tropes, so Christmas is the subject throughout.",
+  "referee": null,
+  "title": "A Hollywood Christmas",
+  "version": 2,
+  "year": "2022"
+ },
  "1029354": {
   "confidence": "high",
   "haiku": "about",
@@ -2891,6 +2903,18 @@
   "version": 2,
   "year": "2024"
  },
+ "1361132": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Christmas romance-comedy centered on families' clashing holiday traditions during Christmas, making the holiday the subject of the story.",
+  "referee": null,
+  "title": "Christmas with the Singhs",
+  "version": 2,
+  "year": "2024"
+ },
  "1361154": {
   "confidence": "medium",
   "haiku": "set_at",
@@ -4583,6 +4607,18 @@
   "version": 2,
   "year": "2026"
  },
+ "177868": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "It is a Christmas television special built around holiday-themed Disney clips (like Pluto's Christmas Tree and The Night Before Christmas), framed by Christmas at Disneyland and the song \"On Christmas Morning.\"",
+  "referee": null,
+  "title": "A Disney Christmas Gift",
+  "version": 2,
+  "year": "1982"
+ },
  "17979": {
   "confidence": "high",
   "haiku": "about",
@@ -4594,6 +4630,18 @@
   "title": "A Christmas Carol",
   "version": 2,
   "year": "2009"
+ },
+ "1800082": {
+  "confidence": "medium",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "I don't know this film, but the description centers on a family discovering the true meaning of Christmas, which marks a classic Christmas-themed romantic comedy.",
+  "referee": "Based on its title and premise, the film's resolution hinges on the family discovering the true meaning of Christmas, which makes the holiday's spirit the subject of the story rather than a backdrop.",
+  "title": "A Richer Christmas",
+  "version": 2,
+  "year": "2026"
  },
  "18038": {
   "confidence": "medium",
@@ -4774,6 +4822,18 @@
   "title": "Bedtime for Sniffles",
   "version": 2,
   "year": "1940"
+ },
+ "21386": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "Will Vinton's Emmy-winning claymation special is built entirely around Christmas carols and holiday segments hosted by dinosaurs Herb and Rex.",
+  "referee": null,
+  "title": "Claymation Christmas Celebration",
+  "version": 2,
+  "year": "1987"
  },
  "214216": {
   "confidence": "low",
@@ -5578,6 +5638,18 @@
   "title": "'Twas the Night Before Christmas",
   "version": 2,
   "year": "1974"
+ },
+ "265923": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "This VeggieTales Christmas special centers entirely on the meaning of Christmas, with Buzz-Saw Louie setting out to teach Dinkletown that Christmas is about giving rather than getting.",
+  "referee": null,
+  "title": "VeggieTales: The Toy That Saved Christmas",
+  "version": 2,
+  "year": "1996"
  },
  "26809": {
   "confidence": "high",
@@ -10919,6 +10991,18 @@
   "version": 2,
   "year": "2010"
  },
+ "744925": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A made-for-TV Christmas romance about saving a holiday skating rink from a Scrooge-like mayor, with the Christmas spirit central to the story.",
+  "referee": null,
+  "title": "Christmas on Ice",
+  "version": 2,
+  "year": "2020"
+ },
  "744931": {
   "confidence": "high",
   "haiku": "about",
@@ -11300,6 +11384,18 @@
   "reason": "A Lifetime Christmas TV romance built around a family Christmas gathering, with holiday traditions and spirit central to the story, fitting the made-for-TV Christmas romance archetype.",
   "referee": null,
   "title": "Too Close for Christmas",
+  "version": 2,
+  "year": "2020"
+ },
+ "766319": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "This Apple TV+ special is built entirely around saving Christmas cheer, with Mariah Carey performing Christmas songs for the North Pole, so the holiday is its whole subject.",
+  "referee": null,
+  "title": "Mariah Carey's Magical Christmas Special",
   "version": 2,
   "year": "2020"
  },
@@ -13076,6 +13172,18 @@
   "reason": "A made-for-TV Christmas romance (likely Lifetime/Hallmark style) set in snowy Vermont where the heroine rediscovers Christmas cheer, so the holiday is central to the story.",
   "referee": null,
   "title": "'Tis the Season to be Merry",
+  "version": 2,
+  "year": "2021"
+ },
+ "889637": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A made-for-TV Christmas romance built around a holiday cottage getaway, squarely in the Hallmark-style genre where Christmas is the subject.",
+  "referee": null,
+  "title": "Christmas in the Pines",
   "version": 2,
   "year": "2021"
  },
