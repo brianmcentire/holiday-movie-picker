@@ -350,7 +350,9 @@
             // hide the top bar with no way to scroll back. Put it back at the top.
             const lockedLayout = matchMedia('(max-width: 1023px)');
             const backToTop = () => {
-                if (lockedLayout.matches && !sideways.matches && scrollY !== 0) requestAnimationFrame(() => scrollTo(0, 0));
+                const reset = () => { if (lockedLayout.matches && !sideways.matches && scrollY !== 0) scrollTo(0, 0); };
+                requestAnimationFrame(reset);
+                setTimeout(reset, 400); // again once the rotation has settled; iPhone nudges the page as it finishes
             };
             sideways.addEventListener('change', () => { update(); backToTop(); });
             addEventListener('pageshow', backToTop);
