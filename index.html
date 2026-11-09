@@ -18,8 +18,8 @@
     <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="Season's Screenings: a holiday movie matchmaker, with posters for Elf, How the Grinch Stole Christmas and Home Alone">
     <meta name="twitter:card" content="summary_large_image">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script src="https://unpkg.com/lucide@1.70.0/dist/umd/lucide.min.js"></script>
     <script src="analytics.js"></script>
     <style>
         .frosted { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); }
@@ -30,8 +30,12 @@
         .state-disabled { display: none; } 
 
         .movie-card:hover { transform: translateY(-4px); transition: all 0.2s; }
+        /* The filters scroll on their own; their thin scrollbar shows only while the pointer is over them */
+        .sidebar-scroll { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+        .sidebar-scroll:hover { scrollbar-color: #cbd5e1 transparent; }
         .sidebar-scroll::-webkit-scrollbar { width: 4px; }
-        .sidebar-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; }
+        .sidebar-scroll:hover::-webkit-scrollbar-thumb { background: #cbd5e1; }
         .sort-btn { transition: color 0.2s; }
         #search-input:placeholder-shown + #clear-search { display: none; }
 
@@ -52,6 +56,8 @@
             #filters-panel .flex.gap-2 { gap: 5px !important; }
             #filters-panel .justify-between { flex-wrap: wrap; row-gap: 2px; }
             #filters-panel button.rounded-full { padding: 3px 8px; font-size: 10px; }
+            /* Long tags wrap instead of pushing the narrow filters column sideways */
+            #filters-panel button.rounded-full { white-space: normal; text-align: left; overflow-wrap: anywhere; }
             #results-pane { height: 100%; overflow-y: auto; padding: 12px 10px 32px; }
             #results-pane > .flex:first-child { margin-bottom: 12px; gap: 8px; }
             #results-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -66,6 +72,60 @@
         @media (min-width: 640px) and (max-width: 1023px) {
             #results-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             #results-grid[data-view="one"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        /* Phones and tablets: ‹ folds the filters into a slim strip to give the results more room, › opens them */
+        #filters-panel > .fold-anchor + * { margin-top: 0 !important; }
+        @media (max-width: 1023px) {
+            .fold-anchor { position: sticky; top: 9px; height: 0; margin-top: -5px; z-index: 5; }
+            #filters-fold {
+                position: absolute; top: 0; right: -2px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+                border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #475569; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            }
+            #filters-fold .fold-icon-show, .filters-folded #filters-fold .fold-icon-hide { display: none; }
+            .filters-folded #filters-fold .fold-icon-show { display: block; }
+            /* Room for the button beside the first heading */
+            #level-section h3, #level-section.hidden + div h3 { padding-right: 30px; }
+
+            body.filters-folded > main { grid-template-columns: 30px minmax(0, 1fr) !important; }
+            body.filters-folded #filters-panel {
+                display: flex; flex-direction: column; align-items: center; gap: 12px;
+                padding: 9px 0 0 !important; overflow: hidden; cursor: pointer;
+            }
+            body.filters-folded #filters-panel > :not(.fold-anchor) { display: none; }
+            body.filters-folded .fold-anchor { position: static; height: 26px; margin: 0 !important; }
+            body.filters-folded #filters-fold { position: static; }
+            body.filters-folded #filters-panel::after {
+                content: 'Filters'; writing-mode: vertical-rl; transform: rotate(180deg);
+                font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.12em;
+            }
+            /* How many filters are on, under the label */
+            body.filters-folded #filters-panel[data-active]:not([data-active="0"])::before {
+                content: attr(data-active); order: 1; min-width: 18px; height: 18px; border-radius: 999px; background: #3b82f6; color: #ffffff;
+                font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center;
+            }
+            body.filters-folded #results-grid[data-view="grid"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (min-width: 640px) and (max-width: 1023px) {
+            body.filters-folded #results-grid[data-view="grid"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
+
+        /* Phones turned sideways: the page scrolls as one, so Safari can tuck its bars away. The filters stay pinned
+           beside the results and scroll on their own; the top bar slides off while scrolling down and back on any
+           scroll up. 4 across, 5 with the filters folded. */
+        @media (max-width: 1023px) and (orientation: landscape) and (max-height: 500px) {
+            body { height: auto; display: block; overflow: visible; }
+            body > header { position: sticky !important; top: 0; transition: transform 0.25s ease; }
+            body.topbar-away > header { transform: translateY(-100%); }
+            /* One row: title, search and sort side by side; the title count gives up its room */
+            body > header > div { flex-direction: row !important; align-items: center !important; }
+            body > header [data-stats] { display: none !important; }
+            body > header > div > div:last-child { flex: 1 1 auto; width: auto !important; }
+            body > main { grid-template-columns: clamp(190px, 30%, 280px) minmax(0, 1fr) !important; align-items: start; }
+            #filters-panel { position: sticky !important; top: 0; height: 100vh !important; height: 100dvh !important; overscroll-behavior: contain; }
+            #results-pane { height: auto; overflow: visible; }
+            #results-grid[data-view="grid"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+            body.filters-folded #results-grid[data-view="grid"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
         }
     </style>
 </head>
@@ -114,8 +174,13 @@
 
     <main class="max-w-7xl mx-auto px-4 md:px-10 grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-12">
         <aside id="filters-panel" class="lg:col-span-1 space-y-8 lg:sticky top-28 h-fit max-h-[calc(100vh-120px)] overflow-y-auto sidebar-scroll pr-4 pb-10">
+            <div class="fold-anchor lg:hidden">
+                <button id="filters-fold" type="button" aria-controls="filters-panel" aria-expanded="true" aria-label="Hide filters" title="Hide filters">
+                    <i data-lucide="chevron-left" class="fold-icon-hide w-4 h-4"></i><i data-lucide="chevron-right" class="fold-icon-show w-4 h-4"></i>
+                </button>
+            </div>
             <div id="level-section" class="hidden">
-                <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Holiday Level</h3>
+                <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Holiday Intensity</h3>
                 <div id="level-cloud" class="flex flex-wrap gap-2"></div>
             </div>
 
@@ -185,7 +250,7 @@
             </div>
 
             <button onclick="resetAll()" class="text-xs text-slate-400 hover:text-blue-600 transition flex items-center gap-1 font-bold uppercase tracking-tighter pt-4">
-                <i data-lucide="refresh-cw" class="w-3 h-3"></i> Reset
+                <i data-lucide="refresh-cw" class="w-3 h-3"></i> Reset filters
             </button>
         </aside>
 
@@ -226,7 +291,7 @@
         // combine with OR. A fresh page shows every rating except R, and every holiday level except adjacent.
         const GROUPS = {
             ratings: { tags: R_TAGS, defaults: new Set(R_TAGS.filter(t => t !== 'R')), all: 'All ratings', prefix: 'Rated ' },
-            levels: { tags: Object.keys(LEVEL_HINTS), defaults: new Set(['Holiday story', 'Holiday setting']), all: 'Every holiday level', prefix: 'Holiday ', noPrefix: 'Holiday ', green: true },
+            levels: { tags: Object.keys(LEVEL_HINTS), defaults: new Set(['Holiday story', 'Holiday setting']), all: 'Any holiday intensity', prefix: 'Holiday ', noPrefix: 'Holiday ', green: true },
         };
         const groupOf = tag => Object.keys(GROUPS).find(name => GROUPS[name].tags.includes(tag));
         const defaultStateFor = tag => (GROUPS[groupOf(tag)]?.defaults.has(tag) ? 1 : 0);
@@ -238,7 +303,75 @@
         let currentVisibleIds = [];
         const movieTags = {}; // id -> Set of its tags and genres
 
+        // --- Phones and tablets: fold the filters into a slim strip; remembered on this device ---
+        function setFiltersFolded(folded) {
+            document.body.classList.toggle('filters-folded', folded);
+            const btn = document.getElementById('filters-fold');
+            const label = folded ? 'Show filters' : 'Hide filters';
+            btn.setAttribute('aria-expanded', String(!folded));
+            btn.setAttribute('aria-label', label);
+            btn.title = label;
+            try { localStorage.setItem('filtersFolded', folded ? '1' : '0'); } catch (e) {}
+        }
+
+        function setUpFiltersFold() {
+            let folded = false;
+            try { folded = localStorage.getItem('filtersFolded') === '1'; } catch (e) {}
+            setFiltersFolded(folded);
+            document.getElementById('filters-fold').onclick = () => setFiltersFolded(!document.body.classList.contains('filters-folded'));
+            // Folded, the whole strip opens them
+            document.getElementById('filters-panel').addEventListener('click', e => {
+                if (document.body.classList.contains('filters-folded') && matchMedia('(max-width: 1023px)').matches
+                    && !e.target.closest('#filters-fold')) setFiltersFolded(false);
+            });
+        }
+
+        // --- Phones turned sideways: the top bar slides away while scrolling down, and back on any scroll up ---
+        function setUpSlidingTopBar() {
+            const sideways = matchMedia('(max-width: 1023px) and (orientation: landscape) and (max-height: 500px)');
+            const header = document.querySelector('body > header');
+            let lastY = 0;
+            const update = () => {
+                // Clamped, so iPhone's bounce past the top or bottom doesn't read as a change of direction
+                const y = Math.min(Math.max(scrollY, 0), document.documentElement.scrollHeight - innerHeight);
+                if (!sideways.matches || y <= header.offsetHeight) {
+                    document.body.classList.remove('topbar-away');
+                    lastY = y;
+                    return;
+                }
+                if (Math.abs(y - lastY) < 6) return; // wait for a deliberate move, not jitter
+                document.body.classList.toggle('topbar-away', y > lastY);
+                lastY = y;
+            };
+            addEventListener('scroll', update, { passive: true });
+
+            // Upright phones and tablets lock the page to the screen and scroll the two halves instead, so a page
+            // left scrolled (from scrolling sideways, then turning upright, or a restored scroll position) would
+            // hide the top bar with no way to scroll back. Put it back at the top.
+            const lockedLayout = matchMedia('(max-width: 1023px)');
+            const backToTop = () => {
+                const reset = () => { if (lockedLayout.matches && !sideways.matches && scrollY !== 0) scrollTo(0, 0); };
+                requestAnimationFrame(reset);
+                setTimeout(reset, 400); // again once the rotation has settled; iPhone nudges the page as it finishes
+            };
+            sideways.addEventListener('change', () => { update(); backToTop(); });
+            addEventListener('pageshow', backToTop);
+
+            // A swipe that starts on the filters scrolls only the filters. iPhone hands a swipe to the page when
+            // the filters are already at their top or bottom, so keep them a pixel away from either end.
+            const filters = document.getElementById('filters-panel');
+            filters.addEventListener('touchstart', () => {
+                if (!sideways.matches) return;
+                const end = filters.scrollHeight - filters.clientHeight;
+                if (end <= 1) return;
+                if (filters.scrollTop <= 0) filters.scrollTop = 1;
+                else if (filters.scrollTop >= end) filters.scrollTop = end - 1;
+            }, { passive: true });
+        }
+
         async function init() {
+            setUpFiltersFold();
+            setUpSlidingTopBar();
             try {
                 const response = await fetch('holiday_engine.json');
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -253,6 +386,10 @@
                 updateResults();
                 showStatusNote();
                 lucide.createIcons();
+                // Tailwind's in-browser compiler can lose classes when several of its rebuilds overlap during
+                // start-up (seen on iPhone Safari: square buttons, unstyled chips). Setting its config asks for one
+                // complete rebuild, so do that once the first render has settled.
+                setTimeout(() => { if (window.tailwind) tailwind.config = tailwind.config; }, 100);
             } catch (e) {
                 console.error("Data Load Failed", e);
                 const help = location.protocol === 'file:'
@@ -280,7 +417,7 @@
             });
         }
 
-        // Under the "Holiday Level" heading, the buttons read as answers; summary pills use the short form
+        // Under the "Holiday Intensity" heading, the buttons read as answers; summary pills use the short form
         const LEVEL_BUTTONS = { 'Holiday story': "It's the story", 'Holiday setting': "It's the setting", 'Holiday adjacent': "It's adjacent" };
         const shortLabel = tag => (tag in LEVEL_HINTS ? tag.replace(/^Holiday (\w)/, (_, c) => c.toUpperCase()) : tag);
 
@@ -420,7 +557,8 @@
         }
 
         function toggleTag(tag) {
-            let next = (tagStates.get(tag) + 1) % 3;
+            // Holiday Intensity buttons are answers you pick or don't, so they switch on and off; others also exclude
+            let next = tag in LEVEL_HINTS ? (tagStates.get(tag) === 1 ? 0 : 1) : (tagStates.get(tag) + 1) % 3;
             tagStates.set(tag, next);
             updateBtnState(tag);
             updateResults();
@@ -500,6 +638,8 @@
         }
 
         // --- Shareable URL state ---
+        // People save and pass these links around, so every link ever shared must keep working:
+        // only add params or values, never rename or remove one, and ignore what isn't recognized.
         // ?with=Comedy&with=small%20town&without=R&q=snow&sort=rating&dir=asc
         // Repeated params (not comma lists) because some tags contain commas.
         // Ratings and holiday levels appear only when they differ from the default, and then in full;
@@ -552,6 +692,15 @@
                     if (tag) { tagStates.set(tag, state); updateBtnState(tag); }
                 });
             });
+            // Older links could exclude a holiday intensity (without=Holiday adjacent); it's now on/off only. Excluded
+            // ones become unpicked, and if that leaves none picked, the rest are picked, which shows the same movies.
+            const levels = GROUPS.levels.tags;
+            const excluded = levels.filter(t => tagStates.get(t) === 2);
+            if (excluded.length) {
+                excluded.forEach(t => tagStates.set(t, 0));
+                if (!levels.some(t => tagStates.get(t) === 1)) levels.filter(t => !excluded.includes(t)).forEach(t => tagStates.set(t, 1));
+                levels.forEach(updateBtnState);
+            }
 
             const q = params.get('q');
             if (q) document.getElementById('search-input').value = q;
@@ -615,7 +764,7 @@
             document.getElementById('search-input').value = '';
         }
 
-        // "Clear all" pill and empty-state button: tags (ratings and levels back to their defaults) + search, keeps the sort.
+        // "Clear filters" pill and empty-state button: tags (ratings and levels back to their defaults) + search, keeps the sort.
         function clearFilters() {
             clearTagsAndSearch();
             updateResults();
@@ -696,6 +845,7 @@
                 if (state === 0 || groupOf(tag)) return;
                 addPill((state === 2 ? 'NO: ' : '') + tag, state === 2, () => resetTag(tag));
             });
+            document.getElementById('filters-panel').dataset.active = container.children.length; // shown on the folded strip
 
             if (hasActiveFilters()) {
                 const clear = document.createElement('button');
@@ -705,7 +855,7 @@
                 const icon = document.createElement('i');
                 icon.setAttribute('data-lucide', 'x-circle');
                 icon.className = 'w-3 h-3';
-                clear.append(icon, 'Clear all');
+                clear.append(icon, 'Clear filters');
                 container.appendChild(clear);
             }
             lucide.createIcons();
@@ -722,7 +872,7 @@
             const status = db.status || {};
             const notes = [];
             if (status.unsorted > 0) {
-                notes.push(`${status.unsorted} new ${status.unsorted === 1 ? 'title' : 'titles'} not yet sorted by holiday level`);
+                notes.push(`${status.unsorted} new ${status.unsorted === 1 ? 'title' : 'titles'} not yet sorted by holiday intensity`);
             }
             const built = status.built && new Date(`${status.built}T12:00:00`);
             const inSeason = [10, 11].includes(new Date().getMonth()); // November, December
@@ -786,6 +936,7 @@
                 btn.classList.toggle('text-slate-400', !on);
             });
             try { localStorage.setItem('resultsView', view); } catch (e) {}
+            if (currentVisibleIds.length) renderGrid(currentVisibleIds); // poster size depends on the view
         }
 
         function updateSortIcon() {
@@ -794,6 +945,9 @@
             document.getElementById('sort-dir').disabled = document.getElementById('sort-select').value === 'random';
             lucide.createIcons();
         }
+
+        // Movie text goes into HTML; titles like 'The Simpsons Meet the Bocellis in "Feliz Navidad"' need escaping
+        const escapeHTML = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
         function renderGrid(ids) {
             const grid = document.getElementById('results-grid');
@@ -810,20 +964,24 @@
                 const label = new Date(`${date}T00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 return `<div class="coming-soon absolute inset-x-0 bottom-0 bg-[#ffeb3b] text-stone-900 text-center text-[11px] font-black uppercase tracking-wider py-2 shadow-[0_-2px_8px_rgba(0,0,0,0.25)]">Coming soon · ${label}</div>`;
             };
+            // Phones and tablets show small cards in the grid, where TMDB's 342px-wide poster is plenty: under half
+            // the pixels of the 500px one to download and decode while scrolling. One per row keeps the larger one.
+            const smallPosters = matchMedia('(max-width: 1023px)').matches && grid.dataset.view !== 'one';
+            const posterURL = url => (smallPosters ? String(url).replace('/t/p/w500/', '/t/p/w342/') : url);
             grid.innerHTML = ids.map(id => {
                 const m = db.movies[id];
                 const year = (m.date && m.date !== '0000-00-00') ? m.date.split('-')[0] : 'TBA';
                 return `<a href="https://www.themoviedb.org/movie/${id}" target="_blank" class="movie-card group bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm flex flex-col">
-                    <div class="aspect-[2/3] overflow-hidden bg-slate-100 relative"><img src="${m.poster}" alt="${m.title} poster" class="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy">${m.date > today ? comingSoon(m.date) : ''}</div>
+                    <div class="aspect-[2/3] overflow-hidden bg-slate-100 relative"><img src="${posterURL(m.poster)}" alt="${escapeHTML(m.title)} poster" class="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" decoding="async">${m.date > today ? comingSoon(m.date) : ''}</div>
                     <div class="card-body p-4 flex-grow min-h-[110px]">
-                        <h4 class="font-bold text-sm leading-tight text-slate-800 mb-1">${m.title} <span class="text-slate-400 font-normal">(${year})</span></h4>
+                        <h4 class="font-bold text-sm leading-tight text-slate-800 mb-1">${escapeHTML(m.title)} <span class="text-slate-400 font-normal">(${year})</span></h4>
                         <div class="flex items-center gap-2 mb-2">
                             <span class="text-blue-600 font-black text-[10px] uppercase tracking-tighter border border-blue-100 px-1 rounded">${m.cert}</span>
                             <span class="text-slate-400 text-[10px] font-bold italic">
                                 ${m.votes ? `${m.rating.toFixed(1)}/10 <span class="card-detail opacity-60 ml-1">[${m.votes} votes]</span>` : 'Not yet rated'}
                             </span>
                         </div>
-                        <p class="card-detail text-[11px] text-slate-500 line-clamp-3 leading-snug">${m.overview}</p>
+                        <p class="card-detail text-[11px] text-slate-500 line-clamp-3 leading-snug">${escapeHTML(m.overview)}</p>
                     </div></a>`;
             }).join('');
         }

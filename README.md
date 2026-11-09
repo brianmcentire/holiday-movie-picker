@@ -9,6 +9,9 @@ A curated holiday movie discovery engine built with a high-concurrency Python AP
 * **Builder:** `data-builder.py` uses `asyncio` and `aiohttp` to fetch and normalize data from TMDB.
 * **Holiday levels:** `holiday_classifier.py` asks Claude how much the holiday matters to each film (see below).
 * **Frontend:** `index.html` is a standalone static site that filters the generated `holiday_engine.json` in real-time.
+* **Watch list:** `watchlist.js` adds a personal list (bookmark movies, mark them watched, reorder, share a copy), stored on the device with no accounts or servers. It's a separate module: removing it means deleting the file, its `<script>` tag and the lines in `index.html` marked `watch list hook`.
+* **Usage stats:** `analytics.js` counts visits and shared links with GoatCounter; it's also separate and removable.
+* **Design decisions** and the reasons for them are in [DESIGN.md](DESIGN.md).
 
 ### Usage
 1.  Get a free API Read Access Token from your [TMDB API settings](https://www.themoviedb.org/settings/api).
@@ -39,10 +42,6 @@ GitHub pauses scheduled workflows in public repos after 60 days without activity
 * **Pick for me:** a button that spotlights one film from the current filters.
 * **Falling snow:** a soothing, gentle snowfall in the page background.
 * **Released filter:** a group like Content Ratings with plain decade buttons (Before 1970 · '70s & '80s · '90s & 2000s · 2010 & later), all on by default, so people who skip older movies can turn them off. Factual labels on purpose: names like "Retro" make a judgment, and whether a film feels dated depends on the film and the viewer (A Christmas Story and Die Hard still play for kids who can't stand Christmas Vacation).
-* **Watch list:** a "+" on each card adds a movie to a personal list for the season, stored on the device with no accounts or servers. A "My list" view lets you drag to reorder, check off what you've watched, and filter to Unwatched, Watched or All. Watched rows fade somewhat, so they stay readable but you can see at a glance what's done.
-  * **Keeping it from getting lost:** ask the browser to keep the site's storage (`navigator.storage.persist()`); add an app manifest so "Add to Home Screen" works, which exempts the list from Safari's 7-day clearing on iPhone; and keep the list (order and checkmarks) in the page address while viewing it, so bookmarks, open tabs and history double as backups, and opening such a link restores a cleared list.
-  * **One quiet line at the top of the list:** "3 of 9 watched · Save a copy · ✓ saved Dec 4". Save a copy opens the share sheet on phones (Notes, Messages, email) and copies the link on desktop. The status turns into a gentle nudge ("Changes since your last save") only after the list has changed noticeably.
-  * **Sharing:** the same list link lets family see the same lineup.
 * **Ageless exceptions:** a short hand-picked list of older films that play for every generation (the Charlie Brown, Rudolph, Grinch and Frosty specials, maybe It's a Wonderful Life) that stays visible even when Before 1970 is off.
 
 *Data provided by [The Movie Database (TMDB)](https://www.themoviedb.org).*

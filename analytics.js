@@ -7,11 +7,15 @@
 // Self-contained: index.html loads this with one <script> tag and nothing else refers to it.
 // To remove it, delete that tag and this file.
 //
-// Off until GOATCOUNTER_CODE is set; on localhost it never sends, it logs to the console instead.
+// Off until GOATCOUNTER_CODE is set. On this computer or the home network (trying the site on a phone over
+// Wi-Fi) it never sends; it logs to the console instead.
 (() => {
     const GOATCOUNTER_CODE = 'seasons-screenings'; // seasons-screenings.goatcounter.com
 
-    const live = GOATCOUNTER_CODE !== '' && !['localhost', '127.0.0.1'].includes(location.hostname);
+    const host = location.hostname;
+    const local = ['localhost', '127.0.0.1'].includes(host) || host.endsWith('.local')
+        || /^(10|192\.168|172\.(1[6-9]|2\d|3[01]))\./.test(host);
+    const live = GOATCOUNTER_CODE !== '' && !local;
 
     // Only the app's own parameters (drops fbclid, utm_* and the like), sorted so the same
     // list always reads the same
