@@ -97,7 +97,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   - Watched: the poster and card fade, with a diagonal green WATCHED ribbon across the top-left corner.
   - Not on the list: nothing.
 - **Icon: the bookmark.** The first idea, popcorn, read as a trash can. A bookmark means "save for later" everywhere.
-- **The movie preview (the peek):** a tap or click on a poster opens it, and so does Enter on a card. It has the poster, the basics and the overview, plus:
+- **The movie preview (the peek):** a tap or click anywhere on a card opens it (poster, title or description), and so does Enter on a card. It has the poster, the basics and the overview, plus:
   - **Add to My Watchlist** (or, when the movie is on the list, **Watched it** and **Remove**);
   - **More on TMDB**.
 
@@ -107,7 +107,8 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   - The poster is on the left. The full description shows, and the two buttons sit side by side.
   - ×, Esc or a click outside closes it.
   - Why: it matches the phone, which the owner liked, and it gives laptops Add to My Watchlist and the "why it matched" line. Large and centered reads clearly as its own layer and never moves around.
-- **Adding on laptops:** the bookmark appears only on the poster under the pointer, and clicking it adds the movie. A click on the poster opens the preview. A click on the rest of the card still opens TMDB, and so does Cmd-, Ctrl- or Shift-click or a middle click on the poster, in a new tab as links do.
+- **Adding on laptops:** the bookmark appears only on the poster under the pointer, and clicking it adds the movie. A click anywhere else on the card opens the preview. Cmd-, Ctrl- or Shift-click or a middle click opens TMDB in a new tab, as links do.
+  - Why the whole card: on Nov 10 the owner found the description going straight to TMDB while the poster opened the preview, and called that wrong. One card, one action.
 
 ### Why it matched
 

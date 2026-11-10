@@ -359,9 +359,9 @@
             + `${icon('bookmarkPlus', 24, { stroke: 2.25, cls: 'wl-mark-off' })}<span class="wl-mark-label" aria-hidden="true"></span></button>`);
     }
 
-    // The poster opens the movie preview: a sheet from the bottom on phones, a panel in the middle on laptops and
-    // tablets. Enter on a card opens it too. With a mouse, the bookmark adds or removes, and the rest of the card
-    // still opens TMDB. A click with Cmd, Ctrl, Shift or Alt, or a middle click, opens TMDB in a new tab, as links do.
+    // Anywhere on a card (poster, title, description) opens the movie preview: a sheet from the bottom on phones, a
+    // panel in the middle on laptops and tablets. Enter on a card opens it too. With a mouse, the bookmark adds or
+    // removes. A click with Cmd, Ctrl, Shift or Alt, or a middle click, opens TMDB in a new tab, as links do.
     let lastPointerType = '';
     addEventListener('pointerdown', e => { lastPointerType = e.pointerType; }, true);
     const mouseDevice = matchMedia('(hover: hover) and (pointer: fine)');
@@ -372,17 +372,15 @@
         const card = e.target.closest('a.movie-card');
         const id = card?.dataset.wlId;
         if (!id) return;
-        const onPoster = !!e.target.closest('.wl-poster');
-        if (isTap(e) && onPoster) {
-            e.preventDefault();
-            openPeek(id);
-        } else if (e.target.closest('.wl-mark')) {
-            e.preventDefault();
+        // A tap on a phone's bookmark opens the preview too: it's small, and only shows on movies already added
+        const onMark = !isTap(e) && e.target.closest('.wl-mark');
+        if (!onMark && (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)) return;
+        e.preventDefault();
+        if (onMark) {
             const adding = !itemFor(id);
             toggle(id);
             if (adding) pop(id);
-        } else if (!(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) && (onPoster || (e.detail === 0 && e.target === card))) {
-            e.preventDefault();
+        } else {
             openPeek(id);
         }
     }
