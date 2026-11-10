@@ -1212,9 +1212,29 @@
             updateResults();
         }
 
+        // The longest hint that fits the search box. Laptop windows under about 1,150px and iPads held upright cut the
+        // full one off ("Search titles, ac"). Phones keep the one word.
+        const SEARCH_HINTS = ['Search titles, actors, keywords...', 'Titles, actors, keywords...', 'Titles, actors...', 'Search'];
+        function fitSearchHint(input) {
+            if (matchMedia('(max-width: 767px)').matches) { input.placeholder = 'Search'; return; }
+            const cs = getComputedStyle(input);
+            const room = input.getBoundingClientRect().width
+                - ['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'].reduce((sum, k) => sum + parseFloat(cs[k]), 0);
+            const ruler = document.createElement('span');
+            Object.assign(ruler.style, { position: 'absolute', visibility: 'hidden', whiteSpace: 'pre',
+                fontFamily: cs.fontFamily, fontSize: cs.fontSize, fontWeight: cs.fontWeight, letterSpacing: cs.letterSpacing });
+            document.body.append(ruler);
+            input.placeholder = SEARCH_HINTS.find(hint => {
+                ruler.textContent = hint;
+                return ruler.getBoundingClientRect().width <= room;
+            }) || 'Search';
+            ruler.remove();
+        }
+
         function addUIListeners() {
             const searchInput = document.getElementById('search-input');
-            if (matchMedia('(max-width: 767px)').matches) searchInput.placeholder = 'Search'; // The full hint doesn't fit on phones
+            // Measured again whenever the box changes size: the start-up styles, turning a phone, resizing a window
+            new ResizeObserver(() => fitSearchHint(searchInput)).observe(searchInput);
             // Redrawn once typing pauses: with most movies matching, each redraw takes a phone a good fraction of a second
             searchInput.oninput = () => {
                 clearTimeout(searchTimer);

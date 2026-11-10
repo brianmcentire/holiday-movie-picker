@@ -63,6 +63,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - **The title count** ("More than 1,000 titles") is grey at first and turns the tagline's blue once the number changes, then back to grey when it says the same as the unfiltered page again. A filter that doesn't change the number (turning R on still shows "More than 1,000") leaves it grey. Why: "34 titles" is the answer to what you just did, so it should draw the eye. *First built as "blue whenever a filter is on"; the owner wanted it tied to the number.*
   - On laptops it sits on the same line as "a holiday movie matchmaker", right-aligned against the search bar with a tab's width (32px) between them. It floated in the middle of the bar, which looked odd.
   - It keeps the width of "More than 1,000 titles" whatever it says, so the search bar never shifts while typing.
+- **The search hint** is the longest that fits the box: "Search titles, actors, keywords...", then "Titles, actors, keywords...", then "Titles, actors...", then "Search". Phones held upright always say "Search". Why: laptop windows under about 1,150px (the count takes room beside the bar), iPads held upright and phones turned sideways showed "Search titles, ac". *The owner asked for a shorter hint there on Nov 10; the middle step was Claude's addition.*
 - **Random** is a fair shuffle, made again on every filter or search change, but not when only the watch list changes (ticking a movie off doesn't reshuffle the page).
 
 ## Phones and tablets
