@@ -139,13 +139,19 @@
             #results-grid[data-view="grid"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
             body.filters-folded #results-grid[data-view="grid"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
         }
+
+        /* Laptops: the title count sits on the same line as "a holiday movie matchmaker", not in the middle of the bar.
+           Browsers without last-baseline alignment put both at the bottom, which is within a pixel or two. */
+        @media (min-width: 1024px) {
+            .header-brand, .header-count { align-self: flex-end; align-self: last baseline; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen pb-20">
 
     <header class="relative md:sticky top-0 z-50 frosted border-b border-slate-200 py-3 px-4 md:py-4 md:px-10 mb-4 md:mb-8">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
-            <div class="flex items-end justify-between gap-3">
+            <div class="header-brand flex items-end justify-between gap-3">
                 <div class="whitespace-nowrap leading-none">
                     <h1 class="text-xl md:text-2xl font-black tracking-tighter text-slate-900 uppercase">Season's Screenings</h1>
                     <p class="text-blue-600 font-light italic text-sm tracking-tight mt-1">a holiday movie matchmaker</p>
@@ -153,7 +159,7 @@
                 <span data-stats class="md:hidden text-[9px] leading-tight font-bold text-slate-400 uppercase tracking-widest text-right">...</span>
             </div>
 
-            <div class="flex-none justify-center px-4 hidden lg:flex">
+            <div class="header-count flex-none justify-center px-4 hidden lg:flex">
                 <span data-stats class="text-xs font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">...</span>
             </div>
 
@@ -810,8 +816,14 @@
 
             currentVisibleIds = ids;
             
+            // The count turns the tagline's blue while any filter or search is on (whenever Clear filters shows)
             const countText = describeCount(ids.length);
-            document.querySelectorAll('[data-stats]').forEach(el => el.innerText = countText);
+            const filtered = hasActiveFilters();
+            document.querySelectorAll('[data-stats]').forEach(el => {
+                el.innerText = countText;
+                el.classList.toggle('text-blue-600', filtered);
+                el.classList.toggle('text-slate-400', !filtered);
+            });
 
             syncSidebarStates();
             renderPills();
@@ -1215,7 +1227,7 @@
             const smallPosters = matchMedia('(max-width: 1023px)').matches && grid.dataset.view !== 'one';
             const posterURL = url => (smallPosters ? String(url).replace('/t/p/w500/', '/t/p/w342/') : url);
             const more = MORE_HIDDEN_NOTE && currentQuery() ? hiddenByGroups(ids.length) : null;
-            const moreNote = more ? `<div class="more-hidden col-span-full flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-medium text-slate-400">
+            const moreNote = more ? `<div class="more-hidden col-span-full flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-medium text-blue-600">
                     ${more.count} more ${more.count === 1 ? 'matches' : 'match'}, hidden by ${more.names.map(n => GROUP_TITLES[n]).join(' and ')}.
                     <button type="button" onclick="showHidden()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border border-slate-200 bg-white shadow-sm text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-blue-600 hover:border-blue-200 transition">
                         <i data-lucide="eye" class="w-3 h-3"></i> Show ${more.count === 1 ? 'it' : 'them'}
