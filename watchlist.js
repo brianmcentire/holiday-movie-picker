@@ -859,8 +859,8 @@
     const searchQuery = raw => (typeof searchKey === 'function' ? searchKey(raw) : raw.trim().toLowerCase());
     function matchesSearch(id, query) {
         if (!query) return true;
-        const text = movieFor(id).searchText ?? movieFor(id).title.toLowerCase();
-        return typeof searchMatches === 'function' ? searchMatches(text, query) : text.includes(query);
+        if (typeof movieMatchesSearch === 'function') return movieMatchesSearch(id, query);
+        return (movieFor(id).searchText ?? movieFor(id).title.toLowerCase()).includes(query);
     }
 
     function renderView() {

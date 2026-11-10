@@ -450,6 +450,92 @@
         // in more, so "santa" puts more Santa titles ahead of Klaus). To turn it off, set enabled to false.
         const TITLE_BOOST = { enabled: true, minVotes: 1000, sorts: ['top', 'rating', 'votes'] };
 
+        // Search also finds people: actors, directors and writers (data-builder.py picks who). A surname matches as
+        // it's typed ("ferr" finds Will Ferrell), a full name once there's a letter after the space ("will f"), and a
+        // first name alone never does, so "jack" and "holly" stay about the movies. Films found only through a person
+        // come after the rest, under the same sorts as TITLE_BOOST, so "brown" shows the Charlie Brown films before
+        // films with an actor named Brown. To stop searching people, set enabled to false; last: false mixes them in.
+        const PEOPLE_SEARCH = { enabled: true, last: true };
+        const PEOPLE_FIELDS = { cast: 'actor', directors: 'director', writers: 'writer' };
+        const NAME_SUFFIXES = new Set(['jr', 'sr', 'ii', 'iii', 'iv']);
+
+        // Where the search matches a person's name (both through searchKey), or -1: the start of the surname or of a
+        // part of it after a hyphen (Brian Doyle-Murray), or the start of the whole name when the search has a space
+        function personMatchAt(nameKey, query) {
+            if (query.includes(' ')) return nameKey.startsWith(query) ? 0 : -1;
+            const words = nameKey.split(' ');
+            let last = words.length - 1;
+            while (last > 0 && NAME_SUFFIXES.has(words[last])) last--;
+            let at = words.slice(0, last).join(' ').length + (last > 0 ? 1 : 0);
+            for (const part of words[last].split('-')) {
+                if (part.startsWith(query)) return at;
+                at += part.length + 1;
+            }
+            return -1;
+        }
+
+        // The Holiday Intensity levels are filters, not words about the film: "story" shouldn't find every film
+        // tagged "holiday story"
+        const LEVEL_TAG_KEYS = new Set(Object.keys(LEVEL_HINTS).map(t => t.toLowerCase()));
+
+        const currentQuery = () => searchKey(document.getElementById('search-input')?.value ?? '');
+        const matchesPerson = (m, query) => PEOPLE_SEARCH.enabled && m.people.some(p => personMatchAt(p.key, query) >= 0);
+
+        // Whether a movie matches the search, through its title, description, tags or people
+        function movieMatchesSearch(id, query) {
+            if (!query) return true;
+            const m = db.movies[id];
+            return !!m && (searchMatches(m.searchText, query) || matchesPerson(m, query));
+        }
+
+        // searchKey's form of a text, with the position each of its characters came from, so a match found in
+        // the searchable form can be marked in the text as it's shown
+        function searchKeyWithMap(text) {
+            const s = String(text ?? '');
+            let key = '';
+            const from = [];
+            for (let i = 0; i < s.length; i++) {
+                if (/\s/.test(s[i])) {
+                    if (key && !key.endsWith(' ')) { key += ' '; from.push(i); }
+                    continue;
+                }
+                for (const c of searchKey(s[i])) { key += c; from.push(i); }
+            }
+            if (key.endsWith(' ')) { key = key.slice(0, -1); from.pop(); }
+            return { key, from };
+        }
+
+        // Each place in a text where the search matches the start of a word, as [start, end) positions in the text
+        function searchMarks(text, query = currentQuery()) {
+            if (!query) return [];
+            const { key, from } = searchKeyWithMap(text);
+            const marks = [];
+            for (let at = key.indexOf(query); at >= 0; at = key.indexOf(query, at + 1)) {
+                if (at > 0 && /[\p{L}\p{N}]/u.test(key[at - 1])) continue;
+                marks.push([from[at], from[at + query.length - 1] + 1]);
+            }
+            return marks;
+        }
+
+        // Why a movie matches the search, for its preview. In order: { kind: 'title' }; { kind: 'person', role, name,
+        // marks } for the first billed person who matches; { kind: 'tag', tag }; { kind: 'description' }. Or null.
+        function searchReason(id, query = currentQuery()) {
+            const m = db.movies[id];
+            if (!query || !m) return null;
+            if (searchMatches(m.titleKey, query)) return { kind: 'title' };
+            if (PEOPLE_SEARCH.enabled) {
+                for (const p of m.people) {
+                    const { key, from } = searchKeyWithMap(p.name);
+                    const at = personMatchAt(key, query);
+                    if (at >= 0) return { kind: 'person', role: p.role, name: p.name, marks: [[from[at], from[at + query.length - 1] + 1]] };
+                }
+            }
+            const tags = [...(movieTags[id] || [])].filter(t => !LEVEL_TAG_KEYS.has(t) && searchMatches(searchKey(t), query));
+            if (tags.length) return { kind: 'tag', tag: tags.find(t => searchKey(t) === query) || tags.sort((a, b) => a.length - b.length)[0] };
+            if (searchMatches(searchKey(m.overview), query)) return { kind: 'description' };
+            return null;
+        }
+
         function indexMovies() {
             [db.index, db.genres || {}].forEach(source => {
                 Object.entries(source).forEach(([tag, ids]) => {
@@ -463,8 +549,12 @@
                 m.score = ((m.votes || 0) * m.rating + WEIGHT_VOTES * avg) / ((m.votes || 0) + WEIGHT_VOTES);
             });
             Object.entries(db.movies).forEach(([id, m]) => {
-                m.searchText = searchKey(`${m.title} ${m.overview} ${[...(movieTags[id] || [])].join(' ')}`);
+                const tags = [...(movieTags[id] || [])].filter(t => !LEVEL_TAG_KEYS.has(t));
+                m.searchText = searchKey(`${m.title} ${m.overview} ${tags.join(' ')}`);
                 m.titleKey = searchKey(m.title);
+                // Actors in billing order, then directors, then writers
+                m.people = Object.entries(PEOPLE_FIELDS).flatMap(([field, role]) => (Array.isArray(m[field]) ? m[field] : [])
+                    .map(name => ({ name: String(name), role, key: searchKey(name) })));
             });
         }
 
@@ -640,7 +730,7 @@
             const query = searchKey(document.getElementById('search-input').value);
 
             if (query) {
-                ids = ids.filter(id => searchMatches(db.movies[id].searchText, query));
+                ids = ids.filter(id => movieMatchesSearch(id, query));
             }
 
             const poolFor = tag => new Set(poolOf(tag));
@@ -701,11 +791,16 @@
                     else { v1 = m1.rating; v2 = m2.rating; }
                     return (typeof v1 === 'string' ? v1.localeCompare(v2) : v1 - v2) * sortDir;
                 });
-                const query = searchKey(document.getElementById('search-input').value);
-                if (query && TITLE_BOOST.enabled && TITLE_BOOST.sorts.includes(sortBy) && sortDir === defaultDirFor(sortBy)) {
-                    const boosted = new Set(ids.filter(id => (db.movies[id].votes || 0) >= TITLE_BOOST.minVotes
-                        && searchMatches(db.movies[id].titleKey, query)));
-                    ids.sort((a, b) => boosted.has(b) - boosted.has(a)); // stable, so each part keeps the sort
+                // While searching under a rating sort: well-known title matches, then the rest, then films found only
+                // through a person
+                const query = currentQuery();
+                if (query && TITLE_BOOST.sorts.includes(sortBy) && sortDir === defaultDirFor(sortBy)) {
+                    const boosted = new Set(TITLE_BOOST.enabled ? ids.filter(id => (db.movies[id].votes || 0) >= TITLE_BOOST.minVotes
+                        && searchMatches(db.movies[id].titleKey, query)) : []);
+                    const viaPeople = new Set(PEOPLE_SEARCH.enabled && PEOPLE_SEARCH.last
+                        ? ids.filter(id => !searchMatches(db.movies[id].searchText, query)) : []);
+                    const tier = id => (boosted.has(id) ? 0 : viaPeople.has(id) ? 2 : 1);
+                    ids.sort((a, b) => tier(a) - tier(b)); // stable, so each part keeps the sort
                 }
             }
 

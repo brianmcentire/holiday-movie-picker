@@ -40,6 +40,19 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   - Why not every title match: "santa" put 55 Santa titles (Santa Bootcamp first) ahead of Klaus, and "christmas" put It's a Wonderful Life 657th. With the cutoff, Klaus is 4th, after The Santa Clause 1–3, and It's a Wonderful Life is 18th, after famous Christmas titles.
   - Only under Top Rated, User Rating and Total Votes, in their usual direction. Release Date, Alphabetical and Random stay strictly in order.
   - Tune it with `minVotes` (lower lets more titles through), or turn it off with `enabled: false`.
+- **Search finds people:** actors, directors and writers.
+  - **Matching:** a surname matches as it's typed ("ferr" finds Elf through Will Ferrell), and so does the part of a surname after a hyphen (Louis-Dreyfus). A full name matches once there's a letter after the space ("will f"). A first name alone never does, so "jack" and "holly" stay about the movies.
+  - **Films found only through a person come after the rest**, under the same sorts as the title boost. So "brown" shows the Charlie Brown films before films with an actor named Brown.
+  - **Settings:** `PEOPLE_SEARCH` in index.html. `enabled: false` stops searching people; `last: false` mixes person matches in with the rest. There's no switch on the page: pill space is already tight.
+- **Who's searchable** (the settings at the top of `data-builder.py`):
+  - **Actors:** the first 5 billed; the first 10 for films with 500+ TMDB votes; and anyone billed lower with TMDB popularity 1.5 or more (John Candy is 11th in Home Alone).
+  - **Directors:** all of them.
+  - **Writers:** the author of the book it's based on (Charles Dickens, whose popularity is only 0.9), and screenwriters with popularity 1.5 or more (John Hughes).
+  - **Producers aren't searchable.** Finding a film through someone who isn't in it confuses, and most well-known producers also act, direct or write.
+  - In Nov 2026 that was about 8,500 names, taking the compressed download from 246KB to 324KB.
+  - **Why a sliding limit:** big films have well-known people deep in the billing (John Krasinski is 15th in The Holiday), while small films are bit parts past the leads. Of 16 well-known supporting actors, top 5 plus popularity found all 16 for 60KB; a fixed top 10 found 13 for 94KB, and a top 20 found 15 for 144KB. The 500-vote line (127 films) adds people like June Squibb and Kris Kristofferson for 1.5KB.
+  - A numbered table of names would have saved only 3–4KB: compression already shortens repeats, and 83% of the people appear in just one film.
+- **The Holiday Intensity names aren't searchable.** Every film carries one as a hidden tag ("holiday story"), so "story" found 1,016 films. They're filters, not words about the film.
 - **Nothing found, but hidden:** when the only matches are hidden by Content Ratings or Holiday Intensity (searching "die hard" with R and It's adjacent off), the empty results say "2 movies match, hidden by Content Ratings and Holiday Intensity." with **Show them**, which turns on every rating (or intensity) and keeps the search.
 - **Random** is a fair shuffle, made again on every filter or search change, but not when only the watch list changes (ticking a movie off doesn't reshuffle the page).
 
