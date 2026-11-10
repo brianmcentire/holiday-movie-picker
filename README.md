@@ -6,7 +6,7 @@ Live demo here - https://brianmcentire.github.io/holiday-movie-picker/
 A curated holiday movie discovery engine built with a high-concurrency Python API client and a zero-dependency static HTML and JS frontend.
 
 ### Architecture
-* **Builder:** `data-builder.py` uses `asyncio` and `aiohttp` to fetch and normalize data from TMDB.
+* **Builder:** `data-builder.py` uses `asyncio` and `aiohttp` to fetch and normalize data from TMDB, including the actors, directors and writers that search can find each film by.
 * **Holiday levels:** `holiday_classifier.py` asks Claude how much the holiday matters to each film (see below).
 * **Frontend:** `index.html` is a standalone static site that filters the generated `holiday_engine.json` in real-time.
 * **Watch list:** `watchlist.js` adds a personal list (bookmark movies, mark them watched, reorder, share a copy), stored on the device with no accounts or servers. It's a separate module: removing it means deleting the file, its `<script>` tag and the lines in `index.html` marked `watch list hook`.

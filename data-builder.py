@@ -133,6 +133,19 @@ LEVEL_TAGS = {"about": "holiday story", "set_at": "holiday setting", "adjacent":
 # TMDB keywords that say nothing about the movie's content
 JUNK_TAGS = {"aftercreditsstinger", "duringcreditsstinger", "woman director", "holiday"}
 
+# The people search can find a film by (the page matches a surname, or a full name). For the 1,136 films of
+# Nov 2026, these came to about 8,500 names (7,000 of them actors), adding 78KB to the compressed download.
+# Actors: the first few billed, the first 10 for films most people have heard of, and anyone billed lower whom many
+# people know (John Candy is 11th in Home Alone). Small films keep just their leads: past them it's bit parts.
+CAST_TOP = 5
+CAST_TOP_WELL_KNOWN = 10
+CAST_WELL_KNOWN_VOTES = 500
+PEOPLE_MIN_POPULARITY = 1.5   # TMDB's popularity for a person: bit parts are under 1; about the best-known 8% pass
+# Crew: every director, the author of the book it's based on (Charles Dickens scores only 0.9), and screenwriters
+# many people know (John Hughes). Producers are left out: finding a film through someone who isn't in it confuses.
+SOURCE_AUTHOR_JOBS = {"Novel", "Book", "Short Story"}
+WRITER_JOBS = {"Screenplay", "Writer", "Story"}
+
 def load_api_key():
     """Read TMDB_API_KEY (the API Read Access Token) from the environment or a local .env file."""
     key = os.environ.get("TMDB_API_KEY")
@@ -162,7 +175,7 @@ async def fetch_with_retry(session, url, params, semaphore):
 
 async def fetch_movie_details(session, semaphore, movie_id):
     url = f"{API_ROOT}/movie/{movie_id}"
-    params = {"append_to_response": "keywords,release_dates"}
+    params = {"append_to_response": "keywords,release_dates,credits"}
     data = await fetch_with_retry(session, url, params, semaphore)
     if not data: return None
     
@@ -186,6 +199,23 @@ async def fetch_movie_details(session, semaphore, movie_id):
             break
     return keywords, cert, genres, data
 
+def pick_people(credits, votes):
+    """The people search finds this film by, as {"cast": [...], "directors": [...], "writers": [...]} with
+    names in billing order; empty lists are left out to keep the file small."""
+    credits = credits or {}
+    top = CAST_TOP_WELL_KNOWN if votes >= CAST_WELL_KNOWN_VOTES else CAST_TOP
+    known = lambda c: (c.get('popularity') or 0) >= PEOPLE_MIN_POPULARITY
+    cast = sorted((c for c in credits.get('cast', []) if c.get('order', 999) < top or known(c)),
+                  key=lambda c: c.get('order', 999))
+    crew = credits.get('crew', [])
+    directors = [c for c in crew if c.get('job') == 'Director']
+    writers = [c for c in crew if c.get('job') in SOURCE_AUTHOR_JOBS or (c.get('job') in WRITER_JOBS and known(c))]
+    people = {}
+    for field, group in (("cast", cast), ("directors", directors), ("writers", writers)):
+        names = list(dict.fromkeys(' '.join(c['name'].split()) for c in group if (c.get('name') or '').strip()))
+        if names: people[field] = names
+    return people
+
 async def main():
     semaphore = asyncio.Semaphore(CONCURRENT_REQUESTS)
     movie_metadata = {}
@@ -207,14 +237,15 @@ async def main():
         if holiday_name != "Christmas" and mid not in inverted_index[tag]:
             inverted_index[tag].append(mid)
 
-    def add_movie(m, keywords, cert, genres, holiday_name):
+    def add_movie(m, keywords, cert, genres, holiday_name, credits):
         mid = str(m['id'])
         movie_metadata[mid] = {
             "title": m['title'], "overview": m['overview'],
             "rating": m['vote_average'],
             "votes": m.get('vote_count', 0),
             "cert": cert, "date": m.get('release_date') or '0000-00-00',
-            "poster": f"https://image.tmdb.org/t/p/w500{m['poster_path']}"
+            "poster": f"https://image.tmdb.org/t/p/w500{m['poster_path']}",
+            **pick_people(credits, m.get('vote_count', 0)),
         }
 
         # Vibes -> Lowercase
@@ -302,7 +333,7 @@ async def main():
                             continue
 
                     if len(movie_metadata) >= TOTAL_MAX_LIMIT: break
-                    add_movie(m, keywords, cert, genres, holiday_name)
+                    add_movie(m, keywords, cert, genres, holiday_name, data.get('credits'))
                     valid_in_batch += 1
 
                 print(f"[{label}] Added {valid_in_batch}. Total: {len(movie_metadata)}", file=sys.stderr)
@@ -318,7 +349,7 @@ async def main():
             if not data.get('poster_path'):
                 print(f"\nWarning: always-include movie {mid} has no poster on TMDB yet, skipping.", file=sys.stderr)
                 continue
-            add_movie(data, keywords, cert, genres, ALWAYS_INCLUDE[mid])
+            add_movie(data, keywords, cert, genres, ALWAYS_INCLUDE[mid], data.get('credits'))
 
         if not movie_metadata:
             sys.exit("\nBuild failed: no titles found. Keeping the existing holiday_engine.json.")
