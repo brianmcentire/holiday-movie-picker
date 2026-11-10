@@ -128,7 +128,12 @@ While searching, the preview says why the movie is in the results. The result ca
   4. **Only the description, past the part that shows:** "Matched description", with a lines icon. Phones show 6 lines of the description, or 3 sideways; laptops show it all, so laptops never need it.
 - **One kind per line,** on phones and laptops alike: people on line 1 (directors, actors and writers together), tags on line 2. "rankin bass stop motion" is 🎬 Arthur <u>Rankin</u> Jr. · Jules <u>Bass</u>, then 🏷 stop motion. With only one kind, it continues onto line 2, lined up under the names. *The owner's calls, Nov 10: tags on their own line on laptops, then the same on phones.*
 - **One icon per run of the same role:** 🎬 Rankin · Bass share one; 👤 Michael Caine · ✒ Charles Dickens get one each.
-- **Matched description** takes line 2 only beside one other kind that fits on line 1 ("ferrell dad" on a phone: Will Ferrell, then Matched description). Beside a person and a tag it's dropped; the yellow highlight still marks the word wherever the description shows it. The owner's call: with title, person, tag and description all matching, drop the description for simplicity.
+- **Matched description** shows whenever the matched word is past the part of the description that shows, but never on a third line:
+  - on its own line when it's the only reason ("workaholic" in Elf, or "snow job" in Snow Bride, whose title takes "snow");
+  - on line 2 when line 1 holds the people or the tags ("ferrell dad" on a phone: Will Ferrell, then Matched description);
+  - dropped only when both lines are already taken, by people and tags, or by a list of people that continues onto line 2. The yellow highlight still marks the word wherever the description shows it.
+  
+  The owner's call: it never pushes onto a third line, so with title, person, tag and description all matching, the description is the one left out.
 - **Two lines at most, and nothing cut short:** no "…" and no partial names. Whatever doesn't fit is left out whole, people first and then in the order typed. Why (the owner): the line is there so people aren't left wondering why a movie came up; when several reasons apply, they don't need all of them.
 - **A first reason too long for a line on its own wraps onto line 2** instead, since it may be the only reason. Only three tags are that wide on a phone, all "relationship" tags ("older woman younger woman relationship" on Carol); no person's name is. *The owner's call, Nov 10.*
 - **"new york" is the tag *new york city*, not Bob Newhart for "new".** Newhart only matches because his name starts with "new", so naming him would be a misleading reason. Someone who means him can type "newhart".

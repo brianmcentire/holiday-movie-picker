@@ -535,8 +535,8 @@
     //   the description: nothing, as the matched words are highlighted in it, unless they're past the lines it shows
     //   (phones show 6), and then "Matched description".
     // A title match needs no reason. People go on the first line and tags on the second; with only one kind, it can
-    // continue onto the second line, and "Matched description" can take a free second line. One icon per run of the
-    // same role. What doesn't fit is left out whole: no partial names and no "…". A first reason too long for a line
+    // continue onto the second line. "Matched description" goes on the first free line, alone or under people or
+    // tags, and is left out only when both lines are taken: never a third line. One icon per run of the same role. What doesn't fit is left out whole: no partial names and no "…". A first reason too long for a line
     // on its own wraps onto the second.
     const REASON_ICONS = { actor: ['person', 'Actor'], director: ['clapperboard', 'Director'], writer: ['pen', 'Writer'] };
     let peekWhy = null; // { people, tags, descRuns } for the open preview, or null when not searching
