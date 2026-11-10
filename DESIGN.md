@@ -34,7 +34,12 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 
 ## Search and results
 
-- **Search ignores case, accents, curly quotes and extra spaces.** iPhone types it’s with a curly apostrophe and adds a space after a tapped suggestion; neither should hide movies. "cafe" finds Café. The link keeps the search exactly as typed.
+- **Search ignores case, accents, apostrophes, full stops and extra spaces.** iPhone types it’s with a curly apostrophe and adds a space after a tapped suggestion; neither should hide movies. "cafe" finds Café, "its a wonderful" finds It's a Wonderful Life, "dr seuss" finds Dr. Seuss. The link keeps the search exactly as typed.
+- **Search matches the start of a word.** "elf" finds Elf, Elf's and elfin, but not herself, selfish or twelfth; "ice" no longer finds police or nice. A word typed halfway still matches, so results keep changing with every letter ("gri" finds Grinch). Searching the middle of a word ("mas" for Christmas) doesn't. Why: "elf" found 116 films, mostly herself and himself, with the movie Elf 77th.
+- **Well-known films with the search in their title come first** (`TITLE_BOOST` in index.html), so "elf" puts Elf first. "Well-known" is 1,000+ TMDB votes, about 80 of the 1,136 films in Nov 2026. Everything else keeps the chosen sort.
+  - Why not every title match: "santa" put 55 Santa titles (Santa Bootcamp first) ahead of Klaus, and "christmas" put It's a Wonderful Life 657th. With the cutoff, Klaus is 4th, after The Santa Clause 1–3, and It's a Wonderful Life is 18th, after famous Christmas titles.
+  - Only under Top Rated, User Rating and Total Votes, in their usual direction. Release Date, Alphabetical and Random stay strictly in order.
+  - Tune it with `minVotes` (lower lets more titles through), or turn it off with `enabled: false`.
 - **Nothing found, but hidden:** when the only matches are hidden by Content Ratings or Holiday Intensity (searching "die hard" with R and It's adjacent off), the empty results say "2 movies match, hidden by Content Ratings and Holiday Intensity." with **Show them**, which turns on every rating (or intensity) and keeps the search.
 - **Random** is a fair shuffle, made again on every filter or search change, but not when only the watch list changes (ticking a movie off doesn't reshuffle the page).
 

@@ -423,12 +423,32 @@
             }
         }
 
-        // Search ignores case, accents (cafe finds Café), curly quotes (iPhone types it’s) and extra spaces (a
-        // suggestion tapped on iPhone adds one at the end). The link keeps the search exactly as typed.
+        // Search ignores case, accents (cafe finds Café), apostrophes and full stops (its finds It's, dr seuss finds
+        // Dr. Seuss), curly quotes and extra spaces (a suggestion tapped on iPhone adds one at the end).
+        // The link keeps the search exactly as typed.
         function searchKey(text) {
             return String(text).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                .replace(/[‘’ʼ′]/g, "'").replace(/[“”″]/g, '"').replace(/\s+/g, ' ').trim().toLowerCase();
+                .replace(/['‘’ʼ′.]/g, '').replace(/[“”″]/g, '"').replace(/\s+/g, ' ').trim().toLowerCase();
         }
+
+        // A search matches the start of a word, so "elf" finds Elf and elfin but not herself or selfish, and a word
+        // typed halfway still finds it ("gri" finds Grinch). Both sides come through searchKey first.
+        let searchPattern = null;
+        function searchMatches(text, query) {
+            if (!query) return true;
+            if (searchPattern?.query !== query) {
+                const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                searchPattern = { query, re: new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}`, 'u') };
+            }
+            return searchPattern.re.test(text);
+        }
+
+        // While searching, well-known films with the search in their title go first, so "elf" brings up Elf instead
+        // of leaving it behind higher-rated films that only mention an elf. Only under the rating sorts in their usual
+        // direction; Release Date, Alphabetical and Random stay strictly in order.
+        // To tune it, change minVotes (TMDB votes: 1000 was the 80 best-known of 1,136 films in Nov 2026; lower lets
+        // in more, so "santa" puts more Santa titles ahead of Klaus). To turn it off, set enabled to false.
+        const TITLE_BOOST = { enabled: true, minVotes: 1000, sorts: ['top', 'rating', 'votes'] };
 
         function indexMovies() {
             [db.index, db.genres || {}].forEach(source => {
@@ -444,6 +464,7 @@
             });
             Object.entries(db.movies).forEach(([id, m]) => {
                 m.searchText = searchKey(`${m.title} ${m.overview} ${[...(movieTags[id] || [])].join(' ')}`);
+                m.titleKey = searchKey(m.title);
             });
         }
 
@@ -619,7 +640,7 @@
             const query = searchKey(document.getElementById('search-input').value);
 
             if (query) {
-                ids = ids.filter(id => db.movies[id].searchText.includes(query));
+                ids = ids.filter(id => searchMatches(db.movies[id].searchText, query));
             }
 
             const poolFor = tag => new Set(poolOf(tag));
@@ -680,6 +701,12 @@
                     else { v1 = m1.rating; v2 = m2.rating; }
                     return (typeof v1 === 'string' ? v1.localeCompare(v2) : v1 - v2) * sortDir;
                 });
+                const query = searchKey(document.getElementById('search-input').value);
+                if (query && TITLE_BOOST.enabled && TITLE_BOOST.sorts.includes(sortBy) && sortDir === defaultDirFor(sortBy)) {
+                    const boosted = new Set(ids.filter(id => (db.movies[id].votes || 0) >= TITLE_BOOST.minVotes
+                        && searchMatches(db.movies[id].titleKey, query)));
+                    ids.sort((a, b) => boosted.has(b) - boosted.has(a)); // stable, so each part keeps the sort
+                }
             }
 
             currentVisibleIds = ids;

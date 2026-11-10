@@ -864,9 +864,13 @@
 
     // The header's search narrows the list on the page, with the same matching as the results
     const searchInput = () => document.getElementById('search-input');
-    // The page's own search normalizer (accents, curly quotes, spaces), when it has one
+    // The page's own search normalizer (accents, apostrophes, spaces) and word-start matching, when it has them
     const searchQuery = raw => (typeof searchKey === 'function' ? searchKey(raw) : raw.trim().toLowerCase());
-    const matchesSearch = (id, query) => !query || (movieFor(id).searchText ?? movieFor(id).title.toLowerCase()).includes(query);
+    function matchesSearch(id, query) {
+        if (!query) return true;
+        const text = movieFor(id).searchText ?? movieFor(id).title.toLowerCase();
+        return typeof searchMatches === 'function' ? searchMatches(text, query) : text.includes(query);
+    }
 
     function renderView() {
         cancelDrag?.(); // the rows are about to be redrawn
