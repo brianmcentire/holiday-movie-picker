@@ -40,6 +40,10 @@
         .sidebar-scroll:hover::-webkit-scrollbar-thumb { background: #cbd5e1; }
         .sort-btn { transition: color 0.2s; }
         #search-input:placeholder-shown + #clear-search { display: none; }
+        @media (prefers-reduced-motion: reduce) {
+            *, ::before, ::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+        }
+        #sort-select:focus-visible { outline: 2px solid #93c5fd; outline-offset: -2px; border-radius: 0.75rem 0 0 0.75rem; }
 
         /* Phones and tablets: a split screen, filters on the left and results on the right, each scrolling on its own */
         @media (max-width: 1023px) {
@@ -124,7 +128,13 @@
             body > header [data-stats] { display: none !important; }
             body > header > div > div:last-child { flex: 1 1 auto; width: auto !important; }
             body > main { grid-template-columns: clamp(190px, 30%, 280px) minmax(0, 1fr) !important; align-items: start; }
-            #filters-panel { position: sticky !important; top: 0; height: 100vh !important; height: 100dvh !important; overscroll-behavior: contain; }
+            /* Below the top bar while it shows (--topbar-h is its height), so it never covers the top of the filters */
+            #filters-panel {
+                position: sticky !important; top: var(--topbar-h, 0px); overscroll-behavior: contain;
+                height: calc(100vh - var(--topbar-h, 0px)) !important; height: calc(100dvh - var(--topbar-h, 0px)) !important;
+                transition: top 0.25s ease, height 0.25s ease;
+            }
+            body.topbar-away #filters-panel { top: 0; height: 100vh !important; height: 100dvh !important; }
             #results-pane { height: auto; overflow: visible; }
             #results-grid[data-view="grid"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
             body.filters-folded #results-grid[data-view="grid"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
@@ -295,6 +305,10 @@
             ratings: { tags: R_TAGS, defaults: new Set(R_TAGS.filter(t => t !== 'R')), all: 'All ratings', prefix: 'Rated ' },
             levels: { tags: Object.keys(LEVEL_HINTS), defaults: new Set(['Holiday story', 'Holiday setting']), all: 'Any holiday intensity', prefix: 'Holiday ', noPrefix: 'Holiday ', green: true },
         };
+        // Plain-object lookups by tag go through has(), so a TMDB keyword like "constructor" can't find Object's built-ins
+        const has = (obj, key) => !!obj && Object.prototype.hasOwnProperty.call(obj, key);
+        // The movies with a tag or genre
+        const poolOf = tag => (has(db.genres, tag) && db.genres[tag]) || (has(db.index, tag.toLowerCase()) && db.index[tag.toLowerCase()]) || [];
         const groupOf = tag => Object.keys(GROUPS).find(name => GROUPS[name].tags.includes(tag));
         const defaultStateFor = tag => (GROUPS[groupOf(tag)]?.defaults.has(tag) ? 1 : 0);
         const groupAtDefault = name => GROUPS[name].tags.every(t => tagStates.get(t) === defaultStateFor(t));
@@ -333,11 +347,16 @@
             const sideways = matchMedia('(max-width: 1023px) and (orientation: landscape) and (max-height: 500px)');
             const header = document.querySelector('body > header');
             let lastY = 0;
+            let topbarHeight = '';
             const update = () => {
+                if (sideways.matches && `${header.offsetHeight}px` !== topbarHeight) {
+                    topbarHeight = `${header.offsetHeight}px`;
+                    document.documentElement.style.setProperty('--topbar-h', topbarHeight);
+                }
                 // Clamped, so iPhone's bounce past the top or bottom doesn't read as a change of direction
                 const y = Math.min(Math.max(scrollY, 0), document.documentElement.scrollHeight - innerHeight);
                 if (!sideways.matches || y <= header.offsetHeight) {
-                    document.body.classList.remove('topbar-away');
+                    document.body.classList.toggle('topbar-away', false); // unlike remove, writes nothing when it's already off
                     lastY = y;
                     return;
                 }
@@ -346,6 +365,8 @@
                 lastY = y;
             };
             addEventListener('scroll', update, { passive: true });
+            addEventListener('resize', update, { passive: true });
+            update();
 
             // Upright phones and tablets lock the page to the screen and scroll the two halves instead, so a page
             // left scrolled (from scrolling sideways, then turning upright, or a restored scroll position) would
@@ -387,7 +408,7 @@
                 setResultsView(savedView);
                 updateResults();
                 showStatusNote();
-                lucide.createIcons();
+                window.lucide?.createIcons();
                 // Tailwind's in-browser compiler can lose classes when several of its rebuilds overlap during
                 // start-up (seen on iPhone Safari: square buttons, unstyled chips). Setting its config asks for one
                 // complete rebuild, so do that once the first render has settled.
@@ -402,6 +423,33 @@
             }
         }
 
+        // Search ignores case, accents (cafe finds Café), apostrophes and full stops (its finds It's, dr seuss finds
+        // Dr. Seuss), curly quotes and extra spaces (a suggestion tapped on iPhone adds one at the end).
+        // The link keeps the search exactly as typed.
+        function searchKey(text) {
+            return String(text).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/['‘’ʼ′.]/g, '').replace(/[“”″]/g, '"').replace(/\s+/g, ' ').trim().toLowerCase();
+        }
+
+        // A search matches the start of a word, so "elf" finds Elf and elfin but not herself or selfish, and a word
+        // typed halfway still finds it ("gri" finds Grinch). Both sides come through searchKey first.
+        let searchPattern = null;
+        function searchMatches(text, query) {
+            if (!query) return true;
+            if (searchPattern?.query !== query) {
+                const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                searchPattern = { query, re: new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}`, 'u') };
+            }
+            return searchPattern.re.test(text);
+        }
+
+        // While searching, well-known films with the search in their title go first, so "elf" brings up Elf instead
+        // of leaving it behind higher-rated films that only mention an elf. Only under the rating sorts in their usual
+        // direction; Release Date, Alphabetical and Random stay strictly in order.
+        // To tune it, change minVotes (TMDB votes: 1000 was the 80 best-known of 1,136 films in Nov 2026; lower lets
+        // in more, so "santa" puts more Santa titles ahead of Klaus). To turn it off, set enabled to false.
+        const TITLE_BOOST = { enabled: true, minVotes: 1000, sorts: ['top', 'rating', 'votes'] };
+
         function indexMovies() {
             [db.index, db.genres || {}].forEach(source => {
                 Object.entries(source).forEach(([tag, ids]) => {
@@ -415,18 +463,20 @@
                 m.score = ((m.votes || 0) * m.rating + WEIGHT_VOTES * avg) / ((m.votes || 0) + WEIGHT_VOTES);
             });
             Object.entries(db.movies).forEach(([id, m]) => {
-                m.searchText = `${m.title} ${m.overview} ${[...movieTags[id]].join(' ')}`.toLowerCase();
+                m.searchText = searchKey(`${m.title} ${m.overview} ${[...(movieTags[id] || [])].join(' ')}`);
+                m.titleKey = searchKey(m.title);
             });
         }
 
         // Under the "Holiday Intensity" heading, the buttons read as answers; summary pills use the short form
         const LEVEL_BUTTONS = { 'Holiday story': "It's the story", 'Holiday setting': "It's the setting", 'Holiday adjacent': "It's adjacent" };
-        const shortLabel = tag => (tag in LEVEL_HINTS ? tag.replace(/^Holiday (\w)/, (_, c) => c.toUpperCase()) : tag);
+        const shortLabel = tag => (has(LEVEL_HINTS, tag) ? tag.replace(/^Holiday (\w)/, (_, c) => c.toUpperCase()) : tag);
 
         function createFilterBtn(tag, container, hint) {
             const btn = document.createElement('button');
             btn.id = `tag-${tag}`;
-            btn.innerText = LEVEL_BUTTONS[tag] || tag;
+            btn.type = 'button';
+            btn.innerText = (has(LEVEL_BUTTONS, tag) && LEVEL_BUTTONS[tag]) || tag;
             if (hint) btn.title = hint;
             btn.className = `px-3 py-1 rounded-full border text-[11px] font-semibold transition-all state-neutral whitespace-nowrap`;
             btn.onclick = () => toggleTag(tag);
@@ -559,8 +609,9 @@
         }
 
         function toggleTag(tag) {
-            // Holiday Intensity buttons are answers you pick or don't, so they switch on and off; others also exclude
-            let next = tag in LEVEL_HINTS ? (tagStates.get(tag) === 1 ? 0 : 1) : (tagStates.get(tag) + 1) % 3;
+            // Holiday Intensity and Content Ratings buttons are answers you pick or don't, so they switch on and off
+            // (with others picked, an excluded rating was hidden anyway); the other filters also exclude
+            let next = groupOf(tag) ? (tagStates.get(tag) === 1 ? 0 : 1) : (tagStates.get(tag) + 1) % 3;
             tagStates.set(tag, next);
             updateBtnState(tag);
             updateResults();
@@ -574,23 +625,29 @@
                 if (state === 0) cls += 'state-neutral';
                 else if (state === 1) cls += 'state-include';
                 else if (state === 2) cls += 'state-exclude';
-                if (tag in LEVEL_HINTS) cls += ' level-btn';
+                if (has(LEVEL_HINTS, tag)) cls += ' level-btn';
                 btn.className = cls;
+                // Holiday Intensity and Content Ratings buttons are on or off; the others read out their state
+                if (groupOf(tag)) btn.setAttribute('aria-pressed', String(state === 1));
+                else if (state) btn.setAttribute('aria-label', `${btn.innerText}: ${state === 1 ? 'only these' : 'hidden'}`);
+                else btn.removeAttribute('aria-label');
             }
         }
 
-        function updateResults() {
+        // The movies that pass the search and every filter, leaving out the groups named in skipGroups
+        function matchingIds(skipGroups = []) {
             let ids = Object.keys(db.movies);
-            const query = document.getElementById('search-input').value.toLowerCase();
+            const query = searchKey(document.getElementById('search-input').value);
 
             if (query) {
-                ids = ids.filter(id => db.movies[id].searchText.includes(query));
+                ids = ids.filter(id => searchMatches(db.movies[id].searchText, query));
             }
 
-            const poolFor = tag => new Set((db.genres && db.genres[tag]) || db.index[tag.toLowerCase()] || []);
+            const poolFor = tag => new Set(poolOf(tag));
             // Within a group, show movies with any selected value; selecting all of them filters nothing,
             // which keeps films not yet given a holiday level in view
-            Object.values(GROUPS).forEach(group => {
+            Object.entries(GROUPS).forEach(([name, group]) => {
+                if (skipGroups.includes(name)) return;
                 const selected = group.tags.filter(t => tagStates.get(t) === 1);
                 if (!selected.length || selected.length === group.tags.length) return;
                 const allowed = new Set(selected.flatMap(t => [...poolFor(t)]));
@@ -598,19 +655,38 @@
             });
 
             tagStates.forEach((state, tag) => {
-                if (state === 0 || (state === 1 && groupOf(tag))) return;
+                if (state === 0 || (state === 1 && groupOf(tag)) || skipGroups.includes(groupOf(tag))) return;
 
-                const pool = (db.genres && db.genres[tag]) || db.index[tag.toLowerCase()] || [];
-                const set = new Set(pool);
+                const set = new Set(poolOf(tag));
 
                 if (state === 1) ids = ids.filter(i => set.has(i));
                 if (state === 2) ids = ids.filter(i => !set.has(i));
             });
             ids = window.watchlist?.filter(ids) ?? ids; // watch list hook
+            return ids;
+        }
+
+        // Random's order: a fair shuffle of every movie, made again on each update unless keepOrder is asked for
+        // (the watch list asks when only the list changed, so ticking a movie off doesn't reshuffle the page)
+        let randomRank = new Map();
+
+        let searchTimer = 0;
+
+        function updateResults(options) {
+            clearTimeout(searchTimer); // anything waiting on the search box is done now
+            const ids = matchingIds();
 
             const sortBy = document.getElementById('sort-select').value;
             if (sortBy === 'random') {
-                ids.sort(() => Math.random() - 0.5);
+                if (!options?.keepOrder || !randomRank.size) {
+                    const all = Object.keys(db.movies);
+                    for (let i = all.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [all[i], all[j]] = [all[j], all[i]];
+                    }
+                    randomRank = new Map(all.map((id, rank) => [id, rank]));
+                }
+                ids.sort((a, b) => randomRank.get(a) - randomRank.get(b));
             } else {
                 ids.sort((a, b) => {
                     const m1 = db.movies[a], m2 = db.movies[b];
@@ -625,6 +701,12 @@
                     else { v1 = m1.rating; v2 = m2.rating; }
                     return (typeof v1 === 'string' ? v1.localeCompare(v2) : v1 - v2) * sortDir;
                 });
+                const query = searchKey(document.getElementById('search-input').value);
+                if (query && TITLE_BOOST.enabled && TITLE_BOOST.sorts.includes(sortBy) && sortDir === defaultDirFor(sortBy)) {
+                    const boosted = new Set(ids.filter(id => (db.movies[id].votes || 0) >= TITLE_BOOST.minVotes
+                        && searchMatches(db.movies[id].titleKey, query)));
+                    ids.sort((a, b) => boosted.has(b) - boosted.has(a)); // stable, so each part keeps the sort
+                }
             }
 
             currentVisibleIds = ids;
@@ -675,17 +757,25 @@
         }
 
         function syncURL() {
-            if (location.hash.startsWith('#watchlist')) { const url = shareURL() + location.hash; if (url !== location.href) history.replaceState(history.state, '', url); return; } // watch list hook: the address keeps it
-            const url = shareURL();
-            if (url !== location.href) history.replaceState(history.state, '', url);
+            try {
+                if (location.hash.startsWith('#watchlist')) { const url = shareURL() + location.hash; if (url !== location.href) history.replaceState(history.state, '', url); return; } // watch list hook: the address keeps it
+                const url = shareURL();
+                if (url !== location.href) history.replaceState(history.state, '', url);
+            } catch (e) {} // Safari's limit on address updates; the next change catches up
         }
 
         function restoreFromURL() {
             const params = new URLSearchParams(location.search);
-            // Case-insensitive lookup so hand-typed links still work; unknown tags are ignored.
-            const known = new Map([...tagStates.keys()].map(t => [t.toLowerCase(), t]));
+            // Case- and spacing-insensitive lookup, so hand-typed links still work (and a tag the data spells with a
+            // trailing space comes back from its own link); unknown tags are ignored. Tags without a sidebar button
+            // count too: a weekly data refresh can drop a tag below MIN_TAG_FILMS after a link to it was shared.
+            const norm = text => text.replace(/\s+/g, ' ').trim().toLowerCase();
+            const known = new Map();
+            [...tagStates.keys(), ...Object.keys(db.genres || {}), ...Object.keys(db.index)].forEach(t => {
+                if (!known.has(norm(t))) known.set(norm(t), t);
+            });
             // A link that mentions any rating (or holiday level) spells out that whole group, so start it from cleared
-            const linkedTags = [...params.getAll('with'), ...params.getAll('without')].map(raw => known.get(raw.trim().toLowerCase()));
+            const linkedTags = [...params.getAll('with'), ...params.getAll('without')].map(raw => known.get(norm(raw)));
             Object.entries(GROUPS).forEach(([name, group]) => {
                 if (params.has(name) || linkedTags.some(t => group.tags.includes(t))) {
                     group.tags.forEach(t => { tagStates.set(t, 0); updateBtnState(t); });
@@ -693,19 +783,20 @@
             });
             [['with', 1], ['without', 2]].forEach(([key, state]) => {
                 params.getAll(key).forEach(raw => {
-                    const tag = known.get(raw.trim().toLowerCase());
+                    const tag = known.get(norm(raw));
                     if (tag) { tagStates.set(tag, state); updateBtnState(tag); }
                 });
             });
-            // Older links could exclude a holiday intensity (without=Holiday adjacent); it's now on/off only. Excluded
-            // ones become unpicked, and if that leaves none picked, the rest are picked, which shows the same movies.
-            const levels = GROUPS.levels.tags;
-            const excluded = levels.filter(t => tagStates.get(t) === 2);
-            if (excluded.length) {
+            // Older links could exclude a holiday intensity or a rating (without=Holiday adjacent, without=R); both are
+            // now on/off only. Excluded ones become unpicked, and if that leaves none picked, the rest are picked, which
+            // shows the same movies.
+            Object.values(GROUPS).forEach(({ tags }) => {
+                const excluded = tags.filter(t => tagStates.get(t) === 2);
+                if (!excluded.length) return;
                 excluded.forEach(t => tagStates.set(t, 0));
-                if (!levels.some(t => tagStates.get(t) === 1)) levels.filter(t => !excluded.includes(t)).forEach(t => tagStates.set(t, 1));
-                levels.forEach(updateBtnState);
-            }
+                if (!tags.some(t => tagStates.get(t) === 1)) tags.filter(t => !excluded.includes(t)).forEach(t => tagStates.set(t, 1));
+                tags.forEach(updateBtnState);
+            });
 
             const q = params.get('q');
             if (q) document.getElementById('search-input').value = q;
@@ -751,8 +842,9 @@
         let shareFeedbackTimer;
         function showShareFeedback(msg) {
             const el = document.getElementById('share-feedback');
-            el.innerText = msg;
             el.classList.remove('hidden');
+            el.innerText = '';
+            setTimeout(() => { el.innerText = msg; }, 50); // after it's shown, so screen readers announce it
             clearTimeout(shareFeedbackTimer);
             shareFeedbackTimer = setTimeout(() => el.classList.add('hidden'), 2000);
         }
@@ -824,7 +916,9 @@
                 pill.appendChild(span);
 
                 const btn = document.createElement('button');
+                btn.type = 'button';
                 btn.className = "hover:opacity-60 transition";
+                btn.setAttribute('aria-label', `Remove ${label}`);
                 btn.onclick = onRemove;
                 
                 const icon = document.createElement('i');
@@ -866,7 +960,7 @@
                 clear.append(icon, 'Clear filters');
                 container.appendChild(clear);
             }
-            lucide.createIcons();
+            window.lucide?.createIcons();
         }
 
         function resetGroup(name) {
@@ -901,7 +995,11 @@
         function addUIListeners() {
             const searchInput = document.getElementById('search-input');
             if (matchMedia('(max-width: 767px)').matches) searchInput.placeholder = 'Search'; // The full hint doesn't fit on phones
-            searchInput.oninput = updateResults;
+            // Redrawn once typing pauses: with most movies matching, each redraw takes a phone a good fraction of a second
+            searchInput.oninput = () => {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(updateResults, 120);
+            };
             
             document.getElementById('clear-search').onclick = () => {
                 searchInput.value = '';
@@ -951,23 +1049,59 @@
             const icon = document.getElementById('dir-icon');
             icon.setAttribute('data-lucide', sortDir === 1 ? 'arrow-up-narrow-wide' : 'arrow-down-wide-narrow');
             document.getElementById('sort-dir').disabled = document.getElementById('sort-select').value === 'random';
-            lucide.createIcons();
+            window.lucide?.createIcons();
         }
 
         // Movie text goes into HTML; titles like 'The Simpsons Meet the Bocellis in "Feliz Navidad"' need escaping
         const escapeHTML = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
+        // With no results: Content Ratings and Holiday Intensity hide some movies by default (R, It's adjacent), so
+        // searching "die hard" would otherwise just say nothing matches. The fewest groups whose opening shows
+        // matches, and how many: { names: ['ratings'], count: 2 }, or null.
+        const GROUP_TITLES = { ratings: 'Content Ratings', levels: 'Holiday Intensity' };
+        let hiddenGroups = [];
+
+        function hiddenByGroups() {
+            const restricting = Object.keys(GROUPS).filter(name => {
+                const tags = GROUPS[name].tags;
+                const picked = tags.filter(t => tagStates.get(t) === 1).length;
+                return tags.some(t => tagStates.get(t) === 2) || (picked > 0 && picked < tags.length);
+            });
+            hiddenGroups = [];
+            for (const names of [...restricting.map(name => [name]), ...(restricting.length > 1 ? [restricting] : [])]) {
+                const count = matchingIds(names).length;
+                if (count) {
+                    hiddenGroups = names;
+                    return { names, count };
+                }
+            }
+            return null;
+        }
+
+        // Show them: every rating (or every holiday intensity) on, keeping the search and the other filters
+        function showHidden() {
+            hiddenGroups.forEach(name => GROUPS[name].tags.forEach(t => { tagStates.set(t, 0); updateBtnState(t); }));
+            updateResults();
+        }
+
         function renderGrid(ids) {
             const grid = document.getElementById('results-grid');
             if (ids.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-400 font-medium">No movies match your search or vibes.
-                    <div class="mt-4"><button type="button" onclick="clearFilters()" class="inline-flex items-center gap-1 px-3 py-1 rounded-lg border border-slate-200 bg-white shadow-sm text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-blue-600 hover:border-blue-200 transition">
+                const hidden = hiddenByGroups();
+                const showButton = hidden ? `<button type="button" onclick="showHidden()" class="inline-flex items-center gap-1 px-3 py-1 rounded-lg border border-slate-200 bg-white shadow-sm text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-blue-600 hover:border-blue-200 transition">
+                        <i data-lucide="eye" class="w-3 h-3"></i> Show ${hidden.count === 1 ? 'it' : 'them'}
+                    </button> ` : '';
+                const hiddenNote = hidden ? `<div class="mt-4">${hidden.count === 1 ? '1 movie matches' : `${hidden.count} movies match`}, hidden by ${hidden.names.map(n => GROUP_TITLES[n]).join(' and ')}.</div>` : '';
+                grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-400 font-medium">No movies match your search or vibes.${hiddenNote}
+                    <div class="mt-4">${showButton}<button type="button" onclick="clearFilters()" class="inline-flex items-center gap-1 px-3 py-1 rounded-lg border border-slate-200 bg-white shadow-sm text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-blue-600 hover:border-blue-200 transition">
                         <i data-lucide="x-circle" class="w-3 h-3"></i> Clear filters
                     </button></div></div>`;
-                lucide.createIcons();
+                window.lucide?.createIcons();
                 return;
             }
-            const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time, comparable to m.date
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`; // local time, comparable to m.date
             const comingSoon = date => {
                 const label = new Date(`${date}T00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 return `<div class="coming-soon absolute inset-x-0 bottom-0 bg-[#ffeb3b] text-stone-900 text-center text-[11px] font-black uppercase tracking-wider py-2 shadow-[0_-2px_8px_rgba(0,0,0,0.25)]">Coming soon · ${label}</div>`;
@@ -979,12 +1113,12 @@
             grid.innerHTML = ids.map(id => {
                 const m = db.movies[id];
                 const year = (m.date && m.date !== '0000-00-00') ? m.date.split('-')[0] : 'TBA';
-                return `<a href="https://www.themoviedb.org/movie/${id}" target="_blank" class="movie-card group bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm flex flex-col">
-                    <div class="aspect-[2/3] overflow-hidden bg-slate-100 relative"><img src="${posterURL(m.poster)}" alt="${escapeHTML(m.title)} poster" class="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" decoding="async">${m.date > today ? comingSoon(m.date) : ''}</div>
+                return `<a href="https://www.themoviedb.org/movie/${escapeHTML(id)}" target="_blank" class="movie-card group bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm flex flex-col">
+                    <div class="aspect-[2/3] overflow-hidden bg-slate-100 relative"><img src="${escapeHTML(posterURL(m.poster))}" alt="" class="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" decoding="async">${m.date > today ? comingSoon(m.date) : ''}</div>
                     <div class="card-body p-4 flex-grow min-h-[110px]">
                         <h4 class="font-bold text-sm leading-tight text-slate-800 mb-1">${escapeHTML(m.title)} <span class="text-slate-400 font-normal">(${year})</span></h4>
                         <div class="flex items-center gap-2 mb-2">
-                            <span class="text-blue-600 font-black text-[10px] uppercase tracking-tighter border border-blue-100 px-1 rounded">${m.cert}</span>
+                            <span class="text-blue-600 font-black text-[10px] uppercase tracking-tighter border border-blue-100 px-1 rounded">${escapeHTML(m.cert)}</span>
                             <span class="text-slate-400 text-[10px] font-bold italic">
                                 ${m.votes ? `${m.rating.toFixed(1)}/10 <span class="card-detail opacity-60 ml-1">[${m.votes} votes]</span>` : 'Not yet rated'}
                             </span>

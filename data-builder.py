@@ -154,6 +154,8 @@ async def fetch_with_retry(session, url, params, semaphore):
                     if resp.status == 200: return await resp.json()
                     if resp.status == 401: sys.exit("TMDB rejected TMDB_API_KEY. Use the API Read Access Token, not the short API Key.")
                     if resp.status == 429: await asyncio.sleep(2 + (2 ** attempt))
+                    # A passing server error would otherwise end a search's paging early and drop its later pages
+                    elif resp.status >= 500: await asyncio.sleep(2 ** attempt)
                     else: return None
             except (aiohttp.ClientError, asyncio.TimeoutError): await asyncio.sleep(2 ** attempt)
     return None
@@ -164,7 +166,8 @@ async def fetch_movie_details(session, semaphore, movie_id):
     data = await fetch_with_retry(session, url, params, semaphore)
     if not data: return None
     
-    keywords = [k['name'] for k in data.get('keywords', {}).get('keywords', [])]
+    # Spacing tidied ("family business " → "family business"); the page's links match tags ignoring spacing
+    keywords = [' '.join(k['name'].split()) for k in data.get('keywords', {}).get('keywords', [])]
     
     # Explicit Genre Mapping
     raw_genres = data.get('genres', [])
