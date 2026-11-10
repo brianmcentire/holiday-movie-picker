@@ -1788,11 +1788,10 @@
             .wl-peek-text .wl-rating { font-size: 12px; }
             .wl-why { margin-top: 10px; font-size: 13px; }
             .wl-peek-overview { display: block; -webkit-line-clamp: none; margin-top: 12px; font-size: 14px; line-height: 1.55; }
-            .wl-peek-actions { grid-column: 2; grid-row: 2; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+            /* Add (or Watched it and Remove), with More on TMDB under it at the same width */
+            .wl-peek-actions { grid-column: 2; grid-row: 2; display: flex; flex-direction: column; gap: 10px; width: min(280px, 100%); margin-top: 20px; }
             .wl-peek-actions .wl-peek-add, .wl-peek-actions .wl-peek-pair, .wl-peek-actions .wl-btn-tmdb { margin-top: 0; }
-            .wl-peek-add { flex: 1.4 1 0; }
-            .wl-peek-pair { flex: 1 1 100%; }
-            .wl-btn-tmdb { flex: 1 1 0; height: 46px; }
+            .wl-btn-tmdb { height: 46px; }
             .wl-peek-close {
                 display: flex; position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; align-items: center; justify-content: center;
                 border: 0; border-radius: 999px; background: #f1f5f9; color: #475569; cursor: pointer;

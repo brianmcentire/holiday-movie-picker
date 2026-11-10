@@ -140,10 +140,16 @@
             body.filters-folded #results-grid[data-view="grid"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
         }
 
-        /* Laptops: the title count sits on the same line as "a holiday movie matchmaker", not in the middle of the bar.
-           Browsers without last-baseline alignment put both at the bottom, which is within a pixel or two. */
+        /* Laptops: the title count sits on the same line as "a holiday movie matchmaker", just left of the search bar,
+           about a tab's width away (its padding plus the row's gap). Browsers without last-baseline alignment put both
+           at the bottom, which is within a pixel or two. */
         @media (min-width: 1024px) {
             .header-brand, .header-count { align-self: flex-end; align-self: last baseline; }
+            body > header .header-count { flex: 1 0 auto; justify-content: flex-end; }
+            /* As wide as "More than 1,000 titles" whatever it says, so the search bar never shifts while typing */
+            body > header .header-count [data-stats] { min-width: 15.5em; text-align: right; }
+            body > header .header-controls { flex: 0 1 auto; min-width: 0; }
+            body > header .header-search { flex: 0 1 auto; width: 30rem; }
         }
     </style>
 </head>
@@ -163,8 +169,8 @@
                 <span data-stats class="text-xs font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">...</span>
             </div>
 
-            <div class="flex items-center gap-2 md:gap-3 w-full md:w-auto md:flex-1 md:justify-end">
-                <div class="relative flex-1 min-w-0 md:max-w-[30rem]">
+            <div class="header-controls flex items-center gap-2 md:gap-3 w-full md:w-auto md:flex-1 md:justify-end">
+                <div class="header-search relative flex-1 min-w-0 md:max-w-[30rem]">
                     <i data-lucide="search" class="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500"></i>
                     <input type="text" id="search-input" aria-label="Search movies" placeholder="Search titles, moods, keywords..."
                         class="h-11 md:h-12 pl-10 md:pl-12 pr-10 md:pr-11 bg-white border-2 border-blue-200 rounded-xl text-base text-slate-900 placeholder:text-slate-400 w-full shadow-sm hover:border-blue-300 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition">
@@ -816,9 +822,9 @@
 
             currentVisibleIds = ids;
             
-            // The count turns the tagline's blue while any filter or search is on (whenever Clear filters shows)
+            // The count turns the tagline's blue once it says something different from the page with nothing filtered
             const countText = describeCount(ids.length);
-            const filtered = hasActiveFilters();
+            const filtered = countText !== unfilteredCountText();
             document.querySelectorAll('[data-stats]').forEach(el => {
                 el.innerText = countText;
                 el.classList.toggle('text-blue-600', filtered);
@@ -1131,6 +1137,22 @@
                 updateSortIcon();
                 updateResults();
             };
+        }
+
+        // What the count says with nothing filtered: no search or tags, and the default ratings and holiday levels
+        let unfilteredCount = null;
+        function unfilteredCountText() {
+            if (unfilteredCount === null) {
+                let ids = Object.keys(db.movies);
+                Object.values(GROUPS).forEach(group => {
+                    const selected = group.tags.filter(t => defaultStateFor(t) === 1);
+                    if (!selected.length || selected.length === group.tags.length) return;
+                    const allowed = new Set(selected.flatMap(t => [...poolOf(t)]));
+                    ids = ids.filter(i => allowed.has(i));
+                });
+                unfilteredCount = ids.length;
+            }
+            return describeCount(unfilteredCount);
         }
 
         // Rounded counts: "More than 1,000" above 1,000, hundreds below that,

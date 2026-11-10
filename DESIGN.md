@@ -55,7 +55,9 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - **The Holiday Intensity names aren't searchable.** Every film carries one as a hidden tag ("holiday story"), so "story" found 1,016 films. They're filters, not words about the film.
 - **Nothing found, but hidden:** when the only matches are hidden by Content Ratings or Holiday Intensity (searching "die hard" with R and It's adjacent off), the empty results say "2 movies match, hidden by Content Ratings and Holiday Intensity." with **Show them**, which turns on every rating (or intensity) and keeps the search.
 - **Some found, more hidden:** while searching, when Content Ratings or Holiday Intensity hide more matches, a line above the results says so, in blue, with the same **Show them**: "2 more match, hidden by Content Ratings." Why: "bateman" shows Nick and Gabriel Bateman's 3 films, with no hint that Jason Bateman's 2 are rated R. Only while searching; `MORE_HIDDEN_NOTE` in index.html turns it off. *Its wording and place were Claude's call, built overnight on Nov 9 from the agreed plan. The owner kept it and asked for it in blue on Nov 10, so it gets noticed.*
-- **The title count** ("More than 1,000 titles") turns the tagline's blue while any filter or search is on, the same moment Clear filters appears, and goes back to grey when everything is cleared. Why: "34 titles" is the answer to what you just did, so it should draw the eye. On laptops it sits on the same line as "a holiday movie matchmaker", not in the middle of the bar.
+- **The title count** ("More than 1,000 titles") is grey at first and turns the tagline's blue once the number changes, then back to grey when it says the same as the unfiltered page again. A filter that doesn't change the number (turning R on still shows "More than 1,000") leaves it grey. Why: "34 titles" is the answer to what you just did, so it should draw the eye. *First built as "blue whenever a filter is on"; the owner wanted it tied to the number.*
+  - On laptops it sits on the same line as "a holiday movie matchmaker", right-aligned against the search bar with a tab's width (32px) between them. It floated in the middle of the bar, which looked odd.
+  - It keeps the width of "More than 1,000 titles" whatever it says, so the search bar never shifts while typing.
 - **Random** is a fair shuffle, made again on every filter or search change, but not when only the watch list changes (ticking a movie off doesn't reshuffle the page).
 
 ## Phones and tablets
@@ -104,7 +106,8 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   Why: an empty bookmark on every tile was clutter. Tapping a poster is what everyone does anyway, and phone tiles hide the overview, so the peek gives something back. The cost is one extra tap to reach TMDB.
 - **Phones:** the preview is a sheet from the bottom over the dimmed page, and a swipe down closes it.
 - **Laptops and tablets** (720px wide and 560px tall or more): the same preview as a large panel in the middle of the screen, 720px wide, over the same dimmed page.
-  - The poster is on the left. The full description shows, and the two buttons sit side by side.
+  - The poster is on the left. The full description shows.
+  - Add to My Watchlist (or Watched it and Remove) with More on TMDB under it, both 280px wide: a little wider than Add was side by side. The owner's call on Nov 10.
   - ×, Esc or a click outside closes it.
   - Why: it matches the phone, which the owner liked, and it gives laptops Add to My Watchlist and the "why it matched" line. Large and centered reads clearly as its own layer and never moves around.
 - **Adding on laptops:** the bookmark appears only on the poster under the pointer, and clicking it adds the movie. A click anywhere else on the card opens the preview. Cmd-, Ctrl- or Shift-click or a middle click opens TMDB in a new tab, as links do.
