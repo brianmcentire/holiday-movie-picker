@@ -5,9 +5,8 @@
 // feature, delete this file, manifest.webmanifest, the script tag and those lines.
 //
 // What it keeps on the device (localStorage), and nothing about the movies themselves:
-//   watchlist       {"v":1,"items":[[771,0],[10719,1]],"made":"2026-11-09T19:41Z","clearedAt":"2026-11-10T02:15:09.411Z"}
-//                   TMDB ids in the user's order with 1 for watched, when the list last changed, and when Clear
-//                   list last emptied it here (so an older copy in the address doesn't bring it back)
+//   watchlist       {"v":1,"items":[[771,0],[10719,1]],"made":"2026-11-09T19:41Z"}
+//                   TMDB ids in the user's order with 1 for watched, and when the list last changed
 //   watchlistPrefs  {"v":1,...}  the two filter pills, Hide watched, and the Home Screen tip
 // Titles, posters and the rest come from the page's own data (db.movies). Ids the data doesn't have are kept but
 // not shown, so a movie that drops out of the data comes back if it returns.
@@ -63,12 +62,6 @@
     const loadMade = () => parseMade(readJSON(LIST_KEY)?.made);
     const minuteISO = date => `${date.toISOString().slice(0, 16)}Z`; // 2026-11-09T19:41Z
 
-    // When Clear list last emptied the list on this device, in milliseconds, or null
-    function loadClearedAt() {
-        const time = Date.parse(readJSON(LIST_KEY)?.clearedAt);
-        return Number.isFinite(time) ? time : null;
-    }
-
     // Fields this version doesn't know about (added by a later one) are kept
     function saveItems() {
         const saved = readJSON(LIST_KEY);
@@ -78,7 +71,7 @@
             v: 1,
             items: items.map(item => [Number(item.id), item.watched ? 1 : 0]),
             made: listMade ? minuteISO(listMade) : undefined,
-            clearedAt: clearedAt === null ? undefined : new Date(clearedAt).toISOString(),
+            clearedAt: undefined, // an earlier version kept when Clear list last ran; no longer used
         });
     }
 
@@ -102,7 +95,6 @@
 
     let items = loadItems(); // [{ id: '771', watched: false }, ...] in the user's order
     let listMade = loadMade();
-    let clearedAt = loadClearedAt();
     const prefs = loadPrefs();
 
     // Ask the browser not to clear the site's storage when space runs low (a no-op where unsupported)
@@ -214,7 +206,6 @@
     function reloadList() {
         items = loadItems();
         listMade = loadMade();
-        clearedAt = loadClearedAt();
     }
 
     // Another tab changed the list
@@ -1179,14 +1170,11 @@
     }
 
     // Clearing goes back to the main screen (the same way Done and x close My Watchlist), with focus on the
-    // results and Undo at the bottom. Undo brings the list back without reopening it.
-    // Cleared means cleared: the time is remembered, so a copy in the address made before it (a Home Screen
-    // app's launch address, an old bookmark) doesn't bring the list back. Undo forgets that time again.
+    // results and Undo at the bottom. Undo brings the list back without reopening it. An older copy of the list
+    // (an old bookmark, a reopened tab) can still bring it back later, onto the empty list, with Undo.
     function clearList() {
         const cleared = items;
-        const clearedBefore = clearedAt;
         items = [];
-        clearedAt = Date.now();
         changed();
         const results = document.getElementById('results-pane');
         if (results) {
@@ -1196,7 +1184,6 @@
         closeView();
         offerUndo('Cleared My Watchlist', () => {
             items = cleanItems([...cleared, ...items]); // anything added since stays too
-            clearedAt = clearedBefore;
             changed();
         });
     }
@@ -1328,11 +1315,6 @@
     // "9 movies, made Sun, Nov 9 at 2:41 PM"
     const copySummary = (count, made) => `${plural(count, 'movie')}${made ? `, made ${madeWhen(made)}` : ''}`;
 
-    // A copy made before Clear list last emptied the list here is what was cleared, so it stays cleared. Once the
-    // list has been cleared, a copy with no readable time counts as older too. (made is to the minute, so a copy
-    // from the same minute as the clear counts as older.)
-    const madeBeforeClear = copy => clearedAt !== null && (!copy.made || copy.made.getTime() <= clearedAt);
-
     // Running as an app added to the Home Screen (or installed), not in a browser tab
     const homeScreenApp = () => navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
 
@@ -1350,8 +1332,8 @@
         }
         if (link?.unreadable) return; // nothing this version can use: ignore it, and leave it in the address
         // The list in the address comes back only on arrival (so going Back to an older address can't undo a
-        // Clear list), only onto an empty list, and only if it wasn't made before the list was cleared here
-        if ((link?.backup || launchSnapshot) && arriving && !shownItems().length && link.copy.items.length && !madeBeforeClear(link.copy)) {
+        // Clear list) and only onto an empty list
+        if ((link?.backup || launchSnapshot) && arriving && !shownItems().length && link.copy.items.length) {
             restoreBackup(link.copy);
         }
         // A Home Screen app always launches from the address it was added with; open=1 there would reopen My

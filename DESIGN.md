@@ -146,7 +146,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - **Opening an address with `backup=1`:**
   - Your list is empty: it fills from the copy ("Restored your watchlist", with Undo). Undo takes out only the movies the copy brought in, so anything added since stays.
   - You already have a list: the copy is ignored.
-  - **Cleared means cleared:** a copy made before Clear list last emptied the list on this device is ignored, so an old bookmark, a reopened tab or a Home Screen app's launch address doesn't bring a cleared list back.
+  - **After Clear list, an older copy still restores.** An old bookmark, a reopened tab or a history entry brings the cleared list back onto the empty list, with Undo. Why: simpler, and the owner wants it that way (Nov 10). An earlier build ignored copies made before the clear; that's gone.
   - It's read only when the page opens with that address, not when the address changes in an open tab, so going Back can't undo a Clear list.
 
   A friend who's sent an address-bar link and has no list starts with the sender's list, with Undo. That's intended.
@@ -178,7 +178,6 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 
 ## Revisit later
 
-- **A friend's address-bar link after a Clear list:** on a device whose list was cleared after the sender's list last changed, the friend's address-bar copy is ignored without a word ("cleared means cleared" can't tell it from your own old bookmark). Saved copies from Save a copy aren't affected. A note offering to restore it anyway would fix it, if it ever comes up.
 - **Films without a holiday level** (when the classifier couldn't run) are hidden by the default Holiday Intensity, though the footer mentions them. They show with Any holiday intensity. Fine as a safe default, or let them through.
 - **TV-G, TV-PG and TV-Y7:** the builder allows them but Content Ratings has no buttons for them, so such a film would be hidden by default and couldn't be picked. None in today's data.
 - **Pill text contrast:** white 10–11px text on the blue, green and red pills is about 3.3–3.8:1, under the 4.5:1 guideline for small text.
@@ -188,4 +187,5 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - **Bringing back the Home Screen tip** needs two things first:
   - **Show me how:** a button in the tip that reloads the page with the list in its address, then shows the Share-menu steps, so the new app starts with the list.
   - **Paste a list:** a way to get a list someone texted you into the Home Screen app, since links open in Safari.
+  - **Decide about Clear list there:** a Home Screen app saved with the list in its address (which Show me how would do) brings that list back, with Undo, every time it starts fresh after Clear list. That's the "an older copy still restores" rule; the app may need an exception.
 - **iPhone Safari bookmarks** may save the loaded address the same way Add to Home Screen does. If so, a bookmark on iPhone won't always carry the list. Test before relying on it.
