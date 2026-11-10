@@ -135,6 +135,12 @@
         // Safari's Share icon, which the Home Screen tip points to (not the page's own Share results icon)
         share: '<path d="M12 2v13"/><path d="m16 6-4-4-4 4"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>',
         grip: '<circle cx="9" cy="5" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="9" cy="19" r="1.6"/><circle cx="15" cy="5" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="15" cy="19" r="1.6"/>',
+        // The preview's line saying why a movie matches the search
+        person: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+        clapperboard: '<path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="m6.2 5.3 3.1 3.9"/><path d="m12.4 3.4 3.1 4"/><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>',
+        pen: '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>',
+        tag: '<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>',
+        text: '<path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/>',
     };
 
     function icon(name, size, { fill = 'none', stroke = 2, cls = '', label = '' } = {}) {
@@ -353,8 +359,9 @@
             + `${icon('bookmarkPlus', 24, { stroke: 2.25, cls: 'wl-mark-off' })}<span class="wl-mark-label" aria-hidden="true"></span></button>`);
     }
 
-    // With a mouse, the bookmark adds or removes, and the rest of the card opens TMDB as before.
-    // On a touch screen, the poster opens the peek instead of TMDB.
+    // The poster opens the movie preview: a sheet from the bottom on phones, a panel in the middle on laptops and
+    // tablets. Enter on a card opens it too. With a mouse, the bookmark adds or removes, and the rest of the card
+    // still opens TMDB. A click with Cmd, Ctrl, Shift or Alt, or a middle click, opens TMDB in a new tab, as links do.
     let lastPointerType = '';
     addEventListener('pointerdown', e => { lastPointerType = e.pointerType; }, true);
     const mouseDevice = matchMedia('(hover: hover) and (pointer: fine)');
@@ -365,7 +372,8 @@
         const card = e.target.closest('a.movie-card');
         const id = card?.dataset.wlId;
         if (!id) return;
-        if (isTap(e) && e.target.closest('.wl-poster')) {
+        const onPoster = !!e.target.closest('.wl-poster');
+        if (isTap(e) && onPoster) {
             e.preventDefault();
             openPeek(id);
         } else if (e.target.closest('.wl-mark')) {
@@ -373,6 +381,9 @@
             const adding = !itemFor(id);
             toggle(id);
             if (adding) pop(id);
+        } else if (!(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) && (onPoster || (e.detail === 0 && e.target === card))) {
+            e.preventDefault();
+            openPeek(id);
         }
     }
 
@@ -496,15 +507,17 @@
         });
     }
 
-    // ---------- The peek: a tap on a poster, on touch screens ----------
+    // ---------- The peek (the movie preview): a click or tap on a poster ----------
     let peek;
     let peekId = null;
+    // Where the preview is a panel in the middle instead of a sheet; the same query as its CSS
+    const peekAsPanel = matchMedia('(min-width: 720px) and (min-height: 560px)');
 
     function buildPeek() {
         peek = createLayer('wl-peek', 'wl-peek-sheet', closePeek);
         peek.panel.setAttribute('aria-labelledby', 'wl-peek-title');
         peek.panel.addEventListener('click', onPeekClick);
-        dragToClose(peek.panel, peek.panel, closePeek);
+        dragToClose(peek.panel, peek.panel, closePeek, () => !peekAsPanel.matches);
     }
 
     function openPeek(id) {
@@ -512,6 +525,54 @@
         peekId = id;
         renderPeek();
         openLayer(peek, peek.panel.querySelector('h3'));
+        showHiddenMatch();
+    }
+
+    // Why the movie matches the search, on a line under Rating and Score (from the page's searchReason):
+    //   a person: their icon, and their name with the matched part underlined;
+    //   a tag: its icon and the tag, plain;
+    //   the description: nothing, as the matched words are highlighted in it, unless they're past the lines it
+    //   shows (phones show 6), and then "Matched description".
+    // A title match needs no line. Only one reason shows: a person, then a tag, then the description.
+    const REASON_ICONS = { actor: ['person', 'Actor'], director: ['clapperboard', 'Director'], writer: ['pen', 'Writer'] };
+
+    // Text with the given [start, end) parts wrapped in a tag
+    function marked(text, marks, tag, cls) {
+        let html = '';
+        let at = 0;
+        for (const [start, end] of marks) {
+            if (start < at) continue;
+            html += `${esc(text.slice(at, start))}<${tag} class="${cls}">${esc(text.slice(start, end))}</${tag}>`;
+            at = end;
+        }
+        return html + esc(text.slice(at));
+    }
+
+    function reasonLine(why) {
+        const line = (iconName, label, html, attrs = 'class="wl-why"') => `<p ${attrs}>${icon(iconName, 13, { stroke: 2.25, label })}<span>${html}</span></p>`;
+        if (why?.kind === 'person' && REASON_ICONS[why.role]) {
+            const [iconName, label] = REASON_ICONS[why.role];
+            return line(iconName, label, marked(why.name, why.marks, 'span', 'wl-why-hit'));
+        }
+        if (why?.kind === 'tag') return line('tag', 'Tag', esc(why.tag));
+        // Hidden until showHiddenMatch knows whether the highlighted words are in view
+        if (why?.kind === 'description') return line('text', 'Description', 'Matched description', 'class="wl-why wl-why-desc" hidden');
+        return '';
+    }
+
+    // "Matched description" shows only when the highlighted words are past the lines the description shows
+    function showHiddenMatch() {
+        const line = peek.panel.querySelector('.wl-why-desc');
+        if (!line) return;
+        const text = peek.panel.querySelector('.wl-peek-overview');
+        const hit = text?.querySelector('.wl-hit');
+        if (!text || !hit) {
+            line.hidden = false;
+            return;
+        }
+        const box = text.getBoundingClientRect();
+        const mark = hit.getBoundingClientRect();
+        line.hidden = mark.top + mark.height / 2 < box.bottom;
     }
 
     const closePeek = () => closeLayer(peek);
@@ -528,18 +589,25 @@
                 ? `<button type="button" class="wl-btn" data-peek="unwatched">${icon('eyeOff', 17)}Not watched</button>`
                 : `<button type="button" class="wl-btn wl-btn-green" data-peek="watched">${icon('eye', 17)}Watched it</button>`}`
               + `<button type="button" class="wl-btn" data-peek="remove">${icon('bookmarkMinus', 17, { stroke: 2.25 })}Remove</button></div>`;
+        // While searching: why it matches, and the matched words highlighted in the description (not for a title match)
+        const why = typeof searchReason === 'function' ? searchReason(peekId) : null;
+        const descMarks = why && why.kind !== 'title' && typeof searchMarks === 'function' ? searchMarks(m.overview ?? '') : [];
         peek.panel.innerHTML = `<div class="wl-grabber" aria-hidden="true"></div>
+            <button type="button" class="wl-peek-close" data-peek="close" aria-label="Close">${icon('x', 18, { stroke: 2.25 })}</button>
             <div class="wl-peek-top">
-                ${m.poster ? `<img src="${esc(posterAt(m.poster, 'w342'))}" alt="" decoding="async" draggable="false">` : '<span class="wl-noposter"></span>'}
+                ${m.poster ? `<img src="${esc(posterAt(m.poster, peekAsPanel.matches ? 'w500' : 'w342'))}" alt="" decoding="async" draggable="false">` : '<span class="wl-noposter"></span>'}
                 <div class="wl-peek-text">
                     ${status}
                     <h3 id="wl-peek-title" tabindex="-1">${esc(m.title)} <span class="wl-year">(${yearOf(m)})</span></h3>
                     <div class="wl-meta"><span class="wl-cert">${esc(m.cert)}</span><span class="wl-rating">${ratingOf(m)}</span></div>
-                    <p class="wl-peek-overview">${esc(m.overview)}</p>
+                    ${reasonLine(why)}
+                    <p class="wl-peek-overview">${marked(m.overview ?? '', descMarks, 'mark', 'wl-hit')}</p>
                 </div>
             </div>
-            ${actions}
-            <a class="wl-btn wl-btn-tmdb" href="${tmdbURL(peekId)}" target="_blank" rel="noopener" draggable="false" data-peek="tmdb">More on TMDB ${icon('externalLink', 14)}</a>`;
+            <div class="wl-peek-actions">
+                ${actions}
+                <a class="wl-btn wl-btn-tmdb" href="${tmdbURL(peekId)}" target="_blank" rel="noopener" draggable="false" data-peek="tmdb">More on TMDB ${icon('externalLink', 14)}</a>
+            </div>`;
     }
 
     // Each choice closes the peek, and the poster behind shows what changed
@@ -855,7 +923,8 @@
 
     // The header's search narrows the list on the page, with the same matching as the results
     const searchInput = () => document.getElementById('search-input');
-    // The page's own search normalizer (accents, apostrophes, spaces) and word-start matching, when it has them
+    // The page's own search normalizer (accents, apostrophes, spaces) and matching (titles, descriptions, tags and
+    // people), when it has them
     const searchQuery = raw => (typeof searchKey === 'function' ? searchKey(raw) : raw.trim().toLowerCase());
     function matchesSearch(id, query) {
         if (!query) return true;
@@ -1693,6 +1762,44 @@
             .wl-peek-top img, .wl-peek-top .wl-noposter { width: 64px; height: 96px; }
             .wl-peek-overview { -webkit-line-clamp: 3; }
             .wl-peek-add, .wl-peek-pair { margin-top: 12px; }
+        }
+        /* Why it matches the search: a line under Rating and Score, and the matched words highlighted in the description */
+        .wl-why { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; font-size: 12px; line-height: 1.3; color: #475569; }
+        .wl-why[hidden] { display: none; }
+        .wl-why svg { flex: none; color: #64748b; }
+        .wl-why > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .wl-why-hit { color: #0f172a; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 2.5px; }
+        .wl-hit { background: #fde047; color: #0f172a; font-weight: 700; border-radius: 2px; padding: 0 1px; }
+        .wl-peek-close { display: none; }
+        /* Laptops and tablets: the same preview as a large panel in the middle, over the dimmed page */
+        @media (min-width: 720px) and (min-height: 560px) {
+            .wl-peek-sheet {
+                top: 50%; left: 50%; right: auto; bottom: auto; width: min(720px, calc(100vw - 48px)); max-width: none;
+                max-height: calc(100vh - 48px); overflow-y: auto; margin: 0; padding: 28px; border-radius: 18px;
+                display: grid; grid-template-columns: 240px minmax(0, 1fr); column-gap: 28px; align-items: start;
+                box-shadow: 0 24px 60px rgba(15,23,42,0.35); touch-action: auto; -webkit-user-select: text; user-select: text;
+                transform: translate(-50%, -50%) scale(0.96); opacity: 0; transition: transform 0.2s ease, opacity 0.2s ease;
+            }
+            #wl-peek.wl-shown .wl-peek-sheet { transform: translate(-50%, -50%); opacity: 1; }
+            .wl-peek-sheet .wl-grabber { display: none; }
+            .wl-peek-top { display: contents; }
+            .wl-peek-top img, .wl-peek-top .wl-noposter { grid-column: 1; grid-row: 1 / span 2; width: 240px; height: 360px; border-radius: 10px; box-shadow: 0 6px 18px rgba(15,23,42,0.25); }
+            .wl-peek-text { grid-column: 2; grid-row: 1; padding-right: 28px; }
+            .wl-peek-text h3 { font-size: 24px; }
+            .wl-peek-text .wl-meta { margin-top: 8px; }
+            .wl-peek-text .wl-rating { font-size: 12px; }
+            .wl-why { margin-top: 10px; font-size: 13px; }
+            .wl-peek-overview { display: block; -webkit-line-clamp: none; margin-top: 12px; font-size: 14px; line-height: 1.55; }
+            .wl-peek-actions { grid-column: 2; grid-row: 2; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+            .wl-peek-actions .wl-peek-add, .wl-peek-actions .wl-peek-pair, .wl-peek-actions .wl-btn-tmdb { margin-top: 0; }
+            .wl-peek-add { flex: 1.4 1 0; }
+            .wl-peek-pair { flex: 1 1 100%; }
+            .wl-btn-tmdb { flex: 1 1 0; height: 46px; }
+            .wl-peek-close {
+                display: flex; position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; align-items: center; justify-content: center;
+                border: 0; border-radius: 999px; background: #f1f5f9; color: #475569; cursor: pointer;
+            }
+            .wl-peek-close:hover { background: #e2e8f0; }
         }
 
         /* ----- The My List buttons ----- */

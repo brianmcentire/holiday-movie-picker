@@ -95,12 +95,29 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   - Watched: the poster and card fade, with a diagonal green WATCHED ribbon across the top-left corner.
   - Not on the list: nothing.
 - **Icon: the bookmark.** The first idea, popcorn, read as a trash can. A bookmark means "save for later" everywhere.
-- **Adding on phones:** tap a poster for a **peek**. It's a sheet with the poster, the basics and the overview, plus:
+- **The movie preview (the peek):** a tap or click on a poster opens it, and so does Enter on a card. It has the poster, the basics and the overview, plus:
   - **Add to My Watchlist** (or, when the movie is on the list, **Watched it** and **Remove**);
   - **More on TMDB**.
 
   Why: an empty bookmark on every tile was clutter. Tapping a poster is what everyone does anyway, and phone tiles hide the overview, so the peek gives something back. The cost is one extra tap to reach TMDB.
-- **Adding on laptops:** the bookmark appears only on the poster under the pointer. Clicking it adds the movie; clicking anywhere else on the card still opens TMDB.
+- **Phones:** the preview is a sheet from the bottom over the dimmed page, and a swipe down closes it.
+- **Laptops and tablets** (720px wide and 560px tall or more): the same preview as a large panel in the middle of the screen, 720px wide, over the same dimmed page.
+  - The poster is on the left. The full description shows, and the two buttons sit side by side.
+  - ×, Esc or a click outside closes it.
+  - Why: it matches the phone, which the owner liked, and it gives laptops Add to My Watchlist and the "why it matched" line. Large and centered reads clearly as its own layer and never moves around.
+- **Adding on laptops:** the bookmark appears only on the poster under the pointer, and clicking it adds the movie. A click on the poster opens the preview. A click on the rest of the card still opens TMDB, and so does Cmd-, Ctrl- or Shift-click or a middle click on the poster, in a new tab as links do.
+
+### Why it matched
+
+While searching, the preview says why the movie is in the results. The result cards never change: a line on every card would make rows uneven and the results taller.
+- **One line, under Rating and Score.** One reason shows, in this order:
+  1. **The title matches:** no line. The title already explains it.
+  2. **A person:** their icon and name, with the matched part underlined (Will <u>Ferrell</u>). If several match, the highest-billed one.
+  3. **A tag or genre:** the tag icon and the tag, plain (🏷 snowman).
+  4. **Only the description, past the part that shows:** "Matched description", with a lines icon, in the same type as the other reasons. Phones show 6 lines of the description, or 3 sideways; laptops show it all.
+- **In the description,** the matched words are highlighted in bright yellow (`#fde047`) wherever they show. The highlight shows alongside a person or tag line too, but never for a title match.
+- **Four icons:** a person for actors, a clapperboard for directors, a pen for writers (book authors too), a tag for tags and genres.
+- **Why one line:** a person and a tag rarely both match. Across 34 searches, only 14 of 1,624 non-title matches had a person and something else.
 
 ### My List button
 
@@ -188,6 +205,15 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - **Ways to add:** an empty bookmark on every tile; long-press to add (hidden, and it fights iPhone's own preview); double-tap to add (hidden, and it slows every tap); an "add mode" switch.
 - **Top of the page:** an Unwatched | Watched | All switch, and a My List row under the search box.
 - **Names for Holiday Level:** Holiday Spirit (reads as mood: a gloomy film set at Christmas still counts as "the setting"), Tinsel Factor (Christmas-only, and some films are Hanukkah, New Year's or Thanksgiving), and the question-style names.
+- **Search order:** every title match first ("christmas" put It's a Wonderful Life 657th, "santa" put Klaus 56th); only exact titles first (too narrow); whole words first while keeping partial-word matches (Elf stayed 11th).
+- **Why it matched:**
+  - a line on every result card, which gave uneven card heights and taller results;
+  - a badge on the poster: the corners are taken, and an icon alone leaves you guessing;
+  - words instead of icons ("from the novel by Charles Dickens" wraps on a phone);
+  - a yellow highlight on people and tags;
+  - naming every reason that applies.
+- **The laptop preview:** a popover next to the clicked card. It's fiddly near the screen's edges, and it moves around.
+- **People search:** a fixed top 10 or 20 actors per film; producers; a switch on the page to turn it off.
 
 ## Revisit later
 
@@ -201,4 +227,6 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   - **Show me how:** a button in the tip that reloads the page with the list in its address, then shows the Share-menu steps, so the new app starts with the list.
   - **Paste a list:** a way to get a list someone texted you into the Home Screen app, since links open in Safari.
   - **Decide about Clear list there:** a Home Screen app saved with the list in its address (which Show me how would do) brings that list back, with Undo, every time it starts fresh after Clear list. That's the "an older copy still restores" rule; the app may need an exception.
+- **People search drifts a little week to week:** TMDB's popularity scores change, so a borderline supporting actor can drop in and out between rebuilds.
+- **Classic casts thin out past the 10th billed:** old stars score low on TMDB popularity, so supporting players further down are missing (Jack Albertson, 14th in the 1947 Miracle on 34th Street).
 - **iPhone Safari bookmarks** may save the loaded address the same way Add to Home Screen does. If so, a bookmark on iPhone won't always carry the list. Test before relying on it.
