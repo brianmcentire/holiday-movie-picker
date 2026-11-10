@@ -204,6 +204,25 @@ While searching, the preview says why the movie is in the results. The result ca
 
 - Notes that are sentences or instructions stay on screen twice as long as the short "Removed X · Undo" ones, and have an × to close them early.
 
+## Planned, not built: spaces mean every word
+
+Designed with the owner on Nov 10 (canvas Round 9, with real catalog data). Not built yet; build only on the owner's go-ahead.
+
+**Matching**
+- A movie matches when the whole search matches, as today, or when every word matches somewhere: the title, a person, a tag or the description. Today a space means "these words together, in this order", so "rankin bass" finds nothing; with every word it finds 16 Rankin/Bass specials (default filters). "hanks ferrell" still finds nothing, honestly: they've never shared a holiday film.
+- **Neighbouring words can match together.** Required, not optional: word by word, "tom hanks train", "will ferrell elf" and "bill murray ghost" find nothing, because a first name alone never matches a person. Read together, they find The Polar Express, Elf and Scrooged. A run of words can only match films its last word matches, which keeps it fast.
+- **Whole-search matches come first**, then every-word matches, within today's tiers. Old shared links show what they showed, then any extra films at the end.
+- Cost: searches that name a title get a longer tail ("christmas vacation" 34 → 70), always after the real matches.
+
+**The reason line for several words** (in the preview, under Rating and Score)
+- Words that match the title show nothing, as today.
+- Every other word, or group of words that go together, gets one reason: person, then tag, then description. "new york" is the tag *new york city*, not Bob Newhart for "new". Why not show both: Newhart only matches because his name starts with "new", so naming him would be a misleading reason. Someone who means him can type "newhart".
+- **One kind per line:** people on line 1 (directors, actors and writers together, one icon per run of the same role), tags on line 2. With only one kind, it can continue onto line 2. *The owner asked for this on laptops ("rankin bass stop motion" put the tag on line 2); Claude applied it to phones too, for consistency. Confirm.*
+- **Matched description** (the word is past the "…") takes line 2 only beside one other kind that fits on line 1. Beside a person and a tag it's dropped; the yellow highlight still marks the word wherever the description shows it. The owner's call: with title, person, tag and description all matching, drop the description for simplicity.
+- **Two lines at most, and nothing cut short:** no "…" and no partial names. Whatever doesn't fit is left out whole, people first and then the order typed. Why (the owner): the line is there so people aren't left wondering why a movie came up; when several reasons apply, they don't need all of them.
+- **A single tag too long for a line wraps onto line 2** instead of being dropped, since it may be the only reason. *Claude's proposal.* Only three tags are that wide on a 390px phone ("older woman younger woman relationship" on Carol); no person's name is.
+- When it would overflow: several surnames typed, several tag words, a very long tag, or a narrow or zoomed screen. On a laptop's wider line, nothing in the catalog overflows on its own.
+
 ## Decided against
 
 - **Laptop list:** a side drawer and a centered panel. My Watchlist is its own page.
@@ -220,6 +239,8 @@ While searching, the preview says why the movie is in the results. The result ca
   - naming every reason that applies.
 - **The laptop preview:** a popover next to the clicked card. It's fiddly near the screen's edges, and it moves around.
 - **People search:** a fixed top 10 or 20 actors per film; producers; a switch on the page to turn it off.
+- **The reason line for several words:** "…" or partial names when it doesn't fit; people and tags mixed on one line; naming every person whose name starts with a typed word (Bob Newhart for "new" in "new york").
+- **The title count:** blue whenever any filter is on. It follows the number instead, so turning R on (still "More than 1,000") stays grey.
 
 ## Revisit later
 
@@ -235,4 +256,5 @@ While searching, the preview says why the movie is in the results. The result ca
   - **Decide about Clear list there:** a Home Screen app saved with the list in its address (which Show me how would do) brings that list back, with Undo, every time it starts fresh after Clear list. That's the "an older copy still restores" rule; the app may need an exception.
 - **People search drifts a little week to week:** TMDB's popularity scores change, so a borderline supporting actor can drop in and out between rebuilds.
 - **Classic casts thin out past the 10th billed:** old stars score low on TMDB popularity, so supporting players further down are missing (Jack Albertson, 14th in the 1947 Miracle on 34th Street).
+- **The built reason line cuts a too-long tag with "…"** (only the three longest "relationship" tags, on phones). That goes against the no-"…" decision above; wrap it instead when the every-word search is built.
 - **iPhone Safari bookmarks** may save the loaded address the same way Add to Home Screen does. If so, a bookmark on iPhone won't always carry the list. Test before relying on it.
