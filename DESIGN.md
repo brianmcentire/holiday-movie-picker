@@ -54,6 +54,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   - A numbered table of names would have saved only 3–4KB: compression already shortens repeats, and 83% of the people appear in just one film.
 - **The Holiday Intensity names aren't searchable.** Every film carries one as a hidden tag ("holiday story"), so "story" found 1,016 films. They're filters, not words about the film.
 - **Nothing found, but hidden:** when the only matches are hidden by Content Ratings or Holiday Intensity (searching "die hard" with R and It's adjacent off), the empty results say "2 movies match, hidden by Content Ratings and Holiday Intensity." with **Show them**, which turns on every rating (or intensity) and keeps the search.
+- **Some found, more hidden:** while searching, when Content Ratings or Holiday Intensity hide more matches, a quiet line above the results says so, with the same **Show them**: "2 more match, hidden by Content Ratings." Why: "bateman" shows Nick and Gabriel Bateman's 3 films, with no hint that Jason Bateman's 2 are rated R. Only while searching; `MORE_HIDDEN_NOTE` in index.html turns it off. *Its wording and place were Claude's call, built overnight on Nov 9 from the agreed plan.*
 - **Random** is a fair shuffle, made again on every filter or search change, but not when only the watch list changes (ticking a movie off doesn't reshuffle the page).
 
 ## Phones and tablets
