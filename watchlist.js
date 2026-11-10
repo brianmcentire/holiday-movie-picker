@@ -1788,8 +1788,8 @@
             .wl-peek-text .wl-rating { font-size: 12px; }
             .wl-why { margin-top: 10px; font-size: 13px; }
             .wl-peek-overview { display: block; -webkit-line-clamp: none; margin-top: 12px; font-size: 14px; line-height: 1.55; }
-            /* Add (or Watched it and Remove), with More on TMDB under it at the same width */
-            .wl-peek-actions { grid-column: 2; grid-row: 2; display: flex; flex-direction: column; gap: 10px; width: min(280px, 100%); margin-top: 20px; }
+            /* Add (or Watched it and Remove), with More on TMDB under it at the same width, centered in the space beside the poster */
+            .wl-peek-actions { grid-column: 2; grid-row: 2; justify-self: center; display: flex; flex-direction: column; gap: 10px; width: min(280px, 100%); margin-top: 20px; }
             .wl-peek-actions .wl-peek-add, .wl-peek-actions .wl-peek-pair, .wl-peek-actions .wl-btn-tmdb { margin-top: 0; }
             .wl-btn-tmdb { height: 46px; }
             .wl-peek-close {

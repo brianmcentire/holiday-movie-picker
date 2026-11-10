@@ -468,7 +468,9 @@
         // come after the rest, under the same sorts as TITLE_BOOST, so "brown" shows the Charlie Brown films before
         // films with an actor named Brown. To stop searching people, set enabled to false; last: false mixes them in.
         const PEOPLE_SEARCH = { enabled: true, last: true };
-        const PEOPLE_FIELDS = { cast: 'actor', directors: 'director', writers: 'writer' };
+        // The order the preview's reason picks from when a word matches several people: a director wins over an actor
+        // with the same surname ("zemeckis" is Robert Zemeckis, not Leslie, who acts in The Polar Express)
+        const PEOPLE_FIELDS = { directors: 'director', cast: 'actor', writers: 'writer' };
         const NAME_SUFFIXES = new Set(['jr', 'sr', 'ii', 'iii', 'iv']);
 
         // Where the search matches a person's name (both through searchKey), or -1: the start of the surname or of a
@@ -564,7 +566,7 @@
                 const tags = [...(movieTags[id] || [])].filter(t => !LEVEL_TAG_KEYS.has(t));
                 m.searchText = searchKey(`${m.title} ${m.overview} ${tags.join(' ')}`);
                 m.titleKey = searchKey(m.title);
-                // Actors in billing order, then directors, then writers
+                // Directors, then actors in billing order, then writers
                 m.people = Object.entries(PEOPLE_FIELDS).flatMap(([field, role]) => (Array.isArray(m[field]) ? m[field] : [])
                     .map(name => ({ name: String(name), role, key: searchKey(name) })));
             });
@@ -1229,7 +1231,7 @@
                 const showButton = hidden ? `<button type="button" onclick="showHidden()" class="inline-flex items-center gap-1 px-3 py-1 rounded-lg border border-slate-200 bg-white shadow-sm text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-blue-600 hover:border-blue-200 transition">
                         <i data-lucide="eye" class="w-3 h-3"></i> Show ${hidden.count === 1 ? 'it' : 'them'}
                     </button> ` : '';
-                const hiddenNote = hidden ? `<div class="mt-4">${hidden.count === 1 ? '1 movie matches' : `${hidden.count} movies match`}, hidden by ${hidden.names.map(n => GROUP_TITLES[n]).join(' and ')}.</div>` : '';
+                const hiddenNote = hidden ? `<div class="mt-4 text-blue-600">${hidden.count === 1 ? '1 movie matches' : `${hidden.count} movies match`}, hidden by ${hidden.names.map(n => GROUP_TITLES[n]).join(' and ')}.</div>` : '';
                 grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-400 font-medium">No movies match your search or vibes.${hiddenNote}
                     <div class="mt-4">${showButton}<button type="button" onclick="clearFilters()" class="inline-flex items-center gap-1 px-3 py-1 rounded-lg border border-slate-200 bg-white shadow-sm text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-blue-600 hover:border-blue-200 transition">
                         <i data-lucide="x-circle" class="w-3 h-3"></i> Clear filters
