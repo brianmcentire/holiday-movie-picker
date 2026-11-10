@@ -468,6 +468,11 @@
         // come after the rest, under the same sorts as TITLE_BOOST, so "brown" shows the Charlie Brown films before
         // films with an actor named Brown. To stop searching people, set enabled to false; last: false mixes them in.
         const PEOPLE_SEARCH = { enabled: true, last: true };
+        // Spaces also mean "every word, anywhere": "rankin bass" finds the films with both a Rankin and a Bass, not
+        // only ones where the words sit side by side. Neighbouring words can match together, so "tom hanks train" is
+        // Tom Hanks and a train ("tom" alone never matches a person). Films matching the whole search come first, in
+        // every sort. To go back to matching the whole search only, set enabled to false.
+        const EVERY_WORD = { enabled: true };
         // The order the preview's reason picks from when a word matches several people: a director wins over an actor
         // with the same surname ("zemeckis" is Robert Zemeckis, not Leslie, who acts in The Polar Express)
         const PEOPLE_FIELDS = { directors: 'director', cast: 'actor', writers: 'writer' };
@@ -501,6 +506,89 @@
             const m = db.movies[id];
             return !!m && (searchMatches(m.searchText, query) || matchesPerson(m, query));
         }
+
+        // The films a run of search words matches, read together: one word as movieMatchesSearch has it, or several
+        // as a phrase ("tom hanks", "new york"). Kept while typing, since each new letter only changes the last word.
+        const runCache = new Map();
+        function runMatches(run) {
+            const key = `${run}|${PEOPLE_SEARCH.enabled}`;
+            let found = runCache.get(key);
+            if (!found) {
+                const all = Object.keys(db.movies);
+                const words = run.split(' ');
+                if (words.length === 1) {
+                    found = new Set(all.filter(id => movieMatchesSearch(id, run)));
+                } else if (words.length > 2) {
+                    // Text or a full name with all the words also has all but the last, so only those films need checking
+                    found = new Set([...runMatches(words.slice(0, -1).join(' '))].filter(id => movieMatchesSearch(id, run)));
+                } else {
+                    // Text with both words also has each one at the start of a word; a full name ("tom hanks") is
+                    // looked for among the films with someone of that first name
+                    const [first, last] = [runMatches(words[0]), runMatches(words[1])];
+                    found = new Set([...(first.size < last.size ? first : last)].filter(id => searchMatches(db.movies[id].searchText, run)));
+                    if (PEOPLE_SEARCH.enabled) filmsWithFirstName(words[0]).forEach(id => { if (matchesPerson(db.movies[id], run)) found.add(id); });
+                }
+                if (runCache.size > 500) runCache.clear();
+                runCache.set(key, found);
+            }
+            return found;
+        }
+
+        // The films with someone whose first name is this word, for finding full names
+        let firstNames = null;
+        function filmsWithFirstName(word) {
+            if (!firstNames) {
+                firstNames = new Map();
+                Object.entries(db.movies).forEach(([id, m]) => m.people.forEach(p => {
+                    const name = p.key.split(' ')[0];
+                    if (!firstNames.has(name)) firstNames.set(name, new Set());
+                    firstNames.get(name).add(id);
+                }));
+            }
+            return firstNames.get(word) || new Set();
+        }
+
+        // How a film splits the search words into runs that each match it, as few runs as possible, or null.
+        // "elf ferrell new york dad" splits into elf + ferrell + new york + dad; one run is the whole search.
+        function runSplitter(words) {
+            // runs[i][k]: words i to i + k, and the films that run matches
+            const runs = words.map((_, i) => words.slice(i).map((__, k) => {
+                const run = words.slice(i, i + k + 1).join(' ');
+                return { run, found: runMatches(run) };
+            }));
+            return id => {
+                const best = [[]];
+                for (let j = 1; j <= words.length; j++) {
+                    best[j] = null;
+                    for (let i = 0; i < j; i++) {
+                        if (!best[i] || (best[j] && best[i].length + 1 >= best[j].length)) continue;
+                        const { run, found } = runs[i][j - i - 1];
+                        if (found.has(id)) best[j] = [...best[i], run];
+                    }
+                }
+                return best[words.length];
+            };
+        }
+        const splitRuns = (id, query) => (EVERY_WORD.enabled ? runSplitter(query.split(' '))(id)
+            : runMatches(query).has(id) ? [query] : null);
+
+        // The films the search finds: the whole search, or every word of it (see EVERY_WORD)
+        function queryMatches(query) {
+            const words = query.split(' ');
+            if (words.length === 1 || !EVERY_WORD.enabled) return runMatches(query);
+            const split = runSplitter(words);
+            // A film matching every word matches a run that starts with the first word and one that ends with the last
+            const starts = new Set(), ends = new Set();
+            words.forEach((_, i) => {
+                runMatches(words.slice(0, i + 1).join(' ')).forEach(id => starts.add(id));
+                runMatches(words.slice(i).join(' ')).forEach(id => ends.add(id));
+            });
+            const [few, many] = starts.size < ends.size ? [starts, ends] : [ends, starts];
+            return new Set([...few].filter(id => many.has(id) && split(id)));
+        }
+
+        // Whether one film matches the search, the same way (the watch list's own search uses it)
+        const movieMatchesQuery = (id, query) => !query || !!(db.movies[id] && splitRuns(id, query));
 
         // searchKey's form of a text, with the position each of its characters came from, so a match found in
         // the searchable form can be marked in the text as it's shown
@@ -548,6 +636,13 @@
             if (tags.length) return { kind: 'tag', tag: tags.find(t => searchKey(t) === query) || tags.sort((a, b) => a.length - b.length)[0] };
             if (searchMatches(searchKey(m.overview), query)) return { kind: 'description' };
             return null;
+        }
+
+        // Why a movie matches the search, for its preview: for each run of words it splits into (see splitRuns), the
+        // reason searchReason gives, with the run it's for. Or null.
+        function searchReasons(id, query = currentQuery()) {
+            const runs = query && db.movies[id] ? splitRuns(id, query) : null;
+            return runs && runs.map(run => ({ run, ...(searchReason(id, run) || { kind: 'none' }) }));
         }
 
         function indexMovies() {
@@ -746,8 +841,11 @@
 
             // The search part is the slow one, and the same for every call until the search changes
             if (query) {
-                const key = `${query}|${PEOPLE_SEARCH.enabled}`;
-                if (searchCache.key !== key) searchCache = { key, ids: ids.filter(id => movieMatchesSearch(id, query)) };
+                const key = `${query}|${PEOPLE_SEARCH.enabled}|${EVERY_WORD.enabled}`;
+                if (searchCache.key !== key) {
+                    const found = queryMatches(query);
+                    searchCache = { key, ids: ids.filter(id => found.has(id)) };
+                }
                 ids = searchCache.ids.slice();
             }
 
@@ -809,17 +907,20 @@
                     else { v1 = m1.rating; v2 = m2.rating; }
                     return (typeof v1 === 'string' ? v1.localeCompare(v2) : v1 - v2) * sortDir;
                 });
-                // While searching under a rating sort: well-known title matches, then the rest, then films found only
-                // through a person
-                const query = currentQuery();
-                if (query && TITLE_BOOST.sorts.includes(sortBy) && sortDir === defaultDirFor(sortBy)) {
-                    const boosted = new Set(TITLE_BOOST.enabled ? ids.filter(id => (db.movies[id].votes || 0) >= TITLE_BOOST.minVotes
-                        && searchMatches(db.movies[id].titleKey, query)) : []);
-                    const viaPeople = new Set(PEOPLE_SEARCH.enabled && PEOPLE_SEARCH.last
-                        ? ids.filter(id => !searchMatches(db.movies[id].searchText, query)) : []);
-                    const tier = id => (boosted.has(id) ? 0 : viaPeople.has(id) ? 2 : 1);
-                    ids.sort((a, b) => tier(a) - tier(b)); // stable, so each part keeps the sort
-                }
+            }
+            // While searching, films matching the whole search come first in every sort, then those matching every
+            // word. Under a rating sort in its usual direction, the whole-search ones go: well-known title matches,
+            // then the rest, then films found only through a person.
+            const query = currentQuery();
+            if (query) {
+                const whole = runMatches(query);
+                const rated = TITLE_BOOST.sorts.includes(sortBy) && sortDir === defaultDirFor(sortBy);
+                const boosted = new Set(rated && TITLE_BOOST.enabled ? ids.filter(id => (db.movies[id].votes || 0) >= TITLE_BOOST.minVotes
+                    && searchMatches(db.movies[id].titleKey, query)) : []);
+                const viaPeople = new Set(rated && PEOPLE_SEARCH.enabled && PEOPLE_SEARCH.last
+                    ? ids.filter(id => whole.has(id) && !searchMatches(db.movies[id].searchText, query)) : []);
+                const tier = id => (!whole.has(id) ? 3 : boosted.has(id) ? 0 : viaPeople.has(id) ? 2 : 1);
+                ids.sort((a, b) => tier(a) - tier(b)); // stable, so each part keeps the sort
             }
 
             currentVisibleIds = ids;

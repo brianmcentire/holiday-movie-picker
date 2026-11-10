@@ -523,54 +523,99 @@
         peekId = id;
         renderPeek();
         openLayer(peek, peek.panel.querySelector('h3'));
-        showHiddenMatch();
+        layoutWhy();
     }
+    // The reason lines are fitted to the preview's width, so fit them again when that changes
+    addEventListener('resize', () => { if (peek && !peek.el.hidden) layoutWhy(); });
 
-    // Why the movie matches the search, on a line under Rating and Score (from the page's searchReason):
-    //   a person: their icon, and their name with the matched part underlined;
-    //   a tag: its icon and the tag, plain;
-    //   the description: nothing, as the matched words are highlighted in it, unless they're past the lines it
-    //   shows (phones show 6), and then "Matched description".
-    // A title match needs no line. Only one reason shows: a person, then a tag, then the description.
+    // Why the movie matches the search, in up to two lines under Rating and Score (from the page's searchReasons,
+    // one reason for each run of words the movie matches):
+    //   people (directors, actors and writers): an icon and the name, with the matched part underlined;
+    //   tags: the tag icon and the tag, plain;
+    //   the description: nothing, as the matched words are highlighted in it, unless they're past the lines it shows
+    //   (phones show 6), and then "Matched description".
+    // A title match needs no reason. People go on the first line and tags on the second; with only one kind, it can
+    // continue onto the second line, and "Matched description" can take a free second line. One icon per run of the
+    // same role. What doesn't fit is left out whole: no partial names and no "…". A first reason too long for a line
+    // on its own wraps onto the second.
     const REASON_ICONS = { actor: ['person', 'Actor'], director: ['clapperboard', 'Director'], writer: ['pen', 'Writer'] };
+    let peekWhy = null; // { people, tags, descRuns } for the open preview, or null when not searching
 
-    // Text with the given [start, end) parts wrapped in a tag
+    // Text with the given [start, end) parts wrapped in a tag; a third number in a part goes in its data-run
     function marked(text, marks, tag, cls) {
         let html = '';
         let at = 0;
-        for (const [start, end] of marks) {
+        for (const [start, end, run] of marks) {
             if (start < at) continue;
-            html += `${esc(text.slice(at, start))}<${tag} class="${cls}">${esc(text.slice(start, end))}</${tag}>`;
+            html += `${esc(text.slice(at, start))}<${tag} class="${cls}"${run === undefined ? '' : ` data-run="${run}"`}>${esc(text.slice(start, end))}</${tag}>`;
             at = end;
         }
         return html + esc(text.slice(at));
     }
 
-    function reasonLine(why) {
-        const line = (iconName, label, html, attrs = 'class="wl-why"') => `<p ${attrs}>${icon(iconName, 13, { stroke: 2.25, label })}<span>${html}</span></p>`;
-        if (why?.kind === 'person' && REASON_ICONS[why.role]) {
-            const [iconName, label] = REASON_ICONS[why.role];
-            return line(iconName, label, marked(why.name, why.marks, 'span', 'wl-why-hit'));
-        }
-        if (why?.kind === 'tag') return line('tag', 'Tag', esc(why.tag));
-        // Hidden until showHiddenMatch knows whether the highlighted words are in view
-        if (why?.kind === 'description') return line('text', 'Description', 'Matched description', 'class="wl-why wl-why-desc" hidden');
-        return '';
+    // The reasons sorted for the lines: people and tags in the order typed, each once, and which runs matched only
+    // the description
+    function whyOf(reasons) {
+        if (!reasons?.length) return null;
+        const people = [], tags = [], descRuns = [];
+        reasons.forEach((r, i) => {
+            if (r.kind === 'person' && REASON_ICONS[r.role] && !people.some(p => p.name === r.name)) people.push(r);
+            else if (r.kind === 'tag' && !tags.includes(r.tag)) tags.push(r.tag);
+            else if (r.kind === 'description') descRuns.push(i);
+        });
+        return { people, tags, descRuns };
     }
 
-    // "Matched description" shows only when the highlighted words are past the lines the description shows
-    function showHiddenMatch() {
-        const line = peek.panel.querySelector('.wl-why-desc');
-        if (!line) return;
+    function layoutWhy() {
+        const box = peek.panel.querySelector('.wl-why-box');
+        if (!box) return;
+        box.innerHTML = '';
+        if (!peekWhy) return;
+        const { people, tags, descRuns } = peekWhy;
+        // A run found only in the description needs saying when none of its highlights are in view
         const text = peek.panel.querySelector('.wl-peek-overview');
-        const hit = text?.querySelector('.wl-hit');
-        if (!text || !hit) {
-            line.hidden = false;
-            return;
+        const textBottom = text?.getBoundingClientRect().bottom ?? 0;
+        const descPast = descRuns.some(run => ![...(text?.querySelectorAll(`.wl-hit[data-run="${run}"]`) ?? [])]
+            .some(hit => { const r = hit.getBoundingClientRect(); return r.top + r.height / 2 < textBottom; }));
+
+        const kinds = [
+            people.map(p => ({ group: p.role, icon: REASON_ICONS[p.role], html: marked(p.name, p.marks, 'span', 'wl-why-hit') })),
+            tags.map(tag => ({ group: 'tag', icon: ['tag', 'Tag'], html: esc(tag) })),
+        ].filter(items => items.length);
+        const itemHTML = (item, withIcon) => `<span class="wl-why-item">${withIcon ? icon(item.icon[0], 13, { stroke: 2.25, label: item.icon[1] }) : ''}${item.html}</span>`;
+        const addLine = () => box.appendChild(Object.assign(document.createElement('p'), { className: 'wl-why' }));
+        // Puts items on a line while they fit, and returns how many it placed. prevGroup: the role of the item just
+        // before, on the line above, so a continued run doesn't repeat its icon.
+        const fill = (line, items, prevGroup = null) => {
+            let placed = 0;
+            if (items[0] && items[0].group === prevGroup) line.classList.add('wl-why-more');
+            for (const item of items) {
+                const before = line.innerHTML;
+                line.insertAdjacentHTML('beforeend', (placed ? '<span class="wl-why-sep" aria-hidden="true">·</span>' : '') + itemHTML(item, item.group !== prevGroup));
+                if (line.scrollWidth > line.clientWidth + 0.5) { line.innerHTML = before; break; }
+                prevGroup = item.group;
+                placed++;
+            }
+            if (!placed) line.remove();
+            return placed;
+        };
+
+        if (kinds.length) {
+            const first = addLine();
+            const onFirst = fill(first, kinds[0]);
+            if (!onFirst) {
+                // Too long for a line on its own: it wraps onto the second line, and nothing else fits
+                const wrapped = addLine();
+                wrapped.classList.add('wl-why-wrap');
+                wrapped.innerHTML = itemHTML(kinds[0][0], true);
+                return;
+            }
+            if (kinds.length === 2) fill(addLine(), kinds[1]);
+            else if (onFirst < kinds[0].length) fill(addLine(), kinds[0].slice(onFirst), kinds[0][onFirst - 1].group);
+            else if (descPast) fill(addLine(), [{ group: 'text', icon: ['text', 'Description'], html: 'Matched description' }]);
+        } else if (descPast) {
+            fill(addLine(), [{ group: 'text', icon: ['text', 'Description'], html: 'Matched description' }]);
         }
-        const box = text.getBoundingClientRect();
-        const mark = hit.getBoundingClientRect();
-        line.hidden = mark.top + mark.height / 2 < box.bottom;
     }
 
     const closePeek = () => closeLayer(peek);
@@ -587,9 +632,14 @@
                 ? `<button type="button" class="wl-btn" data-peek="unwatched">${icon('eyeOff', 17)}Not watched</button>`
                 : `<button type="button" class="wl-btn wl-btn-green" data-peek="watched">${icon('eye', 17)}Watched it</button>`}`
               + `<button type="button" class="wl-btn" data-peek="remove">${icon('bookmarkMinus', 17, { stroke: 2.25 })}Remove</button></div>`;
-        // While searching: why it matches, and the matched words highlighted in the description (not for a title match)
-        const why = typeof searchReason === 'function' ? searchReason(peekId) : null;
-        const descMarks = why && why.kind !== 'title' && typeof searchMarks === 'function' ? searchMarks(m.overview ?? '') : [];
+        // While searching: why it matches, and the matched words highlighted in the description (not the words that
+        // matched the title). An older page without searchReasons gives one reason for the whole search.
+        const reasons = typeof searchReasons === 'function' ? searchReasons(peekId)
+            : typeof searchReason === 'function' ? [searchReason(peekId)].filter(Boolean) : null;
+        peekWhy = whyOf(reasons);
+        const descMarks = typeof searchMarks !== 'function' || !reasons ? []
+            : reasons.flatMap((r, i) => (r.kind === 'title' || r.kind === 'none' ? []
+                : searchMarks(m.overview ?? '', r.run).map(([start, end]) => [start, end, i]))).sort((x, y) => x[0] - y[0]);
         peek.panel.innerHTML = `<div class="wl-grabber" aria-hidden="true"></div>
             <button type="button" class="wl-peek-close" data-peek="close" aria-label="Close">${icon('x', 18, { stroke: 2.25 })}</button>
             <div class="wl-peek-top">
@@ -598,7 +648,7 @@
                     ${status}
                     <h3 id="wl-peek-title" tabindex="-1">${esc(m.title)} <span class="wl-year">(${yearOf(m)})</span></h3>
                     <div class="wl-meta"><span class="wl-cert">${esc(m.cert)}</span><span class="wl-rating">${ratingOf(m)}</span></div>
-                    ${reasonLine(why)}
+                    <div class="wl-why-box"></div>
                     <p class="wl-peek-overview">${marked(m.overview ?? '', descMarks, 'mark', 'wl-hit')}</p>
                 </div>
             </div>
@@ -926,6 +976,7 @@
     const searchQuery = raw => (typeof searchKey === 'function' ? searchKey(raw) : raw.trim().toLowerCase());
     function matchesSearch(id, query) {
         if (!query) return true;
+        if (typeof movieMatchesQuery === 'function') return movieMatchesQuery(id, query);
         if (typeof movieMatchesSearch === 'function') return movieMatchesSearch(id, query);
         return (movieFor(id).searchText ?? movieFor(id).title.toLowerCase()).includes(query);
     }
@@ -1762,10 +1813,16 @@
             .wl-peek-add, .wl-peek-pair { margin-top: 12px; }
         }
         /* Why it matches the search: a line under Rating and Score, and the matched words highlighted in the description */
-        .wl-why { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; font-size: 12px; line-height: 1.3; color: #475569; }
-        .wl-why[hidden] { display: none; }
-        .wl-why svg { flex: none; color: #64748b; }
-        .wl-why > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .wl-why-box { margin: 8px 0 0; font-size: 12px; line-height: 1.3; color: #475569; }
+        .wl-why-box:empty { display: none; }
+        .wl-why { margin: 0; white-space: nowrap; overflow: hidden; }
+        .wl-why + .wl-why { margin-top: 3px; }
+        .wl-why svg { display: inline-block; color: #64748b; vertical-align: -2px; margin-right: 6px; }
+        .wl-why-sep { margin: 0 6px; color: #94a3b8; }
+        /* A run continued from the line above lines up under its names; a reason too long for one line wraps */
+        .wl-why-more { padding-left: 19px; }
+        .wl-why-wrap { position: relative; white-space: normal; padding-left: 19px; max-height: 2.6em; }
+        .wl-why-wrap svg { position: absolute; left: 0; top: calc((1.3em - 13px) / 2); margin: 0; }
         .wl-why-hit { color: #0f172a; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 2.5px; }
         .wl-hit { background: #fde047; color: #0f172a; font-weight: 700; border-radius: 2px; padding: 0 1px; }
         .wl-peek-close { display: none; }
@@ -1786,7 +1843,7 @@
             .wl-peek-text h3 { font-size: 24px; }
             .wl-peek-text .wl-meta { margin-top: 8px; }
             .wl-peek-text .wl-rating { font-size: 12px; }
-            .wl-why { margin-top: 10px; font-size: 13px; }
+            .wl-why-box { margin-top: 10px; font-size: 13px; }
             .wl-peek-overview { display: block; -webkit-line-clamp: none; margin-top: 12px; font-size: 14px; line-height: 1.55; }
             /* Add (or Watched it and Remove), with More on TMDB under it at the same width, centered in the space beside the poster */
             .wl-peek-actions { grid-column: 2; grid-row: 2; justify-self: center; display: flex; flex-direction: column; gap: 10px; width: min(280px, 100%); margin-top: 20px; }

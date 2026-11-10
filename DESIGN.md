@@ -44,6 +44,11 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   - **Matching:** a surname matches as it's typed ("ferr" finds Elf through Will Ferrell), and so does the part of a surname after a hyphen (Louis-Dreyfus). A full name matches once there's a letter after the space ("will f"). A first name alone never does, so "jack" and "holly" stay about the movies.
   - **Films found only through a person come after the rest**, under the same sorts as the title boost. So "brown" shows the Charlie Brown films before films with an actor named Brown.
   - **Settings:** `PEOPLE_SEARCH` in index.html. `enabled: false` stops searching people; `last: false` mixes person matches in with the rest. There's no switch on the page: pill space is already tight.
+- **Spaces mean every word, anywhere** (`EVERY_WORD` in index.html; built Nov 10). A film matches when the whole search matches, as before, or when every word matches somewhere: the title, a person, a tag or the description. Before, a space meant "these words together, in this order", so "rankin bass" and "elf ferr" found nothing; now they find 16 Rankin/Bass specials (with the default filters) and Elf and Saving Santa. "hanks ferrell" still finds nothing, honestly: they've never shared a holiday film.
+  - **Neighbouring words can match together.** Required, not optional: word by word, "tom hanks train", "will ferrell elf" and "bill murray ghost" would find nothing, because a first name alone never matches a person. Read together, they find The Polar Express, Elf and Scrooged. Each film splits the words into as few groups as it can.
+  - **Whole-search matches come first, in every sort and direction**, then the every-word ones. So old shared links show what they showed, followed by any extra films. The title boost and the people-last order apply within the whole-search ones, as before.
+  - Cost: searches that name a title get a longer tail ("christmas vacation" 33 → 66 with the default filters), always after the real matches.
+  - Speed: the groups of words are looked up once and kept while typing; at a simulated phone's speed the search part stays under about 25ms a keystroke. Drawing the results takes longer than searching, and typing waits 120ms before redrawing.
 - **Who's searchable** (the settings at the top of `data-builder.py`):
   - **Actors:** the first 5 billed; the first 10 for films with 500+ TMDB votes; and anyone billed lower with TMDB popularity 1.5 or more (John Candy is 11th in Home Alone).
   - **Directors:** all of them.
@@ -116,14 +121,20 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 ### Why it matched
 
 While searching, the preview says why the movie is in the results. The result cards never change: a line on every card would make rows uneven and the results taller.
-- **One line, under Rating and Score.** One reason shows, in this order:
-  1. **The title matches:** no line. The title already explains it.
+- **Up to two lines, under Rating and Score.** Each word, or group of words read together, gets one reason, in this order:
+  1. **The title matches:** nothing. The title already explains it.
   2. **A person:** their icon and name, with the matched part underlined (Will <u>Ferrell</u>). If several match: a director first, then the highest-billed actor, then a writer. Why directors first: "zemeckis" named Leslie Zemeckis, who has a small part in The Polar Express, instead of its director Robert Zemeckis. It also makes "favreau" in Elf the director, not the 12th-billed actor.
   3. **A tag or genre:** the tag icon and the tag, plain (🏷 snowman).
-  4. **Only the description, past the part that shows:** "Matched description", with a lines icon, in the same type as the other reasons. Phones show 6 lines of the description, or 3 sideways; laptops show it all.
-- **In the description,** the matched words are highlighted in bright yellow (`#fde047`) wherever they show. The highlight shows alongside a person or tag line too, but never for a title match.
+  4. **Only the description, past the part that shows:** "Matched description", with a lines icon. Phones show 6 lines of the description, or 3 sideways; laptops show it all, so laptops never need it.
+- **One kind per line,** on phones and laptops alike: people on line 1 (directors, actors and writers together), tags on line 2. "rankin bass stop motion" is 🎬 Arthur <u>Rankin</u> Jr. · Jules <u>Bass</u>, then 🏷 stop motion. With only one kind, it continues onto line 2, lined up under the names. *The owner's calls, Nov 10: tags on their own line on laptops, then the same on phones.*
+- **One icon per run of the same role:** 🎬 Rankin · Bass share one; 👤 Michael Caine · ✒ Charles Dickens get one each.
+- **Matched description** takes line 2 only beside one other kind that fits on line 1 ("ferrell dad" on a phone: Will Ferrell, then Matched description). Beside a person and a tag it's dropped; the yellow highlight still marks the word wherever the description shows it. The owner's call: with title, person, tag and description all matching, drop the description for simplicity.
+- **Two lines at most, and nothing cut short:** no "…" and no partial names. Whatever doesn't fit is left out whole, people first and then in the order typed. Why (the owner): the line is there so people aren't left wondering why a movie came up; when several reasons apply, they don't need all of them.
+- **A first reason too long for a line on its own wraps onto line 2** instead, since it may be the only reason. Only three tags are that wide on a phone, all "relationship" tags ("older woman younger woman relationship" on Carol); no person's name is. *The owner's call, Nov 10.*
+- **"new york" is the tag *new york city*, not Bob Newhart for "new".** Newhart only matches because his name starts with "new", so naming him would be a misleading reason. Someone who means him can type "newhart".
+- **In the description,** the matched words are highlighted in bright yellow (`#fde047`) wherever they show, for every word that didn't match the title.
 - **Four icons:** a person for actors, a clapperboard for directors, a pen for writers (book authors too), a tag for tags and genres.
-- **Why one line:** a person and a tag rarely both match. Across 34 searches, only 14 of 1,624 non-title matches had a person and something else.
+- The lines are fitted to the preview's width when it opens, and again if the window changes size.
 
 ### My List button
 
@@ -204,25 +215,6 @@ While searching, the preview says why the movie is in the results. The result ca
 
 - Notes that are sentences or instructions stay on screen twice as long as the short "Removed X · Undo" ones, and have an × to close them early.
 
-## Planned, not built: spaces mean every word
-
-Designed with the owner on Nov 10 (canvas Round 9, with real catalog data). Not built yet; build only on the owner's go-ahead.
-
-**Matching**
-- A movie matches when the whole search matches, as today, or when every word matches somewhere: the title, a person, a tag or the description. Today a space means "these words together, in this order", so "rankin bass" finds nothing; with every word it finds 16 Rankin/Bass specials (default filters). "hanks ferrell" still finds nothing, honestly: they've never shared a holiday film.
-- **Neighbouring words can match together.** Required, not optional: word by word, "tom hanks train", "will ferrell elf" and "bill murray ghost" find nothing, because a first name alone never matches a person. Read together, they find The Polar Express, Elf and Scrooged. A run of words can only match films its last word matches, which keeps it fast.
-- **Whole-search matches come first**, then every-word matches, within today's tiers. Old shared links show what they showed, then any extra films at the end.
-- Cost: searches that name a title get a longer tail ("christmas vacation" 34 → 70), always after the real matches.
-
-**The reason line for several words** (in the preview, under Rating and Score)
-- Words that match the title show nothing, as today.
-- Every other word, or group of words that go together, gets one reason: person, then tag, then description. "new york" is the tag *new york city*, not Bob Newhart for "new". Why not show both: Newhart only matches because his name starts with "new", so naming him would be a misleading reason. Someone who means him can type "newhart".
-- **One kind per line:** people on line 1 (directors, actors and writers together, one icon per run of the same role), tags on line 2. With only one kind, it can continue onto line 2. *The owner asked for this on laptops ("rankin bass stop motion" put the tag on line 2); Claude applied it to phones too, for consistency. Confirm.*
-- **Matched description** (the word is past the "…") takes line 2 only beside one other kind that fits on line 1. Beside a person and a tag it's dropped; the yellow highlight still marks the word wherever the description shows it. The owner's call: with title, person, tag and description all matching, drop the description for simplicity.
-- **Two lines at most, and nothing cut short:** no "…" and no partial names. Whatever doesn't fit is left out whole, people first and then the order typed. Why (the owner): the line is there so people aren't left wondering why a movie came up; when several reasons apply, they don't need all of them.
-- **A single tag too long for a line wraps onto line 2** instead of being dropped, since it may be the only reason. *Claude's proposal.* Only three tags are that wide on a 390px phone ("older woman younger woman relationship" on Carol); no person's name is.
-- When it would overflow: several surnames typed, several tag words, a very long tag, or a narrow or zoomed screen. On a laptop's wider line, nothing in the catalog overflows on its own.
-
 ## Decided against
 
 - **Laptop list:** a side drawer and a centered panel. My Watchlist is its own page.
@@ -236,7 +228,7 @@ Designed with the owner on Nov 10 (canvas Round 9, with real catalog data). Not 
   - a badge on the poster: the corners are taken, and an icon alone leaves you guessing;
   - words instead of icons ("from the novel by Charles Dickens" wraps on a phone);
   - a yellow highlight on people and tags;
-  - naming every reason that applies.
+  - naming every reason one word matches (title, person and tag for "snow"); each word, or group read together, gets one.
 - **The laptop preview:** a popover next to the clicked card. It's fiddly near the screen's edges, and it moves around.
 - **People search:** a fixed top 10 or 20 actors per film; producers; a switch on the page to turn it off.
 - **The reason line for several words:** "…" or partial names when it doesn't fit; people and tags mixed on one line; naming every person whose name starts with a typed word (Bob Newhart for "new" in "new york").
@@ -256,5 +248,5 @@ Designed with the owner on Nov 10 (canvas Round 9, with real catalog data). Not 
   - **Decide about Clear list there:** a Home Screen app saved with the list in its address (which Show me how would do) brings that list back, with Undo, every time it starts fresh after Clear list. That's the "an older copy still restores" rule; the app may need an exception.
 - **People search drifts a little week to week:** TMDB's popularity scores change, so a borderline supporting actor can drop in and out between rebuilds.
 - **Classic casts thin out past the 10th billed:** old stars score low on TMDB popularity, so supporting players further down are missing (Jack Albertson, 14th in the 1947 Miracle on 34th Street).
-- **The built reason line cuts a too-long tag with "…"** (only the three longest "relationship" tags, on phones). That goes against the no-"…" decision above; wrap it instead when the every-word search is built.
+- **When the filters hide every whole-search match,** only the every-word extras show. "bad santa" with R off shows 7 films that mention both words, with "3 more match, hidden by Content Ratings." above them; the hidden 3 are the actual Bad Santa films. The blue note points the way, but it could say those are the closer matches.
 - **iPhone Safari bookmarks** may save the loaded address the same way Add to Home Screen does. If so, a bookmark on iPhone won't always carry the list. Test before relying on it.

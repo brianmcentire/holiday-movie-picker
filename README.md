@@ -39,7 +39,6 @@ If the classifier can't run (missing key, no credits, API trouble), the new movi
 GitHub pauses scheduled workflows in public repos after 60 days without activity, so each fall, before November, turn it back on with `gh workflow enable rebuild-data.yml`.
 
 ### Future ideas
-* **Every word search:** spaces also mean "every word, anywhere", so "rankin bass" finds the Rankin/Bass specials. Designed, not built; see DESIGN.md.
 * **Pick for me:** a button that spotlights one film from the current filters.
 * **Falling snow:** a soothing, gentle snowfall in the page background.
 * **Released filter:** a group like Content Ratings with plain decade buttons (Before 1970 · '70s & '80s · '90s & 2000s · 2010 & later), all on by default, so people who skip older movies can turn them off. Factual labels on purpose: names like "Retro" make a judgment, and whether a film feels dated depends on the film and the viewer (A Christmas Story and Die Hard still play for kids who can't stand Christmas Vacation).
