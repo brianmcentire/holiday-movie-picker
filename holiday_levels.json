@@ -4595,6 +4595,18 @@
   "version": 2,
   "year": "2026"
  },
+ "1773378": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Hallmark-style Christmas romance centered on hosting a Christmas Eve dinner and small Christmas miracles, so the holiday is the subject.",
+  "referee": null,
+  "title": "Who's Coming for Christmas?",
+  "version": 2,
+  "year": "2026"
+ },
  "1773382": {
   "confidence": "high",
   "haiku": "about",
