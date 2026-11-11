@@ -108,14 +108,15 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   - Not on the list: nothing.
 - **Icon: the bookmark.** The first idea, popcorn, read as a trash can. A bookmark means "save for later" everywhere.
 - **The movie preview (the peek):** a tap or click anywhere on a card opens it (poster, title or description), and so does Enter on a card. It has the poster, the basics and the overview, plus:
-  - **Add to My Watchlist** (or, when the movie is on the list, **Watched it** and **Remove**);
-  - **More on TMDB**.
+  - **Add to My Watchlist** (or, when the movie is on the list, **Watched it** and **Remove**), the only button;
+  - **the rating opens TMDB.** "6.7/10" is TMDB's score, so tapping or clicking it opens the film on TMDB in a new tab, and the preview stays open. There's no hint beyond a pointer and an underline on hover. The owner's browser script makes its IMDb and Rotten Tomatoes scores work the same way.
 
   Why: an empty bookmark on every tile was clutter. Tapping a poster is what everyone does anyway, and phone tiles hide the overview, so the peek gives something back. The cost is one extra tap to reach TMDB.
+  - **More on TMDB was removed** on Nov 11 (the owner's call: the buttons for TMDB, IMDb and Rotten Tomatoes all looked cluttered). Add moved half a button (23px) further from the description on phones: 41px, and 35px on a phone turned sideways. On laptops, the panel shares out the room the button left, so Add moved down about 28px for most films. Films whose long description fills the panel keep 20px.
 - **Phones:** the preview is a sheet from the bottom over the dimmed page, and a swipe down closes it.
 - **Laptops and tablets** (720px wide and 560px tall or more): the same preview as a large panel in the middle of the screen, 720px wide, over the same dimmed page.
   - The poster is on the left. The full description shows.
-  - Add to My Watchlist (or Watched it and Remove) with More on TMDB under it, both 280px wide (a little wider than Add was side by side), centered in the space beside the poster. Left-aligned under the description, they looked off-center. The owner's call on Nov 10.
+  - Add to My Watchlist (or Watched it and Remove), 280px wide, centered in the space beside the poster. Left-aligned under the description, it looked off-center. The owner's call on Nov 10.
   - ×, Esc or a click outside closes it.
   - Why: it matches the phone, which the owner liked, and it gives laptops Add to My Watchlist and the "why it matched" line. Large and centered reads clearly as its own layer and never moves around.
 - **Adding on laptops:** the bookmark appears only on the poster under the pointer, and clicking it adds the movie. A click anywhere else on the card opens the preview. Cmd-, Ctrl- or Shift-click or a middle click opens TMDB in a new tab, as links do.
@@ -228,6 +229,34 @@ While searching, the preview says why the movie is in the results. The result ca
 
 - Notes that are sentences or instructions stay on screen twice as long as the short "Removed X · Undo" ones, and have an × to close them early.
 
+## Outside scores (the owner's browser script)
+
+- **`scores.json` is for the owner's Tampermonkey script, not the site.** The page never loads it, so other visitors see and download nothing new. It's public in the repo and at the site's address, though, and holds IMDb and Rotten Tomatoes numbers that MDBList gathers. *The owner accepted that gray area on Nov 11: it's quiet, not private.*
+- **Where the numbers come from:** [MDBList](https://mdblist.com), a free hobby service, with the owner's own key (`MDBLIST_API_KEY`). Per film:
+  - the IMDb rating (out of 10), the Tomatometer and the Popcornmeter (percents);
+  - the IMDb id and the Rotten Tomatoes address;
+  - the date its scores were last fetched.
+  When MDBList lacks an IMDb id or RT address, Wikidata fills it in.
+- **0 means unknown.** MDBList reports a missing score as 0 or null, so a 0% is treated as no score, as are values out of range. A missing field in the file means unknown; the file never holds nulls, zeros or empty strings.
+- **Old values are kept rather than lost** (the owner: "if we have old scores id prefer to keep using them than deleting"):
+  - a score MDBList leaves out this week keeps last week's value;
+  - a film whose request failed keeps its whole entry;
+  - no key, a refused key, MDBList being down or every request failing leaves the file untouched;
+  - a film that leaves the catalog leaves the file.
+- **Polite to MDBList,** so the key never gets blocked:
+  - 50 films a request, about 23 requests for the whole catalog, one every 1.5 seconds;
+  - at most 300 requests a run, and it stops early rather than leave fewer than 100 of the day's free 1,000, which the browser script also uses;
+  - "too many requests": waits as long as MDBList says (up to 2 minutes), twice at most, then stops for the week. The daily limit stops it at once;
+  - a server or network error: one retry 5 seconds later, then that batch is skipped. 3 failed batches in a row end the run.
+- **It runs every Monday after the movie data,** as its own step that can't stop the data from publishing. `make scores` runs it by hand.
+- **MDBList fills gaps lazily.** On Nov 11 a first request for It's a Wonderful Life had no RT scores; the full run minutes later had 94% and 95%. Some well-known films (The Grinch, Red One, Violent Night) still had no Tomatometer, and may fill in on a later run.
+- **The script** (`userscripts/scores.user.js`) adds "IMDb 7.1 🍅 85% 🍿 79%" after the rating in the preview (the owner picked emoji, option A on the canvas's Round 10).
+  - It reads `scores.json` once per page, so scores show at once. It asks MDBList live only for a film missing from the file, or when the file can't be read, and only with a key set. A gap in the file isn't filled live, since the file came from MDBList anyway.
+  - A score with no valid number shows nothing, no icon. With nothing valid, nothing shows at all.
+  - The IMDb score opens IMDb, and 🍅 and 🍿 open Rotten Tomatoes, in a new tab, when the file has the address. Otherwise they're plain text.
+  - Old scores still show; hovering one gives its source and date ("MDBList, updated Nov 11").
+  - The key is set by clicking "Scores: add your MDBList key" in a preview, or from the Tampermonkey menu, and stays in Tampermonkey's storage.
+
 ## Decided against
 
 - **Laptop list:** a side drawer and a centered panel. My Watchlist is its own page.
@@ -243,6 +272,8 @@ While searching, the preview says why the movie is in the results. The result ca
   - a yellow highlight on people and tags;
   - naming every reason one word matches (title, person and tag for "snow"); each word, or group read together, gets one.
 - **The laptop preview:** a popover next to the clicked card. It's fiddly near the screen's edges, and it moves around.
+- **Links to TMDB, IMDb and Rotten Tomatoes under Add** (canvas Round 11, Nov 11): a "More on:" line of text links, the same line in small capitals, and rows of equal buttons with each site's name and the arrow. All looked cluttered; the rating links to TMDB instead.
+  - *If buttons ever come back, the owner's pick is E:* plain buttons like the old More on TMDB, equal widths, labeled TMDB, IMDb and "Tomatoes", with slightly tighter letter spacing so "Tomatoes" fits a laptop's 88px button. "Rotten Tom." doesn't fit, and "RT" is less known.
 - **People search:** a fixed top 10 or 20 actors per film; producers; a switch on the page to turn it off.
 - **The reason line for several words:** "…" or partial names when it doesn't fit; people and tags mixed on one line; naming every person whose name starts with a typed word (Bob Newhart for "new" in "new york").
 - **The title count:** blue whenever any filter is on. It follows the number instead, so turning R on (still "More than 1,000") stays grey.

@@ -647,23 +647,23 @@
                 <div class="wl-peek-text">
                     ${status}
                     <h3 id="wl-peek-title" tabindex="-1">${esc(m.title)} <span class="wl-year">(${yearOf(m)})</span></h3>
-                    <div class="wl-meta"><span class="wl-cert">${esc(m.cert)}</span><span class="wl-rating">${ratingOf(m)}</span></div>
+                    <div class="wl-meta"><span class="wl-cert">${esc(m.cert)}</span><a class="wl-rating wl-rating-link" href="${tmdbURL(peekId)}" target="_blank" rel="noopener" draggable="false" aria-label="${ratingOf(m)} on TMDB">${ratingOf(m)}</a></div>
                     <div class="wl-why-box"></div>
                     <p class="wl-peek-overview">${marked(m.overview ?? '', descMarks, 'mark', 'wl-hit')}</p>
                 </div>
             </div>
             <div class="wl-peek-actions">
                 ${actions}
-                <a class="wl-btn wl-btn-tmdb" href="${tmdbURL(peekId)}" target="_blank" rel="noopener" draggable="false" data-peek="tmdb">More on TMDB ${icon('externalLink', 14)}</a>
             </div>`;
     }
 
-    // Each choice closes the peek, and the poster behind shows what changed
+    // Each choice closes the peek, and the poster behind shows what changed. The rating is a plain link to TMDB:
+    // it opens a new tab and leaves the peek open.
     function onPeekClick(e) {
         const action = e.target.closest('[data-peek]')?.dataset.peek;
         if (!action) return;
         const id = peekId;
-        closePeek(); // and 'tmdb', a link, goes on to open TMDB in a new tab
+        closePeek();
         if (action === 'add') {
             add(id);
             setTimeout(() => pop(id), 250); // once the peek is out of the way
@@ -1802,15 +1802,17 @@
             margin: 8px 0 0; font-size: 12.5px; line-height: 1.45; color: #475569;
             display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden;
         }
-        .wl-peek-add { margin-top: 18px; box-shadow: 0 6px 16px -6px rgba(37,99,235,0.6); }
-        .wl-peek-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
-        .wl-btn-tmdb { margin-top: 10px; height: 42px; font-weight: 700; color: #334155; }
-        .wl-btn-tmdb svg { color: #64748b; }
+        /* The rating opens TMDB, with no hint beyond the pointer and an underline on hover (the owner's call, Nov 11) */
+        .wl-rating-link { text-decoration: none; cursor: pointer; }
+        .wl-rating-link:hover { text-decoration: underline; }
+        /* Half a button (23px) further from the description than before, now that More on TMDB is gone */
+        .wl-peek-add { margin-top: 41px; box-shadow: 0 6px 16px -6px rgba(37,99,235,0.6); }
+        .wl-peek-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 41px; }
         @media (orientation: landscape) and (max-height: 500px) {
             .wl-peek-sheet { padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
             .wl-peek-top img, .wl-peek-top .wl-noposter { width: 64px; height: 96px; }
             .wl-peek-overview { -webkit-line-clamp: 3; }
-            .wl-peek-add, .wl-peek-pair { margin-top: 12px; }
+            .wl-peek-add, .wl-peek-pair { margin-top: 35px; }
         }
         /* Why it matches the search: a line under Rating and Score, and the matched words highlighted in the description */
         .wl-why-box { margin: 8px 0 0; font-size: 12px; line-height: 1.3; color: #475569; }
@@ -1845,10 +1847,9 @@
             .wl-peek-text .wl-rating { font-size: 12px; }
             .wl-why-box { margin-top: 10px; font-size: 13px; }
             .wl-peek-overview { display: block; -webkit-line-clamp: none; margin-top: 12px; font-size: 14px; line-height: 1.55; }
-            /* Add (or Watched it and Remove), with More on TMDB under it at the same width, centered in the space beside the poster */
+            /* Add (or Watched it and Remove), 280px wide, centered in the space beside the poster */
             .wl-peek-actions { grid-column: 2; grid-row: 2; justify-self: center; display: flex; flex-direction: column; gap: 10px; width: min(280px, 100%); margin-top: 20px; }
-            .wl-peek-actions .wl-peek-add, .wl-peek-actions .wl-peek-pair, .wl-peek-actions .wl-btn-tmdb { margin-top: 0; }
-            .wl-btn-tmdb { height: 46px; }
+            .wl-peek-actions .wl-peek-add, .wl-peek-actions .wl-peek-pair { margin-top: 0; }
             .wl-peek-close {
                 display: flex; position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; align-items: center; justify-content: center;
                 border: 0; border-radius: 999px; background: #f1f5f9; color: #475569; cursor: pointer;
