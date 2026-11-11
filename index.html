@@ -678,7 +678,7 @@
             btn.innerText = (has(LEVEL_BUTTONS, tag) && LEVEL_BUTTONS[tag]) || tag;
             if (hint) btn.title = hint;
             btn.className = `px-3 py-1 rounded-full border text-[11px] font-semibold transition-all state-neutral whitespace-nowrap`;
-            btn.onclick = e => (e.shiftKey && groupOf(tag) === 'ratings' ? soloRating(tag) : toggleTag(tag));
+            btn.onclick = e => (e.shiftKey && groupOf(tag) ? soloInGroup(tag) : toggleTag(tag));
             // Shift-clicking would otherwise select the sidebar's text between the last click and this one
             btn.onmousedown = e => { if (e.shiftKey) e.preventDefault(); };
             container.appendChild(btn);
@@ -818,20 +818,23 @@
             updateResults();
         }
 
-        // Shift-click a Content Rating to show only that rating. Shift-click it again, while it's still the only one
-        // on, to put the ratings back as they were. Needs a Shift key, so laptops in practice; kept in memory only.
-        let ratingSolo = null; // { tag, before: each rating's state before the first solo }
-        function soloRating(tag) {
-            const tags = GROUPS.ratings.tags;
+        // Shift-click a Content Rating or Holiday Intensity button to show only that one in its group. Shift-click it
+        // again, while it's still the only one on, to put the group back as it was. Needs a Shift key, so laptops in
+        // practice; kept in memory only.
+        const groupSolo = {}; // per group: { tag, before: each button's state before the first solo }
+        function soloInGroup(tag) {
+            const name = groupOf(tag);
+            const tags = GROUPS[name].tags;
             const onlyOn = t => tags.every(r => tagStates.get(r) === (r === t ? 1 : 0));
-            const soloed = ratingSolo && onlyOn(ratingSolo.tag); // still as the last shift-click left it
-            if (soloed && ratingSolo.tag === tag) {
-                ratingSolo.before.forEach((state, r) => tagStates.set(r, state));
-                ratingSolo = null;
+            let solo = groupSolo[name];
+            const soloed = solo && onlyOn(solo.tag); // still as the last shift-click left it
+            if (soloed && solo.tag === tag) {
+                solo.before.forEach((state, r) => tagStates.set(r, state));
+                delete groupSolo[name];
             } else {
-                // Moving the solo to another rating keeps the original "before"
-                if (!soloed) ratingSolo = { before: new Map(tags.map(r => [r, tagStates.get(r)])) };
-                ratingSolo.tag = tag;
+                // Moving the solo to another button keeps the original "before"
+                if (!soloed) solo = groupSolo[name] = { before: new Map(tags.map(r => [r, tagStates.get(r)])) };
+                solo.tag = tag;
                 tags.forEach(r => tagStates.set(r, r === tag ? 1 : 0));
             }
             tags.forEach(updateBtnState);
