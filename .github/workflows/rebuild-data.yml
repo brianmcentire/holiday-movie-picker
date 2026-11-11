@@ -52,17 +52,25 @@ jobs:
               sys.exit(f"New build has {new} titles, down from {old}. Not publishing it.")
           PY
 
+      # For the owner's browser script only; the site doesn't load scores.json. Any trouble with MDBList keeps
+      # last week's scores, and a failure here never stops the movie data from publishing.
+      - name: Fetch outside scores (MDBList)
+        continue-on-error: true
+        env:
+          MDBLIST_API_KEY: ${{ secrets.MDBLIST_API_KEY }}
+        run: python scores-builder.py
+
       - name: Commit and push if the data changed
         id: commit
         run: |
-          if git diff --quiet -- holiday_engine.json holiday_levels.json holiday_levels_review.md; then
+          if git diff --quiet -- holiday_engine.json holiday_levels.json holiday_levels_review.md scores.json; then
             echo "Data unchanged, nothing to publish."
             echo "pushed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add holiday_engine.json holiday_levels.json holiday_levels_review.md
+          git add holiday_engine.json holiday_levels.json holiday_levels_review.md scores.json
           git commit -m "Refresh movie data from TMDB ($(date -u +%Y-%m-%d))"
           git pull --rebase origin main
           git push origin HEAD:main

@@ -3,7 +3,7 @@ PID_FILE := .dev-server.pid
 LOG_FILE := .dev-server.log
 DEPS := .venv/.dev-deps
 
-.PHONY: dev dev-stop
+.PHONY: dev dev-stop scores
 
 ## make dev: serve the site at http://localhost:8000 in the background, reloading the browser on changes
 dev: $(DEPS)
@@ -27,6 +27,10 @@ dev-stop:
 		echo "The dev server wasn't running"; \
 	fi
 	@rm -f $(PID_FILE)
+
+## make scores: fetch IMDb and Rotten Tomatoes scores from MDBList into scores.json (needs MDBLIST_API_KEY in .env)
+scores: $(DEPS)
+	@.venv/bin/python scores-builder.py
 
 # Creates the venv and installs dependencies, again whenever the requirements files change
 $(DEPS): requirements.txt requirements-dev.txt

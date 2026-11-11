@@ -11,6 +11,7 @@ A curated holiday movie discovery engine built with a high-concurrency Python AP
 * **Frontend:** `index.html` is a standalone static site that filters the generated `holiday_engine.json` in real-time.
 * **Watch list:** `watchlist.js` adds a personal list (bookmark movies, mark them watched, reorder, share a copy), stored on the device with no accounts or servers. It's a separate module: removing it means deleting the file, its `<script>` tag and the lines in `index.html` marked `watch list hook`.
 * **Usage stats:** `analytics.js` counts visits and shared links with GoatCounter; it's also separate and removable.
+* **Outside scores (personal):** `scores-builder.py` fetches IMDb and Rotten Tomatoes scores from MDBList into `scores.json`, for the owner's Tampermonkey script in `userscripts/`. The site itself never loads it (see below).
 * **Design decisions** and the reasons for them are in [DESIGN.md](DESIGN.md).
 
 ### Usage
@@ -37,6 +38,14 @@ One-time setup: run `gh secret set TMDB_API_KEY` and `gh secret set ANTHROPIC_AP
 If the classifier can't run (missing key, no credits, API trouble), the new movie data still publishes, with the new films unsorted. The run is then marked failed, so GitHub emails you, and the page's footer shows a quiet note until it's fixed. The footer also notes when the movie list hasn't refreshed in over 10 days during November or December.
 
 GitHub pauses scheduled workflows in public repos after 60 days without activity, so each fall, before November, turn it back on with `gh workflow enable rebuild-data.yml`.
+
+### Outside scores (personal)
+`scores.json` holds each film's IMDb rating, Tomatometer and Popcornmeter, plus its IMDb id and Rotten Tomatoes address, from [MDBList](https://mdblist.com). Only the Tampermonkey script in `userscripts/scores.user.js` reads it; the page doesn't load it.
+
+* Needs a free MDBList API key (mdblist.com, Preferences, API) in `.env` as `MDBLIST_API_KEY=your_key`. Run `make scores` to refresh it by hand.
+* The Monday refresh runs it too, after the movie data, with the key from `gh secret set MDBLIST_API_KEY`. A problem with MDBList never stops the movie data from publishing.
+* A whole refresh takes about 23 requests (50 films each), paced 1.5 seconds apart, out of the free 1,000 a day.
+* If MDBList is down, refuses the key or leaves a score out, the scores from the last good run stay.
 
 ### Future ideas
 * **Pick for me:** a button that spotlights one film from the current filters.
