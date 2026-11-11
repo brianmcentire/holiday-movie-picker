@@ -1673,7 +1673,7 @@
     // sheet; closing either one closes both for good. Never shown once the site is on the Home Screen.
     const TIP_TEXT = `Add Season’s Screenings to your Home Screen: open Safari’s Share menu ${icon('share', 13, { stroke: 2.25, label: 'Share', cls: 'wl-inline-icon' })} and choose <b>Add to Home Screen</b>.`;
     let tipToast = null;
-    // Off for now: iPhone saves the address the page was loaded with, so a Home Screen app added after building a
+    // Parked (owner, Nov 11): iPhone saves the address the page was loaded with, so a Home Screen app added after building a
     // list would start empty, and Safari and the app would keep separate lists. See DESIGN.md, "Add to Home Screen".
     const HOME_SCREEN_TIP = false;
 

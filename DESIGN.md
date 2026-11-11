@@ -60,6 +60,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - **The Holiday Intensity names aren't searchable.** Every film carries one as a hidden tag ("holiday story"), so "story" found 1,016 films. They're filters, not words about the film.
 - **Nothing found, but hidden:** when the only matches are hidden by Content Ratings or Holiday Intensity (searching "die hard" with R and It's adjacent off), the empty results say "2 movies match, hidden by Content Ratings and Holiday Intensity." with **Show them**, which turns on every rating (or intensity) and keeps the search. "No movies match your search or vibes." stays grey; the "2 movies match, hidden by…" line is blue, like the note when some results show (the owner's call, Nov 10).
 - **Some found, more hidden:** while searching, when Content Ratings or Holiday Intensity hide more matches, a line above the results says so, in blue, with the same **Show them**: "2 more match, hidden by Content Ratings." Why: "bateman" shows Nick and Gabriel Bateman's 3 films, with no hint that Jason Bateman's 2 are rated R. Only while searching; `MORE_HIDDEN_NOTE` in index.html turns it off. *Its wording and place were Claude's call, built overnight on Nov 9 from the agreed plan. The owner kept it and asked for it in blue on Nov 10, so it gets noticed.*
+  - **The same note when the hidden ones are the closer matches.** "bad santa" with R off shows 7 films that mention both words, under "3 more match, hidden by Content Ratings."; the hidden 3 are the actual Bad Santa films. No special wording for that. *The owner's call, Nov 11: fine as is.*
 - **The title count** ("More than 1,000 titles") is grey at first and turns the tagline's blue once the number changes, then back to grey when it says the same as the unfiltered page again. A filter that doesn't change the number (turning R on still shows "More than 1,000") leaves it grey. Why: "34 titles" is the answer to what you just did, so it should draw the eye. *First built as "blue whenever a filter is on"; the owner wanted it tied to the number.*
   - On laptops it sits on the same line as "a holiday movie matchmaker", right-aligned against the search bar with a tab's width (32px) between them. It floated in the middle of the bar, which looked odd.
   - It keeps the width of "More than 1,000 titles" whatever it says, so the search bar never shifts while typing.
@@ -205,12 +206,17 @@ While searching, the preview says why the movie is in the results. The result ca
   A friend who's sent an address-bar link and has no list starts with the sender's list, with Undo. That's intended.
 - Share results never carries it.
 
-### Add to Home Screen (tip off for now)
+### Add to Home Screen (parked)
 
-- **The Home Screen tip is built but switched off** (`HOME_SCREEN_TIP` in `watchlist.js`). Two findings on iOS 27 made it a poor promise for now:
+- **Parked on Nov 11, the owner's call:** the fixes it needs are too much for a simple, fun site. The tip stays off; its code stays in place.
+- **The Home Screen tip is built but switched off** (`HOME_SCREEN_TIP` in `watchlist.js`). Two findings on iOS 27 made it a poor promise:
   - **iPhone saves the address the page was loaded with,** not the one the page updates afterwards. A list built after the page loaded isn't in that address, so the Home Screen app starts empty. A page reloaded with the list in its address does carry it (tested on the simulator).
   - **A Home Screen app keeps its own storage, separate from Safari's,** and links someone texts you always open in Safari. People who use both would have two lists drifting apart.
-- **When it's back, the tip will read:** "Added Klaus." then, on its own line, "Add Season's Screenings to your Home Screen: open Safari's Share menu ⬆ and choose Add to Home Screen."
+- **Picking it back up would need:**
+  - **Show me how:** a button in the tip that reloads the page with the list in its address, then shows the Share-menu steps, so the new app starts with the list.
+  - **Paste a list:** a way to get a list someone texted you into the Home Screen app, since links open in Safari.
+  - **Decide about Clear list there:** a Home Screen app saved with the list in its address (which Show me how would do) brings that list back, with Undo, every time it starts fresh after Clear list. That's the "an older copy still restores" rule; the app may need an exception.
+- **If it's back, the tip will read:** "Added Klaus." then, on its own line, "Add Season's Screenings to your Home Screen: open Safari's Share menu ⬆ and choose Add to Home Screen."
   - It names Safari's Share menu, with Safari's icon, because Add to Home Screen exists only there. Our Share results button can't do it.
   - The planned places are once right after the very first add, and at the bottom of the list on phones. It's iPhone Safari only, and never shown once closed or once the site is on the Home Screen.
 - **The app name is "Season's Screenings"** (the manifest's `short_name`), and the manifest has no fixed start address.
@@ -248,11 +254,6 @@ While searching, the preview says why the movie is in the results. The result ca
 - **The Undo after tapping a bookmark** may be redundant, since tapping the bookmark again removes the movie. Kept for now as feedback.
 - **"Mark them watched too"** in Just look, for couples who watch together while only one of them marks things. Not built.
 - **Mail's subject line:** check on a real iPhone whether Mail uses the share title as the subject.
-- **Bringing back the Home Screen tip** needs two things first:
-  - **Show me how:** a button in the tip that reloads the page with the list in its address, then shows the Share-menu steps, so the new app starts with the list.
-  - **Paste a list:** a way to get a list someone texted you into the Home Screen app, since links open in Safari.
-  - **Decide about Clear list there:** a Home Screen app saved with the list in its address (which Show me how would do) brings that list back, with Undo, every time it starts fresh after Clear list. That's the "an older copy still restores" rule; the app may need an exception.
 - **People search drifts a little week to week:** TMDB's popularity scores change, so a borderline supporting actor can drop in and out between rebuilds.
 - **Classic casts thin out past the 10th billed:** old stars score low on TMDB popularity, so supporting players further down are missing (Jack Albertson, 14th in the 1947 Miracle on 34th Street).
-- **When the filters hide every whole-search match,** only the every-word extras show. "bad santa" with R off shows 7 films that mention both words, with "3 more match, hidden by Content Ratings." above them; the hidden 3 are the actual Bad Santa films. The blue note points the way, but it could say those are the closer matches.
 - **iPhone Safari bookmarks** may save the loaded address the same way Add to Home Screen does. If so, a bookmark on iPhone won't always carry the list. Test before relying on it.
