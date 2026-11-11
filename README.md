@@ -46,6 +46,7 @@ GitHub pauses scheduled workflows in public repos after 60 days without activity
 * The Monday refresh runs it too, after the movie data, with the key from `gh secret set MDBLIST_API_KEY`. A problem with MDBList never stops the movie data from publishing.
 * A whole refresh takes about 23 requests (50 films each), paced 1.5 seconds apart, out of the free 1,000 a day.
 * If MDBList is down, refuses the key or leaves a score out, the scores from the last good run stay.
+* **Installing the script:** with Tampermonkey in Chrome, open https://raw.githubusercontent.com/brianmcentire/holiday-movie-picker/main/userscripts/scores.user.js and click Install. Tampermonkey then updates it by itself whenever a pushed version has a higher `@version` (it checks daily; Tampermonkey's menu has "Check for userscript updates" to check now).
 
 ### Future ideas
 * **Pick for me:** a button that spotlights one film from the current filters.

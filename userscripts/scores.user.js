@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Season's Screenings: IMDb and Rotten Tomatoes scores
 // @namespace    https://brianmcentire.github.io/holiday-movie-picker/
-// @version      2.2
+// @version      2.3
 // @description  Adds IMDb, the Tomatometer and the Popcornmeter after the rating in the movie preview, from MDBList.
 // @match        https://brianmcentire.github.io/holiday-movie-picker/*
 // @match        http://localhost:8000/*
@@ -11,7 +11,11 @@
 // @grant        GM_registerMenuCommand
 // @connect      api.mdblist.com
 // @run-at       document-idle
+// @updateURL    https://raw.githubusercontent.com/brianmcentire/holiday-movie-picker/main/userscripts/scores.user.js
+// @downloadURL  https://raw.githubusercontent.com/brianmcentire/holiday-movie-picker/main/userscripts/scores.user.js
 // ==/UserScript==
+
+// Tampermonkey updates itself from GitHub, so raise @version with every change, or it won't notice.
 
 // Where the scores come from:
 // 1. scores.json, next to the site. The weekly data build fetches every film's scores from MDBList into it; the site
