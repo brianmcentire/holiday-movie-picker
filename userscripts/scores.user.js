@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Season's Screenings: IMDb and Rotten Tomatoes scores
 // @namespace    https://brianmcentire.github.io/holiday-movie-picker/
-// @version      1.0
+// @version      1.1
 // @description  Adds IMDb, the Tomatometer and the Popcornmeter after the rating in the movie preview, from MDBList.
 // @match        https://brianmcentire.github.io/holiday-movie-picker/*
 // @match        http://localhost:8000/*
@@ -13,7 +13,8 @@
 // @run-at       document-idle
 // ==/UserScript==
 
-// Your MDBList key lives in Tampermonkey's storage, never in this file: Tampermonkey menu → "Set MDBList API key".
+// Your MDBList key lives in Tampermonkey’s storage, never in this file. Set it by clicking "Scores: add your MDBList key"
+// in any movie preview, or from the Tampermonkey menu → "Set MDBList API key".
 // Scores are kept for 3 days per movie (MDBList refreshes them every few days), so reopening a preview costs nothing.
 
 (() => {
@@ -22,14 +23,16 @@
     const KEEP_FOR = 3 * 24 * 60 * 60 * 1000;
     const pending = new Map(); // TMDB id → the request in flight
 
-    GM_registerMenuCommand('Set MDBList API key', () => {
+    // From the Tampermonkey menu, or by clicking the note in the preview when there's no key or a wrong one
+    function askForKey() {
         const key = prompt('Your MDBList API key (mdblist.com → Preferences → API):', GM_getValue('mdblistKey', ''));
         if (key === null) return;
         GM_setValue('mdblistKey', key.trim());
         GM_setValue('scores', {}); // a new key gets fresh scores
         document.querySelector('#wl-peek .ss-scores')?.remove();
         fill();
-    });
+    }
+    GM_registerMenuCommand('Set MDBList API key', askForKey);
 
     // MDBList's ratings: [{ source: 'imdb', value: 7.1 }, { source: 'tomatoes', value: 85 }, { source: 'popcorn', value: 79 }, ...]
     // The audience score was called tomatoesaudience on MDBList's older host.
@@ -40,7 +43,7 @@
 
     function scoresFor(id) {
         const key = GM_getValue('mdblistKey', '');
-        if (!key) return Promise.resolve({ problem: 'Scores: set your MDBList key in the Tampermonkey menu' });
+        if (!key) return Promise.resolve({ problem: 'Scores: add your MDBList key' });
         const saved = GM_getValue('scores', {})[id];
         if (saved && Date.now() - saved.at < KEEP_FOR) return Promise.resolve(saved);
         if (!pending.has(id)) {
@@ -52,7 +55,7 @@
                     timeout: 10000,
                     onload: r => {
                         pending.delete(id);
-                        if (r.status === 401 || r.status === 403) return resolve({ problem: 'Scores: MDBList didn’t accept your key' });
+                        if (r.status === 401 || r.status === 403) return resolve({ problem: 'Scores: MDBList didn’t accept your key. Change it' });
                         if (r.status !== 200) return fail(`HTTP ${r.status}`);
                         let data;
                         try { data = JSON.parse(r.responseText); } catch (e) { return fail('not JSON'); }
@@ -85,7 +88,15 @@
             span.append(text);
             return span;
         };
-        if (s.problem) return box.append(part('', s.problem));
+        if (s.problem) {
+            const note = part('', s.problem);
+            note.setAttribute('role', 'button');
+            note.tabIndex = 0;
+            note.style.cssText += 'cursor: pointer; text-decoration: underline; color: #2563eb;';
+            note.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); askForKey(); });
+            note.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); askForKey(); } });
+            return box.append(note);
+        }
         if (s.imdb) box.append(part('', `IMDb ${Number(s.imdb).toFixed(1)}`));
         if (s.tomatoes) box.append(part('🍅', `${Math.round(s.tomatoes)}%`));
         if (s.popcorn) box.append(part('🍿', `${Math.round(s.popcorn)}%`));
