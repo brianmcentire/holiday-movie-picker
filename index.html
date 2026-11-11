@@ -678,7 +678,9 @@
             btn.innerText = (has(LEVEL_BUTTONS, tag) && LEVEL_BUTTONS[tag]) || tag;
             if (hint) btn.title = hint;
             btn.className = `px-3 py-1 rounded-full border text-[11px] font-semibold transition-all state-neutral whitespace-nowrap`;
-            btn.onclick = () => toggleTag(tag);
+            btn.onclick = e => (e.shiftKey && groupOf(tag) === 'ratings' ? soloRating(tag) : toggleTag(tag));
+            // Shift-clicking would otherwise select the sidebar's text between the last click and this one
+            btn.onmousedown = e => { if (e.shiftKey) e.preventDefault(); };
             container.appendChild(btn);
             return btn;
         }
@@ -813,6 +815,26 @@
             let next = groupOf(tag) ? (tagStates.get(tag) === 1 ? 0 : 1) : (tagStates.get(tag) + 1) % 3;
             tagStates.set(tag, next);
             updateBtnState(tag);
+            updateResults();
+        }
+
+        // Shift-click a Content Rating to show only that rating. Shift-click it again, while it's still the only one
+        // on, to put the ratings back as they were. Needs a Shift key, so laptops in practice; kept in memory only.
+        let ratingSolo = null; // { tag, before: each rating's state before the first solo }
+        function soloRating(tag) {
+            const tags = GROUPS.ratings.tags;
+            const onlyOn = t => tags.every(r => tagStates.get(r) === (r === t ? 1 : 0));
+            const soloed = ratingSolo && onlyOn(ratingSolo.tag); // still as the last shift-click left it
+            if (soloed && ratingSolo.tag === tag) {
+                ratingSolo.before.forEach((state, r) => tagStates.set(r, state));
+                ratingSolo = null;
+            } else {
+                // Moving the solo to another rating keeps the original "before"
+                if (!soloed) ratingSolo = { before: new Map(tags.map(r => [r, tagStates.get(r)])) };
+                ratingSolo.tag = tag;
+                tags.forEach(r => tagStates.set(r, r === tag ? 1 : 0));
+            }
+            tags.forEach(updateBtnState);
             updateResults();
         }
 
