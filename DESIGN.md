@@ -341,6 +341,20 @@ Decided with the owner and built on Nov 11.
   5. Then a spot check of about 20 random films in the pill, since two models that agree can still share a blind spot.
 
   Estimated at $8 to $15 in all. **Weekly runs are undecided** until the one-time run shows whether the extra steps earn their keep.
+- **How the one-time run went (Nov 11):**
+  - The Opus and Sonnet batches took 4 minutes and cost $5.15.
+  - 592 films qualified for Fable, about half the catalog, far more than expected: the models were often unsure about obscure TV movies, and neither knew 280 of them.
+  - **Fable ran as Claude Code agents** on the owner's Max plan rather than through the API, at no API cost: nine agents of 42 to 79 films each, the 42 contested films kept together. Their calls are marked `"via": "Claude Code agent"` in `musicals.json`.
+  - **Where Fable changed the outcome:**
+    - The 395 films both models called "none" with no musical hint: no changes. Fable confirmed every one.
+    - The 155 films both left out, unsure: 2 moved in, The Rapsittie Street Kids: Believe in Santa and Boys Go to Jupiter.
+    - The 42 contested films: 3 moved in against Opus's call (A Cinderella Story: Christmas Wish, Nativity!, Saving Santa), and 12 moved out. The ones moved out include How the Grinch Stole Christmas! (1966), Frosty's Winter Wonderland, A Garfield Christmas and A Chipmunk Christmas, each with a few songs in a story carried by narration, like Frosty.
+  - The pill holds 82 films: 70 musicals and 12 music shows. `musicals_review.md` lists the 40 calls where the three models didn't all agree.
+  - **Spot check:** 20 random films in the pill all looked right. The calls least sure of themselves:
+    - Drummer Boy (2026): nobody knew it, and Fable judged it from its details;
+    - Christmas Crush (2012): Fable put it in, saying it was released as a musical, which is worth checking;
+    - Captain Underpants Mega Blissmas and The Leprechauns' Christmas Gold: Fable's own lowest-confidence calls.
+  - **What it says about weekly runs:** Fable changed the outcome only on films where the two models disagreed or leaned uncertain, never on the quiet "none" films. A weekly step could skip those (`--skip-quiet`).
 - **Not used:**
   - curated lists: none found on GitHub, and Wikipedia's lists (behind the Wikidata check) barely cover TV specials and TV movies;
   - a trained classifier like BERT: it needs hundreds of labeled films and sees only the description, which rarely mentions songs;

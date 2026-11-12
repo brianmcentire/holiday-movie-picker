@@ -411,15 +411,18 @@ def decide(skip_quiet, log):
 
 
 def write_review(answers, ids):
-    """The films Fable decided, for a human to skim."""
-    rows = sorted(((mid, e) for mid, e in answers.items() if mid in ids and answered(e, "fable")),
+    """Fable's calls that differ from Opus or Sonnet about the pill, for a human to skim."""
+    decided = [(mid, e) for mid, e in answers.items() if mid in ids and answered(e, "fable")]
+    differs = lambda e: len({in_pill_kind(e[who]["kind"]) for who in ("fable", "opus", "sonnet")}) > 1
+    rows = sorted(((mid, e) for mid, e in decided if differs(e)),
                   key=lambda row: (KINDS.index(row[1]["fable"]["kind"]), row[1]["title"]))
     lines = [
         "# Musical pill: calls to review",
         "",
-        "Opus and Sonnet each said whether a film is a musical. Fable made the final call on these films, because the two",
-        "disagreed about the pill, or one of them wasn't sure or didn't know the film. To overrule one, add its TMDB id",
-        "to `OVERRIDES` in `musical_classifier.py`.",
+        "Opus and Sonnet each said whether a film is a musical. Fable made the final call when the two disagreed about",
+        "the pill, or one of them wasn't sure or didn't know the film. Listed here are the calls where Fable, Opus and",
+        "Sonnet didn't all agree about the pill. To overrule one, add its TMDB id to `OVERRIDES` in",
+        "`musical_classifier.py`, then run `python musical_classifier.py apply`.",
         "",
         "Kinds: **musical** and **music_show** are in the pill · **some_songs** and **none** aren't",
         "",
@@ -432,7 +435,8 @@ def write_review(answers, ids):
         reason = f["reason"].replace("|", "/").replace("\n", " ")
         lines.append(f"| {e['title']} ({e['year']}) `{mid}` | **{f['kind']}** | {e['opus']['kind']} | {e['sonnet']['kind']}"
                      f" | {f['why_asked']} | {reason}{nobody} |")
-    lines += ["", f"{len(rows)} films decided by Fable."]
+    lines += ["", f"{plural(len(rows), 'call')} to review. Fable decided {plural(len(decided), 'film')} in all; "
+                  "on the rest it agreed with both models."]
     REVIEW_FILE.write_text("\n".join(lines) + "\n")
 
 
