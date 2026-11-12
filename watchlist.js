@@ -1621,7 +1621,8 @@
     // For starting over without unmarking films one by one. The button always acts on the watched movies showing
     // above it, and its number says how many: at the bottom of My Watchlist, the watched rows showing; under the
     // results, every result, and only while the Watched pill is on ("only these"), so it never turns up under an
-    // ordinary search. It asks first, then offers Undo. Under the results it's a white pill with a start-over arrow,
+    // ordinary search. For two or more it asks first; for one it just unmarks it. Either way it offers Undo.
+    // Under the results it's a white pill with a start-over arrow,
     // like Clear filters there: alone under the cards, plain grey capitals read as a caption, not a button.
     const unmarkLabel = n => `Unmark ${plural(n, 'watched movie')}`;
     let resultsUnmark = null;
@@ -1655,6 +1656,7 @@
 
     function askToUnmark(ids) {
         if (!ids.length) return;
+        if (ids.length === 1) return unmarkWatched(ids); // one movie: what's meant is clear, and Undo covers a slip
         unmarkIds = ids;
         confirmLayer.panel.innerHTML = `<h3 id="wl-confirm-title" class="wl-card-title" tabindex="-1">Remove watched mark from ${plural(ids.length, 'movie')}?</h3>
             <button type="button" class="wl-btn wl-btn-red" data-confirm="unmark">Unmark</button>
@@ -1677,7 +1679,8 @@
             if (results) results.tabIndex = -1;
             (viewOpen ? $('#wl-title') : results)?.focus({ preventScroll: true });
         }
-        offerUndo(`Unmarked ${plural(marked.length, 'movie')}`, () => {
+        const what = marked.length === 1 ? movieFor(marked[0])?.title ?? '1 movie' : plural(marked.length, 'movie');
+        offerUndo(`Unmarked ${what}`, () => {
             marked.forEach(id => { // each mark goes back where the movie is now: on its list entry, or beside the list
                 const item = itemFor(id);
                 if (item) item.watched = true;
