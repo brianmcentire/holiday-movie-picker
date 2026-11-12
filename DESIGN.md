@@ -45,7 +45,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   - Only under Top Rated, User Rating and Total Votes, in their usual direction. Release Date, Alphabetical and Random stay strictly in order.
   - Tune it with `minVotes` (lower lets more titles through), or turn it off with `enabled: false`.
 - **Search finds people:** actors, directors and writers.
-  - **Matching:** a surname matches as it's typed ("ferr" finds Elf through Will Ferrell), and so does the part of a surname after a hyphen (Louis-Dreyfus). A full name matches once there's a letter after the space ("will f"). A first name alone never does, so "jack" and "holly" stay about the movies.
+  - **Matching:** a surname matches as it's typed ("ferr" finds Elf through Will Ferrell), and so does the part of a surname after a hyphen (Louis-Dreyfus). A full name matches once there's a letter after the space ("will f"), and so does any later part of a name, which is how surnames of several words are found ("de niro", "van allsburg", and "jessica parker" for Sarah Jessica Parker). A first name alone never does, so "jack" and "holly" stay about the movies.
   - **Films found only through a person come after the rest**, under the same sorts as the title boost. So "brown" shows the Charlie Brown films before films with an actor named Brown.
   - **Settings:** `PEOPLE_SEARCH` in index.html. `enabled: false` stops searching people; `last: false` mixes person matches in with the rest. There's no switch on the page: pill space is already tight.
 - **Spaces mean every word, anywhere** (`EVERY_WORD` in index.html; built Nov 10). A film matches when the whole search matches, as before, or when every word matches somewhere: the title, a person, a tag or the description. Before, a space meant "these words together, in this order", so "rankin bass" and "elf ferr" found nothing; now they find 16 Rankin/Bass specials (with the default filters) and Elf and Saving Santa. "hanks ferrell" still finds nothing, honestly: they've never shared a holiday film.
@@ -76,6 +76,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - **Folding the filters.** A **‹** at the top right of the filters folds them into a slim strip. The strip shows **›**, the word Filters and how many filters are on; tap anywhere on it to reopen. The device remembers the choice.
   - Columns with filters open → folded: upright phone 2 → 3; tablet 3 → 4; sideways phone 4 → 5.
 - **Long tags wrap** in the narrow filters column instead of making it scroll sideways.
+- **The header is two rows below 1024px wide:** the site's name with the title count at its right, then search and sort across the full width. Tablets and narrow windows joined phones here on Nov 12: in one row, 768 to 1023px had no room for the title count, so it showed nowhere, and an upright iPad's search box was 250px wide. Sideways phones keep their single row.
 - **Sideways phones** (landscape, no taller than 500px):
   - The whole page scrolls, so Safari tucks its own bars away.
   - The filters stay pinned beside the results and scroll on their own. A swipe that starts on the filters never moves the page. While the top bar shows, the filters sit just below it, so it never covers their top.

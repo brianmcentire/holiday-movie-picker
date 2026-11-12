@@ -160,9 +160,6 @@
         bookmarkMinus: `${BOOKMARK}<path d="M15 10H9"/>`,
         check: '<path d="M20 6 9 17l-5-5"/>',
         x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
-        eye: '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
-        eyeOff: '<path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/>',
-        externalLink: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
         chevronLeft: '<path d="m15 18-6-6 6-6"/>',
         chevronRight: '<path d="m9 18 6-6-6-6"/>',
         trash: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
@@ -975,7 +972,8 @@
     //     open=1       My Watchlist is open (there for a Home Screen app added with the sheet showing)
     // Opening it on an empty list restores the list, with Undo, unless it was made before Clear list last emptied
     // the list here; on a list that has movies, it's quietly replaced by that list's own copy, and it never brings
-    // up the Shared with you card. An empty list has no copy. A Home Screen app ignores open=1 at launch.
+    // up the Shared with you card. With no movies and no watched marks there's no copy. A Home Screen app ignores
+    // open=1 at launch.
     // 'all' keeps it in every browser, 'ios' only on iPhone and iPad (Safari or a Home Screen app), 'off' nowhere.
     const LIST_IN_ADDRESS = 'all';
 
@@ -990,8 +988,8 @@
     const movieList = () => items.map(item => item.id + (item.watched ? 'w' : '')).join(',');
     const seenPart = () => (offList.size ? `&seen=${[...offList].join(',')}` : '');
 
-    // The address's watch-list part for the user's own list: the copy (when it's on and the list has movies),
-    // or just #watchlist while My Watchlist is open, or nothing
+    // The address's watch-list part for the user's own list: the copy (when it's on and there are movies or
+    // watched marks to keep), or just #watchlist while My Watchlist is open, or nothing
     function ownHash(open = viewOpen && !looking) {
         if (!listInAddress() || (!items.length && !offList.size)) return open ? '#watchlist' : '';
         return `#watchlist=1&backup=1&made=${minuteISO(listMade || new Date())}&m=${movieList()}${seenPart()}${open ? '&open=1' : ''}`;
@@ -1404,7 +1402,7 @@
         }
         closeView();
         offerUndo('Cleared My Watchlist', () => {
-            cleared.forEach(item => { item.watched = false; }); // their marks are kept apart now, and come back from there
+            cleared.forEach(item => { item.watched = isWatched(item.id); }); // their marks as they are now
             items = cleanItems([...cleared, ...items]); // anything added since stays too
             foldWatched();
             changed();
@@ -1762,6 +1760,7 @@
         const item = looking?.items.find(entry => entry.id === id);
         if (!item || !addFromCopy([item])) return;
         offerUndo(`Added ${movieFor(id).title}`, () => {
+            if (itemFor(id)?.watched) offList.add(id); // off the list again, it keeps its watched mark
             items = items.filter(entry => entry.id !== id);
             changed();
         });
@@ -1885,8 +1884,6 @@
         .wl-btn:hover { border-color: #cbd5e1; }
         .wl-btn-blue { border: 0; background: #2563eb; color: #ffffff; }
         .wl-btn-blue:hover { background: #1d4ed8; }
-        .wl-btn-green { border: 0; background: #16a34a; color: #ffffff; }
-        .wl-btn-green:hover { background: #15803d; }
         .wl-btn-soft { border-color: #bfdbfe; background: #eff6ff; color: #2563eb; }
         .wl-btn-red { border: 0; background: #ef4444; color: #ffffff; }
         .wl-btn-plain { border: 0; background: none; color: #64748b; height: 40px; }

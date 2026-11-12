@@ -156,21 +156,21 @@
 <body class="bg-slate-50 text-slate-900 min-h-screen pb-20">
 
     <header class="relative md:sticky top-0 z-50 frosted border-b border-slate-200 py-3 px-4 md:py-4 md:px-10 mb-4 md:mb-8">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-3 md:gap-4">
             <div class="header-brand flex items-end justify-between gap-3">
                 <div class="whitespace-nowrap leading-none">
                     <h1 class="text-xl md:text-2xl font-black tracking-tighter text-slate-900 uppercase"><a href="./" id="home-link">Season's Screenings</a></h1>
                     <p class="text-blue-600 font-light italic text-sm tracking-tight mt-1">a holiday movie matchmaker</p>
                 </div>
-                <span data-stats class="md:hidden text-[9px] leading-tight font-bold text-slate-400 uppercase tracking-widest text-right">...</span>
+                <span data-stats class="lg:hidden text-[9px] leading-tight font-bold text-slate-400 uppercase tracking-widest text-right">...</span>
             </div>
 
             <div class="header-count flex-none justify-center px-4 hidden lg:flex">
                 <span data-stats class="text-xs font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">...</span>
             </div>
 
-            <div class="header-controls flex items-center gap-2 md:gap-3 w-full md:w-auto md:flex-1 md:justify-end">
-                <div class="header-search relative flex-1 min-w-0 md:max-w-[30rem]">
+            <div class="header-controls flex items-center gap-2 md:gap-3 w-full lg:w-auto lg:flex-1 lg:justify-end">
+                <div class="header-search relative flex-1 min-w-0 lg:max-w-[30rem]">
                     <i data-lucide="search" class="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500"></i>
                     <input type="text" id="search-input" aria-label="Search movies" placeholder="Search titles, actors, keywords..."
                         class="h-11 md:h-12 pl-10 md:pl-12 pr-10 md:pr-11 bg-white border-2 border-blue-200 rounded-xl text-base text-slate-900 placeholder:text-slate-400 w-full shadow-sm hover:border-blue-300 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition">
@@ -479,9 +479,10 @@
         const NAME_SUFFIXES = new Set(['jr', 'sr', 'ii', 'iii', 'iv']);
 
         // Where the search matches a person's name (both through searchKey), or -1: the start of the surname or of a
-        // part of it after a hyphen (Brian Doyle-Murray), or the start of the whole name when the search has a space
+        // part of it after a hyphen (Brian Doyle-Murray), or, when the search has a space, the start of any word of
+        // the name ("will f", and "de niro" or "van allsburg" for surnames of several words)
         function personMatchAt(nameKey, query) {
-            if (query.includes(' ')) return nameKey.startsWith(query) ? 0 : -1;
+            if (query.includes(' ')) return ` ${nameKey}`.indexOf(` ${query}`);
             const words = nameKey.split(' ');
             let last = words.length - 1;
             while (last > 0 && NAME_SUFFIXES.has(words[last])) last--;
@@ -522,11 +523,11 @@
                     // Text or a full name with all the words also has all but the last, so only those films need checking
                     found = new Set([...runMatches(words.slice(0, -1).join(' '))].filter(id => movieMatchesSearch(id, run)));
                 } else {
-                    // Text with both words also has each one at the start of a word; a full name ("tom hanks") is
-                    // looked for among the films with someone of that first name
+                    // Text with both words also has each one at the start of a word; a name ("tom hanks", "de niro")
+                    // is looked for among the films with someone who has the first word in their name
                     const [first, last] = [runMatches(words[0]), runMatches(words[1])];
                     found = new Set([...(first.size < last.size ? first : last)].filter(id => searchMatches(db.movies[id].searchText, run)));
-                    if (PEOPLE_SEARCH.enabled) filmsWithFirstName(words[0]).forEach(id => { if (matchesPerson(db.movies[id], run)) found.add(id); });
+                    if (PEOPLE_SEARCH.enabled) filmsWithNameWord(words[0]).forEach(id => { if (matchesPerson(db.movies[id], run)) found.add(id); });
                 }
                 if (runCache.size > 500) runCache.clear();
                 runCache.set(key, found);
@@ -534,18 +535,17 @@
             return found;
         }
 
-        // The films with someone whose first name is this word, for finding full names
-        let firstNames = null;
-        function filmsWithFirstName(word) {
-            if (!firstNames) {
-                firstNames = new Map();
-                Object.entries(db.movies).forEach(([id, m]) => m.people.forEach(p => {
-                    const name = p.key.split(' ')[0];
-                    if (!firstNames.has(name)) firstNames.set(name, new Set());
-                    firstNames.get(name).add(id);
-                }));
+        // The films with someone who has this word in their name, for finding names of two words or more
+        let nameWords = null;
+        function filmsWithNameWord(word) {
+            if (!nameWords) {
+                nameWords = new Map();
+                Object.entries(db.movies).forEach(([id, m]) => m.people.forEach(p => p.key.split(' ').forEach(name => {
+                    if (!nameWords.has(name)) nameWords.set(name, new Set());
+                    nameWords.get(name).add(id);
+                })));
             }
-            return firstNames.get(word) || new Set();
+            return nameWords.get(word) || new Set();
         }
 
         // How a film splits the search words into runs that each match it, as few runs as possible, or null.
@@ -912,7 +912,7 @@
                 ? { text: level, tone: 'green', why: 'One of your Holiday Intensity picks' }
                 : { text: level, tone: 'amber', why: 'Not one of your Holiday Intensity picks, so the results leave it out' });
             tagStates.forEach((state, tag) => {
-                if (!state || groupOf(tag) || !(tags.has(tag) || tags.has(tag.toLowerCase()))) return;
+                if (!state || groupOf(tag) || !tags.has(tag)) return;
                 labels.push(state === 2
                     ? { text: tag, tone: 'red', why: `Your filters leave out ${tag}` }
                     : { text: tag, tone: 'blue', why: `One of your picks: ${tag}` });
@@ -925,8 +925,10 @@
         document.getElementById('home-link')?.addEventListener('click', e => {
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button > 0) return; // a new tab, as links do
             e.preventDefault();
-            if (window.watchlist?.isOpen?.()) window.watchlist.close();
-            else scrollTo({ top: 0, behavior: 'smooth' });
+            if (window.watchlist?.isOpen?.()) return window.watchlist.close();
+            scrollTo({ top: 0, behavior: 'smooth' });
+            // Upright phones and tablets scroll the results, not the page
+            document.getElementById('results-pane').scrollTo({ top: 0, behavior: 'smooth' });
         });
 
         // Random's order: a fair shuffle of every movie, made again on each update unless keepOrder is asked for
@@ -1169,7 +1171,7 @@
                 const btn = document.getElementById(`tag-${tag}`);
                 if (!btn) return;
 
-                const isAvailable = availableTags.has(tag) || availableTags.has(tag.toLowerCase());
+                const isAvailable = availableTags.has(tag);
 
                 // Ratings and levels filter within their group, so an unselected one (R) is never "unavailable"
                 if (state === 0 && !isAvailable && !groupOf(tag)) {

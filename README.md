@@ -3,7 +3,7 @@
 
 Live demo here - https://brianmcentire.github.io/holiday-movie-picker/
 
-A curated holiday movie discovery engine built with a high-concurrency Python API client and a zero-dependency static HTML and JS frontend.
+A curated holiday movie discovery engine built with a high-concurrency Python API client and a static HTML and JS frontend with no build step (Tailwind and Lucide load from CDNs).
 
 ### Architecture
 * **Builder:** `data-builder.py` uses `asyncio` and `aiohttp` to fetch and normalize data from TMDB, including the actors, directors and writers that search can find each film by.
@@ -46,7 +46,10 @@ One-time setup: run `gh secret set TMDB_API_KEY` and `gh secret set ANTHROPIC_AP
 
 If the classifier can't run (missing key, no credits, API trouble), the new movie data still publishes, with the new films unsorted. The same goes for the Musical pill's labels (see above). The run is then marked failed, so GitHub emails you, and the page's footer shows a quiet note until it's fixed. The footer also notes when the movie list hasn't refreshed in over 10 days during November or December.
 
-GitHub pauses scheduled workflows in public repos after 60 days without activity, so each fall, before November, turn it back on with `gh workflow enable rebuild-data.yml`.
+**Each fall, before November:**
+1. Turn the refresh back on with `gh workflow enable rebuild-data.yml`. GitHub pauses scheduled workflows in public repos after 60 days without activity.
+2. Check that the Claude models named at the top of `holiday_classifier.py` and `musical_classifier.py` are still offered (Anthropic lists retirement dates under [model deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations)) and that the Anthropic account has credit. A retired model doesn't stop the movie data; the new films stay unsorted until its id is changed.
+3. Start one run from the Actions tab, or with `gh workflow run rebuild-data.yml`, and check that it finishes green.
 
 ### Outside scores (personal)
 `scores.json` holds each film's IMDb rating, Tomatometer and Popcornmeter, plus its IMDb id and Rotten Tomatoes address, from [MDBList](https://mdblist.com). Only the Tampermonkey script in `userscripts/scores.user.js` reads it; the page doesn't load it.
