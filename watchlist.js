@@ -92,7 +92,7 @@
             items: items.map(item => [Number(item.id), item.watched ? 1 : 0]),
             watched: offList.size ? [...offList].map(Number) : undefined,
             made: listMade ? minuteISO(listMade) : undefined,
-            clearedAt: undefined, // an earlier version kept when Clear list last ran; no longer used
+            clearedAt: undefined, // an earlier version kept when the list was last deleted; no longer used
         });
     }
 
@@ -164,6 +164,7 @@
         chevronRight: '<path d="m9 18 6-6-6-6"/>',
         trash: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
         clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+        rotateCcw: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
         // Safari's Share icon, which the Home Screen tip points to (not the page's own Share results icon)
         share: '<path d="M12 2v13"/><path d="m16 6-4-4-4 4"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>',
         grip: '<circle cx="9" cy="5" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="9" cy="19" r="1.6"/><circle cx="15" cy="5" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="15" cy="19" r="1.6"/>',
@@ -369,6 +370,7 @@
 
     function cardsRedrawn() {
         markCards();
+        syncResultsUnmark();
         if (pageMode()) renderView(); // the search may have changed, and on the page it narrows the list
     }
 
@@ -853,7 +855,7 @@
             <div class="wl-scroll">
                 <ol class="wl-rows"></ol>
                 <p class="wl-empty" hidden></p>
-                <div class="wl-clear-row"><button type="button" class="wl-clear" data-wl="clear">Clear list</button></div>
+                <div class="wl-clear-row"><button type="button" class="wl-clear" data-wl="clear">Delete Watchlist</button><span class="wl-unmark" hidden><span class="wl-unmark-dot" aria-hidden="true">·</span><button type="button" class="wl-clear" data-wl="unmark"></button></span></div>
                 <p class="wl-credit">This website uses <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a> and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</p>
             </div>
             <div class="wl-look-bar"><button type="button" class="wl-btn wl-btn-blue" data-wl="add-rest">${icon('bookmarkPlus', 17, { stroke: 2.25 })}Add the rest<span class="wl-count"></span></button><button type="button" class="wl-btn" data-wl="close">Done</button></div>
@@ -912,7 +914,7 @@
         openedHere = false;
         endLook();
         closeOpenRow();
-        if (openLayers.includes(confirmLayer)) closeLayer(confirmLayer); // Clear list asked about this list
+        if (openLayers.includes(confirmLayer)) closeLayer(confirmLayer); // Delete Watchlist asked about this list
         const wasPage = document.body.classList.contains('wl-page-open');
         document.body.classList.remove('wl-page-open');
         if (openLayers.includes(view)) {
@@ -970,9 +972,8 @@
     //     m            the movies in order, by TMDB id; a trailing w marks one watched
     //     seen         movies marked watched that aren't on the list (added Nov 2026; older pages ignore it)
     //     open=1       My Watchlist is open (there for a Home Screen app added with the sheet showing)
-    // Opening it on an empty list restores the list, with Undo, unless it was made before Clear list last emptied
-    // the list here; on a list that has movies, it's quietly replaced by that list's own copy, and it never brings
-    // up the Shared with you card. With no movies and no watched marks there's no copy. A Home Screen app ignores
+    // Opening it on an empty list restores the list, with Undo; on a list that has movies, it's quietly replaced
+    // by that list's own copy, and it never brings up the Shared with you card. With no movies and no watched marks there's no copy. A Home Screen app ignores
     // open=1 at launch.
     // 'all' keeps it in every browser, 'ios' only on iPhone and iPad (Safari or a Home Screen app), 'off' nowhere.
     const LIST_IN_ADDRESS = 'all';
@@ -1044,6 +1045,8 @@
         return (movieFor(id).searchText ?? movieFor(id).title.toLowerCase()).includes(query);
     }
 
+    let watchedRows = []; // the watched movies among the rows showing, for Unmark N watched movies
+
     function renderView() {
         cancelDrag?.(); // the rows are about to be redrawn
         if (!viewOpen) return;
@@ -1084,6 +1087,9 @@
             : query ? `Nothing on your list matches “${rawQuery}”.`
             : "You've watched everything on your list.";
         $('.wl-clear-row').hidden = !all.length;
+        watchedRows = rows.filter(item => item.watched).map(item => item.id);
+        $('.wl-unmark').hidden = !watchedRows.length;
+        $('[data-wl="unmark"]').textContent = unmarkLabel(watchedRows.length);
         $('.wl-sheet-tip').hidden = pageMode() || !all.length || !tipApplies();
     }
 
@@ -1142,6 +1148,7 @@
         if (action === 'hide') return toggleHideWatched();
         if (action === 'save') return saveCopy();
         if (action === 'clear') return askToClear();
+        if (action === 'unmark') return askToUnmark(watchedRows);
         if (action === 'tip-close') return dismissTip();
         if (action === 'look-hide') return toggleLookHideWatched();
         if (action === 'add-rest') return addAllFromLook();
@@ -1360,7 +1367,7 @@
         setTimeout(() => remove(row.dataset.id), 360);
     }
 
-    // ---------- Clear list, after asking ----------
+    // ---------- Delete Watchlist (the list's movies; watched marks stay), after asking ----------
     let confirmLayer;
 
     function buildConfirm() {
@@ -1370,6 +1377,7 @@
             const action = e.target.closest('[data-confirm]')?.dataset.confirm;
             if (action === 'save') saveCopy();
             else if (action === 'clear') { closeLayer(confirmLayer); clearList(); }
+            else if (action === 'unmark') { closeLayer(confirmLayer); unmarkWatched(unmarkIds); }
             else if (action === 'cancel') closeLayer(confirmLayer);
         });
     }
@@ -1379,10 +1387,10 @@
 
     function askToClear() {
         const n = shownItems().length;
-        confirmLayer.panel.innerHTML = `<h3 id="wl-confirm-title" class="wl-card-title" tabindex="-1">Clear My Watchlist?</h3>
+        confirmLayer.panel.innerHTML = `<h3 id="wl-confirm-title" class="wl-card-title" tabindex="-1">Delete My Watchlist?</h3>
             <p class="wl-card-text">This takes ${n === 1 ? 'the one movie' : `all ${n} movies`} off ${onPhone() ? 'this phone' : 'this browser'}’s list. Watched marks stay. Save a copy first if you might want the list back later.</p>
             <button type="button" class="wl-btn wl-btn-soft" data-confirm="save">Save a copy first</button>
-            <button type="button" class="wl-btn wl-btn-red" data-confirm="clear">Clear list</button>
+            <button type="button" class="wl-btn wl-btn-red" data-confirm="clear">Delete Watchlist</button>
             <button type="button" class="wl-btn wl-btn-plain" data-confirm="cancel">Cancel</button>`;
         openLayer(confirmLayer, confirmLayer.panel.querySelector('h3'));
     }
@@ -1401,7 +1409,7 @@
             view.returnTo = results;
         }
         closeView();
-        offerUndo('Cleared My Watchlist', () => {
+        offerUndo('Deleted My Watchlist', () => {
             cleared.forEach(item => { item.watched = isWatched(item.id); }); // their marks as they are now
             items = cleanItems([...cleared, ...items]); // anything added since stays too
             foldWatched();
@@ -1554,8 +1562,8 @@
             closeLayer(mergeLayer);
         }
         if (link?.unreadable) return; // nothing this version can use: ignore it, and leave it in the address
-        // The list in the address comes back only on arrival (so going Back to an older address can't undo a
-        // Clear list) and only onto an empty list
+        // The list in the address comes back only on arrival (so going Back to an older address can't undo
+        // Delete Watchlist) and only onto an empty list
         if ((link?.backup || launchSnapshot) && arriving && !shownItems().length && (link.copy.items.length || link.copy.seen.size)) {
             restoreBackup(link.copy);
         }
@@ -1607,6 +1615,76 @@
         foldWatched(); // a movie the user had already marked watched keeps its mark
         changed();
         return fresh.length;
+    }
+
+    // ---------- Unmark N watched movies ----------
+    // For starting over without unmarking films one by one. The button always acts on the watched movies showing
+    // above it, and its number says how many: at the bottom of My Watchlist, the watched rows showing; under the
+    // results, every result, and only while the Watched pill is on ("only these"), so it never turns up under an
+    // ordinary search. It asks first, then offers Undo. Under the results it's a white pill with a start-over arrow,
+    // like Clear filters there: alone under the cards, plain grey capitals read as a caption, not a button.
+    const unmarkLabel = n => `Unmark ${plural(n, 'watched movie')}`;
+    let resultsUnmark = null;
+    let unmarkIds = [];
+
+    function buildResultsUnmark() {
+        const grid = document.getElementById('results-grid');
+        if (!grid) return;
+        resultsUnmark = document.createElement('div');
+        resultsUnmark.className = 'wl-clear-row';
+        resultsUnmark.hidden = true;
+        resultsUnmark.innerHTML = `<button type="button" class="wl-pill">${icon('rotateCcw', 12)}<span></span></button>`;
+        resultsUnmark.firstElementChild.onclick = () => askToUnmark(watchedResults());
+        grid.after(resultsUnmark);
+    }
+
+    // The results are index.html's currentVisibleIds: all of them, drawn yet or not
+    function watchedResults() {
+        if (prefs.watched !== 1 || typeof currentVisibleIds === 'undefined') return [];
+        const marked = new Set(offList);
+        items.forEach(item => { if (item.watched) marked.add(item.id); });
+        return currentVisibleIds.filter(id => marked.has(id));
+    }
+
+    function syncResultsUnmark() {
+        if (!resultsUnmark) return;
+        const count = watchedResults().length;
+        resultsUnmark.hidden = !count;
+        resultsUnmark.querySelector('span').textContent = unmarkLabel(count);
+    }
+
+    function askToUnmark(ids) {
+        if (!ids.length) return;
+        unmarkIds = ids;
+        confirmLayer.panel.innerHTML = `<h3 id="wl-confirm-title" class="wl-card-title" tabindex="-1">Remove watched mark from ${plural(ids.length, 'movie')}?</h3>
+            <button type="button" class="wl-btn wl-btn-red" data-confirm="unmark">Unmark</button>
+            <button type="button" class="wl-btn wl-btn-plain" data-confirm="cancel">Cancel</button>`;
+        openLayer(confirmLayer, confirmLayer.panel.querySelector('h3'));
+    }
+
+    // One change for all of them, so the page saves and redraws once
+    function unmarkWatched(ids) {
+        const byId = new Map(items.map(item => [item.id, item]));
+        const marked = ids.filter(id => byId.get(id)?.watched || offList.has(id));
+        if (!marked.length) return;
+        marked.forEach(id => { if (byId.has(id)) byId.get(id).watched = false; else offList.delete(id); });
+        changed();
+        syncResultsUnmark();
+        // The button that asked may be gone now, and the card that asked is closing; keep the keyboard's place nearby
+        const active = document.activeElement;
+        if (!active || active === document.body || confirmLayer.el.contains(active) || !active.getClientRects().length) {
+            const results = document.getElementById('results-pane');
+            if (results) results.tabIndex = -1;
+            (viewOpen ? $('#wl-title') : results)?.focus({ preventScroll: true });
+        }
+        offerUndo(`Unmarked ${plural(marked.length, 'movie')}`, () => {
+            marked.forEach(id => { // each mark goes back where the movie is now: on its list entry, or beside the list
+                const item = itemFor(id);
+                if (item) item.watched = true;
+                else if (offList.size < MAX_MOVIES) offList.add(id);
+            });
+            changed();
+        });
     }
 
     // ----- The card for a saved list when the user already has one: Add N new, Just look, or No thanks -----
@@ -1864,7 +1942,7 @@
 
         /* ----- Layers ----- */
         html.wl-locked, html.wl-locked body { overflow: hidden !important; }
-        #results-pane:focus { outline: none; } /* where focus lands after Clear list */
+        #results-pane:focus { outline: none; } /* where focus lands after Delete Watchlist */
         .wl-layer { position: fixed; inset: 0; z-index: 80; color: #0f172a; }
         .wl-layer[hidden] { display: none; }
         .wl-backdrop { position: absolute; inset: 0; background: rgba(15,23,42,0.4); opacity: 0; transition: opacity 0.25s; touch-action: none; }
@@ -2124,6 +2202,29 @@
             font: inherit; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
         }
         .wl-clear:hover { color: #ef4444; }
+        .wl-unmark { white-space: nowrap; }
+        .wl-unmark[hidden] { display: none; }
+        .wl-unmark-dot { color: #cbd5e1; font-size: 11px; font-weight: 700; }
+        .wl-unmark .wl-clear { padding-left: 8px; }
+        /* Phones: tighter, so both fit on one line with a three-digit number; one under the other on the narrowest */
+        @media (max-width: 1023px) {
+            #wl-view .wl-clear-row > .wl-clear { padding-left: 4px; padding-right: 8px; }
+            #wl-view .wl-unmark .wl-clear { padding-right: 4px; }
+        }
+        @media (max-width: 374px) {
+            .wl-unmark:not([hidden]) { display: block; }
+            .wl-unmark-dot { display: none; }
+        }
+        /* Under the results: the look of Clear filters and Show them in index.html, turning red, not blue */
+        #results-pane > .wl-clear-row { padding: 28px 0 0; }
+        .wl-pill {
+            display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border: 1px solid #e2e8f0; border-radius: 8px;
+            background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); color: #64748b; cursor: pointer;
+            font: inherit; font-size: 10px; font-weight: 700; line-height: 1.5; text-transform: uppercase; letter-spacing: 0.05em;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .wl-pill svg { flex: none; }
+        .wl-pill:hover { color: #ef4444; border-color: #fecaca; }
 
         /* The Home Screen tip at the bottom of the sheet */
         .wl-sheet-tip { flex: none; display: flex; align-items: center; gap: 10px; padding: 12px 6px calc(12px + env(safe-area-inset-bottom, 0px)) 16px; border-top: 1px solid #e2e8f0; background: #ffffff; }
@@ -2226,7 +2327,7 @@
             .wl-cert.wl-cert-off { color: #b45309; border-color: #fde68a; background: #fffbeb; }
         }
 
-        /* ----- Cards over the page: Clear list, and a saved list opening ----- */
+        /* ----- Cards over the page: Delete Watchlist, Unmark watched, and a saved list opening ----- */
         .wl-card {
             position: absolute; left: 12px; right: 12px; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); max-width: 420px; margin: 0 auto;
             box-sizing: border-box; padding: 16px 16px 14px; background: #ffffff; border-radius: 16px; box-shadow: 0 16px 40px rgba(15,23,42,0.35);
@@ -2240,6 +2341,7 @@
         .wl-card-text { margin: 6px 0 16px; font-size: 12.5px; line-height: 1.45; color: #64748b; }
         .wl-card .wl-btn + .wl-btn { margin-top: 8px; }
         .wl-card .wl-btn-plain { margin-top: 4px; }
+        .wl-card-title + .wl-btn { margin-top: 16px; }
         .wl-card .wl-kicker { display: block; }
         .wl-card .wl-card-title { margin-top: 4px; }
         .wl-card .wl-made { display: flex; margin-top: 6px; font-size: 12.5px; }
@@ -2282,6 +2384,7 @@
         buildView();
         buildPeek();
         buildConfirm();
+        buildResultsUnmark();
         buildMergeCard();
         watchGrid();
         refreshChrome();

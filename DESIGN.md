@@ -32,6 +32,8 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - **Mark watched** and **Unmark watched** in the preview, and **Remove from My Watchlist** to match Add to My Watchlist (Nov 11). The My Watchlist pills' chips say "Not: Watched" too.
 - **No line through red pills** (Nov 11): red already says "not", the chips above say "Not:", and the strike made them harder to read.
 - **Clear filters** and **Reset filters**, not Clear all and Reset, so nobody worries a button might delete their watch list.
+- **Delete Watchlist**, not Clear list (the owner, Nov 12): "Clear" was vague about what goes. *Also offered: Remove all movies, to match Remove on each row and because the list itself and the watched marks stay; the owner chose Delete Watchlist.* Its confirmation is "Delete My Watchlist?" and still says the watched marks stay.
+- **Unmark N watched movies**, always with the number ("Unmark 1 watched movie"), the same words wherever the button appears. Its question is short: "Remove watched mark from 12 movies?" (the owner asked for less wordy than a sentence about what's hidden).
 - **My Watchlist** where there's room: the laptop button, page and sheet titles, the filters section, tooltips. **My List** where it's tight: the phone's floating button and the "On My List" pill.
 - **Made**, not Saved, for when a saved copy was created.
 - **Friendly, never a warning.** No "keep it safe" or "don't lose it": it sounds scary and promises what a website can't guarantee.
@@ -69,6 +71,16 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   - On laptops it sits on the same line as "a holiday movie matchmaker", right-aligned against the search bar with a tab's width (32px) between them. It floated in the middle of the bar, which looked odd.
   - It keeps the width of "More than 1,000 titles" whatever it says, so the search bar never shifts while typing.
 - **The search hint** is the longest that fits the box: "Search titles, actors, keywords...", then "Titles, actors, keywords...", then "Titles, actors...", then "Search". Phones held upright always say "Search". Why: laptop windows under about 1,150px (the count takes room beside the bar), iPads held upright and phones turned sideways showed "Search titles, ac". *The owner asked for a shorter hint there on Nov 10; the middle step was Claude's addition.*
+- **Tags and genres only show while they'd find something:** a button goes away when none of the results has that tag or genre, unless it's picked or excluded. Ratings and holiday intensity never hide: within those groups a pick adds movies, so an unpicked one is never a dead end.
+  - **Genres hide like tags, on purpose** (the owner, Nov 12: "dont change genre handling"). A genre narrows the results, so one that none of them has could only lead to "No movies match". *Considered: never hiding the 12 genres, as ratings never hide; dimming them in place so the row doesn't shift.*
+  - **Each tag section's number is the tags showing now** (Nov 12): "More Tags (25)", not the section's full 40. A section with none goes away, heading and all, until something brings a tag back. *Before, the numbers were set once when the page loaded.*
+- **The cards are drawn a batch at a time** (Nov 12): the first 60, then 120 more whenever scrolling comes within about 2,500px of the last one drawn.
+  - Why: the owner found folding the filters laggy on an iPhone 15 Pro. Folding takes the results from 2 columns to 3, so the browser laid out every card again, all 1,000, though 8 show. In Safari (iPhone simulator, on the Mac's processor, so a real phone is slower) that took about 160ms to fold and 205ms to unfold. With batches: about 17 and 18ms at the top of the list (60 cards drawn), 28 and 42ms after scrolling down a way (180 drawn). Every filter tap and the first load draw less too.
+  - Not the posters: they were already lazy, and loading all of them made no difference. Not one part of the card either: hiding the posters, the bookmarks or the text saved 10–35% each.
+  - A redraw while scrolled down brings back as many cards as were there, so the screen keeps its place (ticking a movie off with On My List picked, say). At the top, a redraw is one batch.
+  - Scrolling was no worse in the tests, and no poster was caught blank: Safari's lazy loading already runs about 12 posters ahead of a fast scroll. Starting them earlier is a few lines if grey boxes ever show on a slow connection.
+  - Nothing else reads the cards on the page: the title count, Share results and the watch list all work from the list of results, and the watch list marks cards as they arrive.
+  - The price: the browser's own find-in-page sees only the cards drawn (the site's search sees everything); the scrollbar grows on the way down; the TMDB credit and Unmark N watched movies sit under the last card drawn.
 - **Random** is a fair shuffle, made again on every filter or search change, but not when only the watch list changes (ticking a movie off doesn't reshuffle the page).
 
 ## Phones and tablets
@@ -100,7 +112,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 ### What's stored
 
 - Only TMDB movie IDs, in the user's order, with a watched flag. It's versioned and kept in localStorage, and everything else comes from the page's own data.
-- **Watched is its own mark (Nov 11, the owner's call):** any movie can be marked watched, on the list or not. A listed movie's mark stays on its list entry; the marks on movies that aren't on the list are kept beside it (`watched` in the same stored object, still `v: 1`, so an older tab keeps the field as it is). Taking a movie off the list, or Clear list, keeps its mark; adding a watched movie to the list keeps it too. Marks made before Nov 11 carry over.
+- **Watched is its own mark (Nov 11, the owner's call):** any movie can be marked watched, on the list or not. A listed movie's mark stays on its list entry; the marks on movies that aren't on the list are kept beside it (`watched` in the same stored object, still `v: 1`, so an older tab keeps the field as it is). Taking a movie off the list, or Delete Watchlist, keeps its mark; adding a watched movie to the list keeps it too. Marks made before Nov 11 carry over.
 - A tab still running an older version never writes over a list saved by a newer one (a higher `v`), and keeps any fields it doesn't know about.
 - IDs missing from the data stay stored but hidden; nothing breaks on them.
 - The first add asks the browser to keep the storage (`navigator.storage.persist()`).
@@ -173,7 +185,16 @@ While searching, the preview says why the movie is in the results. The result ca
   - Not on phones: there's no room.
 - Removing: on phones, swipe a row left, with Undo; on laptops, × on hover.
 - On the laptop page, the top bar's search narrows the list. The rule is that the top bar acts on whatever is below it.
-- **Clear list:** a quiet button at the bottom. It asks first and offers **Save a copy first**. Once confirmed, My Watchlist closes and you're back on the main screen, not looking at an empty list. Undo shows there and brings the list back without reopening it. **Watched marks stay as they are** (the owner, Nov 11), and the confirmation says so.
+- **Delete Watchlist:** a quiet button at the bottom, which takes every movie off the list. It asks first ("Delete My Watchlist?") and offers **Save a copy first**. Once confirmed, My Watchlist closes and you're back on the main screen, not looking at an empty list. Undo shows there ("Deleted My Watchlist") and brings the list back without reopening it. **Watched marks stay as they are** (the owner, Nov 11), and the confirmation says so. *Called Clear list until Nov 12; the owner found "Clear" vague.*
+- **Unmark N watched movies** (Nov 12), beside Delete Watchlist: for starting over without unmarking films one by one. Rare, so it takes no permanent space.
+  - **The rule: it acts on the watched movies showing above it, nothing else,** and its number says how many ("Unmark 12 watched movies"). The same label in both places, because both follow the same rule.
+  - **At the bottom of My Watchlist:** the watched rows showing. The laptop page's search narrows them; with Hide watched on there are none, so the button is hidden. Marks on movies that aren't on the list stay.
+  - **Under the results, only while the Watched pill is on** ("only these"). Then every result is watched, so the number is the number of movies on screen. Search, ratings, holiday intensity and tags narrow it as they narrow the results. Why only then: shown whenever the results include a watched movie, it would turn up under ordinary searches ("elf" with Elf watched) as clutter and an easy misclick. It also covers someone with watched marks and an empty list, who has no My List button on a phone.
+    - **Here it's a white pill with a start-over arrow (↺),** the look of Clear filters and Show them in the results, turning red under the pointer. Why: alone under the cards, the list's plain grey capitals read as a caption, like the filters' headings (the owner, on his phone). The arrow is kin to Reset filters'; the circled × is Clear filters and the eye is Show them. In the list it stays plain text: beside Delete Watchlist, with the dot, the pair already reads as actions. *Also considered: the arrow in front of the plain capitals, as Share results has; blue link text, which this site keeps for harmless actions; leaving it.* On a phone with the filters open, a one-digit number fits the pill on one line; more digits wrap to two.
+  - **It asks first:** "Remove watched mark from 12 movies?", a red Unmark and Cancel. Then Undo ("Unmarked 12 movies"). No Save a copy first: Undo covers a mistake.
+  - **Accepted:** R and holiday adjacent are off by default, so Watched alone doesn't show (or unmark) a watched Die Hard. Afterwards the empty results already say "3 movies match, hidden by Content Ratings" with Show them, which leads to the rest.
+  - *First ideas:* turning the My Watchlist button into Reset Watched while the pill is on (a familiar button that sometimes wipes marks, and the pill is remembered between visits); one button in the list that unmarked everything (it reached past the list it sat in); the same button in two places with two fixed reaches, the list's marks and every mark (the same words would have done two different things).
+  - **Phones narrower than 375px** put Delete Watchlist and Unmark one under the other, without the dot: they don't fit on one line there. From 375px up they share a line, with room for a three-digit number.
 - There's no "saved on" date in the list, and no "changes since your last save" nudge. The site can't know whether a copy was actually kept, since Save a copy only opens the share sheet or copies a link.
 
 ### Filters
@@ -218,8 +239,8 @@ While searching, the preview says why the movie is in the results. The result ca
 - **Opening an address with `backup=1`:**
   - Your list is empty: it fills from the copy ("Restored your watchlist", with Undo), watched marks included. Undo takes out only the movies and marks the copy brought in, so anything added since stays.
   - You already have a list: the copy is ignored.
-  - **After Clear list, an older copy still restores.** An old bookmark, a reopened tab or a history entry brings the cleared list back onto the empty list, with Undo. Why: simpler, and the owner wants it that way (Nov 10). An earlier build ignored copies made before the clear; that's gone.
-  - It's read only when the page opens with that address, not when the address changes in an open tab, so going Back can't undo a Clear list.
+  - **After Delete Watchlist, an older copy still restores.** An old bookmark, a reopened tab or a history entry brings the deleted list back onto the empty list, with Undo. Why: simpler, and the owner wants it that way (Nov 10). An earlier build ignored copies made before the list was deleted; that's gone.
+  - It's read only when the page opens with that address, not when the address changes in an open tab, so going Back can't undo Delete Watchlist.
 
   A friend who's sent an address-bar link and has no list starts with the sender's list, with Undo. That's intended.
 - Share results never carries it.
@@ -233,7 +254,7 @@ While searching, the preview says why the movie is in the results. The result ca
 - **Picking it back up would need:**
   - **Show me how:** a button in the tip that reloads the page with the list in its address, then shows the Share-menu steps, so the new app starts with the list.
   - **Paste a list:** a way to get a list someone texted you into the Home Screen app, since links open in Safari.
-  - **Decide about Clear list there:** a Home Screen app saved with the list in its address (which Show me how would do) brings that list back, with Undo, every time it starts fresh after Clear list. That's the "an older copy still restores" rule; the app may need an exception.
+  - **Decide about Delete Watchlist there:** a Home Screen app saved with the list in its address (which Show me how would do) brings that list back, with Undo, every time it starts fresh after Delete Watchlist. That's the "an older copy still restores" rule; the app may need an exception.
 - **If it's back, the tip will read:** "Added Klaus." then, on its own line, "Add Season's Screenings to your Home Screen: open Safari's Share menu ⬆ and choose Add to Home Screen."
   - It names Safari's Share menu, with Safari's icon, because Add to Home Screen exists only there. Our Share results button can't do it.
   - The planned places are once right after the very first add, and at the bottom of the list on phones. It's iPhone Safari only, and never shown once closed or once the site is on the Home Screen.
@@ -385,6 +406,8 @@ Decided with the owner and built on Nov 11.
 
 ## Decided against
 
+- **`content-visibility: auto` on the result cards** (tested Nov 12): it made folding the filters about 3× faster, but in Safari (iOS 18.7 simulator) the page froze for about 50 seconds right after the results were drawn, with or without `auto` in `contain-intrinsic-size`. Chrome was fine. Don't retry it without testing in Safari.
+- **Loading every poster up front** to make the page feel faster: it made no difference to folding the filters, and it would download about 30 MB on a phone. Safari's lazy loading already fetches posters a few screens ahead.
 - **Laptop list:** a side drawer and a centered panel. My Watchlist is its own page.
 - **Look of the marks:** checkmarks on the results; a watched sash alone; fading alone. The popcorn icon, plus heart, star, ticket, clock and plain words.
 - **Ways to add:** an empty bookmark on every tile; long-press to add (hidden, and it fights iPhone's own preview); double-tap to add (hidden, and it slows every tap); an "add mode" switch.
@@ -419,9 +442,12 @@ Where a list gets lost today: closing a tab in a normal window keeps it. It's lo
 
 Not on the list: short links, a preview picture per list, and syncing between devices. Each needs a server or accounts; lists are short enough as links already.
 
+Also possible, not wanted for now (owner, Nov 12):
+
+- **The Watched pill in My Watchlist's labels.** Today the labels cover holiday intensity, tags and genres, and content ratings, so with Watched on (or "Not: Watched") nothing on a row says the results leave it out. The idea: treat Watched like a tag. With Watched picked, watched rows get a blue Watched label; with "Not: Watched", a red one. Unwatched rows get nothing, as a movie missing a picked tag gets nothing today (amber stays for holiday intensity only, since every film has exactly one level). **On My List** would get no label: every row in My Watchlist is on the list, so it would say the same thing on every row. A few lines.
+
 ## Revisit later
 
-- **Clear all watched:** a way to take every watched mark off at once, with a confirmation first. Where it goes is undecided; the owner wants it, later (Nov 11).
 - **Films without a holiday level** (when the classifier couldn't run) are hidden by the default Holiday Intensity, though the footer mentions them. They show with Any holiday intensity. Fine as a safe default, or let them through.
 - **TV-G, TV-PG and TV-Y7:** the builder allows them but Content Ratings has no buttons for them, so such a film would be hidden by default and couldn't be picked. None in today's data.
 - **Pill text contrast:** white 10–11px text on the blue, green and red pills is about 3.3–3.8:1, under the 4.5:1 guideline for small text.
