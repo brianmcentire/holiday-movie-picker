@@ -250,12 +250,96 @@ While searching, the preview says why the movie is in the results. The result ca
   - a server or network error: one retry 5 seconds later, then that batch is skipped. 3 failed batches in a row end the run.
 - **It runs every Monday after the movie data,** as its own step that can't stop the data from publishing. `make scores` runs it by hand.
 - **MDBList fills gaps lazily.** On Nov 11 a first request for It's a Wonderful Life had no RT scores; the full run minutes later had 94% and 95%. Some well-known films (The Grinch, Red One, Violent Night) still had no Tomatometer, and may fill in on a later run.
+- **MDBList can also wipe scores it had.** When it refreshes a film and fails to read Rotten Tomatoes, it saves blanks over the old numbers: It's a Wonderful Life lost both scores and its RT address at 19:25 UTC on Nov 11 (its "updated" time). Popular films refresh most often, so they're hit most. Keeping old values covers it.
 - **The script** (`userscripts/scores.user.js`) adds "IMDb 7.1 🍅 85% 🍿 79%" after the rating in the preview (the owner picked emoji, option A on the canvas's Round 10).
   - It reads `scores.json` once per page, so scores show at once. It asks MDBList live only for a film missing from the file, or when the file can't be read, and only with a key set. A gap in the file isn't filled live, since the file came from MDBList anyway.
   - A score with no valid number shows nothing, no icon. With nothing valid, nothing shows at all.
   - The IMDb score opens IMDb, and 🍅 and 🍿 open Rotten Tomatoes, in a new tab, when the file has the address. Otherwise they're plain text.
   - Old scores still show; hovering one gives its source and date ("MDBList, updated Nov 11").
   - The key is set by clicking "Scores: add your MDBList key" in a preview, or from the Tampermonkey menu, and stays in Tampermonkey's storage.
+
+### Finding gems (by hand, when wanted)
+
+A way to rank the catalog by what audiences think, used on Nov 11. It's not a feature and there's no script in the repo: paste the snippet below into a terminal in this folder.
+
+- **The two scores:** the IMDb rating and the Popcornmeter (Rotten Tomatoes' audience score). The Tomatometer is left out: it's critics, and most TV movies don't have one.
+- **Why not a plain average:** they're different kinds of numbers. IMDb is an average out of 10 that mostly falls between 5 and 7.5; the Popcornmeter is the share of the audience who liked it, and runs from 7% to 100%. Averaged as is, the Popcornmeter would decide almost everything.
+- **Instead:** for each score, the percent of the catalog a film beats (ties count half), and the average of the two. A 96 beats 96% of the catalog on average. A second standard way (averaging how far each score is above the catalog's typical one) picked 19 of the same top 20.
+- **Enough votes to trust:** films with fewer than 30 TMDB votes are left out (about 576 films remain with both scores).
+- **The knobs:**
+  - `FROM_YEAR`: the earliest release year, `0` for any. With any year, the list leans to old classics;
+  - `MAX_VOTES`: `600` gives hidden gems only, leaving out the best-known 15% or so (It's a Wonderful Life, Klaus, Die Hard); `None` doesn't penalize popular films.
+- **A bias:** TV movies with few votes (the Hallmark kind) are rated mostly by fans, so their scores run high.
+- **What came out (Nov 11):**
+  - hidden gems, any year: The Snowman, The Thin Man, Scrooge (1951), The Lion in Winter, Emmet Otter's Jug-Band Christmas;
+  - 2010 on, popular films included: Klaus, The Holdovers, Little Women (2019), A Biltmore Christmas, Boiling Point.
+
+```sh
+python3 -I - <<'EOF'
+import json
+MIN_VOTES, MAX_VOTES, FROM_YEAR, TOP = 30, None, 2010, 20   # MAX_VOTES=600 for hidden gems only
+LEVEL = {'about': 'story', 'set_at': 'setting', 'adjacent': 'adjacent'}
+db = json.load(open('holiday_engine.json'))['movies']
+sc = json.load(open('scores.json'))['movies']
+lv = json.load(open('holiday_levels.json'))
+pool = [dict(db[i], **sc[i], level=lv.get(i, {}).get('level')) for i in db
+        if sc.get(i, {}).get('imdb') and sc[i].get('popcorn') and db[i]['votes'] >= MIN_VOTES]
+for key in ('imdb', 'popcorn'):  # percent of the pool each film beats, ties counted as half
+    vals = [m[key] for m in pool]
+    for m in pool:
+        m['p_' + key] = 100 * (sum(v < m[key] for v in vals) + (vals.count(m[key]) - 1) / 2) / (len(vals) - 1)
+for m in pool:
+    m['score'] = (m['p_imdb'] + m['p_popcorn']) / 2
+picks = [m for m in pool if m['date'][:4] >= str(FROM_YEAR) and (MAX_VOTES is None or m['votes'] < MAX_VOTES)]
+for n, m in enumerate(sorted(picks, key=lambda m: -m['score'])[:TOP], 1):
+    print(f"{n:2}. {m['title']} ({m['date'][:4]}) | IMDb {m['imdb']} | 🍿 {m['popcorn']}% | 🍅 {m.get('tomatoes') or '–'}"
+          f" | {m['cert']} | {LEVEL.get(m['level'], '?')} | {m['votes']} votes | {m['score']:.0f}")
+EOF
+```
+
+## Musical pill (planned, not built)
+
+Decided with the owner on Nov 11; building waits for the owner's go.
+
+- **TMDB's "Music" genre pill becomes "Musical",** filled from Claude's answer instead of TMDB's. One pill, not two. It works like the other genre pills: include, exclude, reset. Mostly it's for leaving musicals out, and some people will want only them. No old links need to keep working; nobody but the owner uses the pill yet.
+- **Why not an existing label:** none is reliable. TMDB has no Musical genre (its "Music" genre lumps musicals in with concerts and films about musicians), and its user-added "musical" tag misses Rudolph (1964) and Emmet Otter while tagging The Lion in Winter. IMDb's and MDBList's Musical labels miss Rudolph (1964), The Year Without a Santa Claus and Nativity!. All three were checked on Nov 11.
+- **What Claude is asked:** which of four kinds a film is, plus a rough count of full songs performed on screen:
+  - **musical:** several full songs or song-and-dance numbers performed on screen that carry the story or are the point of it, animated specials included when they're built around their songs;
+  - **music show:** a concert, a variety special built on songs, a filmed ballet or opera, or a documentary about musicians or a song;
+  - **some songs:** a song or two, a carol, a pageant number or one performance, in a story told mostly in dialogue;
+  - **none.**
+- **The pill holds musicals and music shows.**
+  - A romance about a singer is in only if it's full of songs (the owner's call).
+  - Frosty the Snowman is out (the owner: "close but no").
+  - Christmas specials built on songs, like Rudolph (1964) and The Year Without a Santa Claus, are in. The owner will turn the pill back on when wanting them.
+- **Test round (Nov 11, Opus at low effort):** 20 of 20 hand-labeled edge cases right.
+  - In: White Christmas, Holiday Inn, Meet Me in St. Louis, The Muppet Christmas Carol, Spirited, Jingle Jangle, The Nightmare Before Christmas, Rudolph (1964), A Very Murray Christmas, the Sabrina Carpenter and Mariah Carey specials, and Wham!: Last Christmas Unwrapped.
+  - Out: Elf, It's a Wonderful Life, The Polar Express, A Charlie Brown Christmas, Love Actually, Frosty, The Lion in Winter and The Humans.
+  - Unlabeled ones landed: Nativity!, the 1998 Rudolph movie, The Year Without a Santa Claus and Emmet Otter as musicals; Rudolph (1948), Christmas Harmony, Holiday Harmony and A Cinderella Story: Christmas Wish as some songs.
+- **Models compared** (Nov 11, low effort, the same 28 films, run several times each):
+
+  | Model | Labeled films right | Whole catalog once | With the Batch API |
+  |---|---|---|---|
+  | Opus | 20 of 20 (2 runs) | about $8.50 | about $4.25 |
+  | Sonnet | 20 of 20 (3 runs) | about $3.90 | about $1.95 |
+  | Haiku | 19 of 20 (3 runs) | about $0.22 | about $0.11 |
+
+  - Haiku called Frosty a musical every time, with 5 to 8 songs (it has about 2), and changed its mind about A Cinderella Story: Christmas Wish between runs.
+  - Sonnet agreed with Opus on the unlabeled films. Holiday Harmony went back and forth between runs; it's a true borderline case.
+  - The Batch API halves the price. Most batches finish within an hour, and the limit is 24 hours. That's fine for the one-time run; the weekly new films use normal requests, since the saving is pennies.
+- **Answers are saved per film,** like holiday levels, so each film is asked once and later runs cost pennies.
+- **The one-time run over the whole catalog** (the owner's plan, Nov 11):
+  1. Opus and Sonnet each answer every film, as batches. Each gives the kind, the song count, its confidence, and whether it knows the film.
+  2. Fable decides a film when the two disagree on in or out of the pill, or when either says low confidence or doesn't know the film. Disagreeing only on musical vs. music show isn't a disagreement. Medium confidence doesn't count: in the test it covered a quarter of the films, easy ones included.
+  3. **A pause before Fable:** the count of films for Fable and its estimated cost are reported first, and Fable runs only on the owner's go. If the count is too high, films where both models say "none" and TMDB has no musical tag or Music genre are skipped.
+  4. A review list shows what Fable decided and why, marking films that no model knew.
+  5. Then a spot check of about 20 random films in the pill, since two models that agree can still share a blind spot.
+
+  Estimated at $8 to $15 in all. **Weekly runs are undecided** until the one-time run shows whether the extra steps earn their keep.
+- **Not used:**
+  - curated lists: none found on GitHub, and Wikipedia's lists (behind the Wikidata check) barely cover TV specials and TV movies;
+  - a trained classifier like BERT: it needs hundreds of labeled films and sees only the description, which rarely mentions songs;
+  - the new "System One" decision models: early access, weak at counting by their own explainers, and nothing to save on about 1,100 films.
 
 ## Decided against
 
