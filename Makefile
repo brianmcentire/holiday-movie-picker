@@ -33,9 +33,9 @@ scores: $(DEPS)
 	@.venv/bin/python scores-builder.py
 
 ## make musicals: ask Claude about films not yet labeled for the Musical pill (Opus and Sonnet, then Fable for the
-## hard calls), and update the pill. For the whole catalog, use the Batch API: see musical_classifier.py
+## hard calls), and update the pill; the weekly refresh does the same. For the whole catalog, see musical_classifier.py
 musicals: $(DEPS)
-	@.venv/bin/python musical_classifier.py ask && .venv/bin/python musical_classifier.py decide
+	@.venv/bin/python musical_classifier.py ask; .venv/bin/python musical_classifier.py decide --skip-quiet
 
 # Creates the venv and installs dependencies, again whenever the requirements files change
 $(DEPS): requirements.txt requirements-dev.txt

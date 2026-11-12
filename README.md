@@ -34,7 +34,8 @@ Claude Opus 5.5 classifies each film and says how sure it is, and Claude Haiku 5
 ### Musical pill
 The Genres pill **Musical** holds musicals and music shows: concerts, variety specials and documentaries about musicians. Claude Opus 5.5 and Claude Sonnet 5.5 each say what kind of film it is, and Claude Fable 5.1 makes the call when they disagree or aren't sure. Answers are saved in `musicals.json`, so each film is asked once, and Fable's calls are listed in `musicals_review.md`.
 
-* **New films:** the weekly refresh doesn't ask Claude, so run `make musicals` now and then. It costs pennies for a handful of films.
+* **New films:** the Monday refresh labels them, Fable only for the ones Opus and Sonnet disagree on or aren't sure about. That's about 1.5¢ a film, plus about 5¢ for each one Fable decides. `make musicals` does the same by hand.
+* **If labeling fails** (no credits, API trouble), the new movie data still publishes, with the new films outside the pill. The run is then marked failed, so GitHub emails you. A run that would need more than 50 films labeled stops instead; do those with `--batch` by hand.
 * **The whole catalog** (done once on Nov 11): `python musical_classifier.py ask --batch` uses the Batch API at half price; it can take up to a day, usually under an hour. It then says how many films Fable would decide and what that would cost, and `python musical_classifier.py decide` runs Fable.
 * To overrule a call, add the film's TMDB id to `OVERRIDES` in `musical_classifier.py`, then run `python musical_classifier.py apply`.
 
@@ -43,7 +44,7 @@ A GitHub Action (`.github/workflows/rebuild-data.yml`) rebuilds `holiday_engine.
 
 One-time setup: run `gh secret set TMDB_API_KEY` and `gh secret set ANTHROPIC_API_KEY` in this folder, pasting each key when prompted.
 
-If the classifier can't run (missing key, no credits, API trouble), the new movie data still publishes, with the new films unsorted. The run is then marked failed, so GitHub emails you, and the page's footer shows a quiet note until it's fixed. The footer also notes when the movie list hasn't refreshed in over 10 days during November or December.
+If the classifier can't run (missing key, no credits, API trouble), the new movie data still publishes, with the new films unsorted. The same goes for the Musical pill's labels (see above). The run is then marked failed, so GitHub emails you, and the page's footer shows a quiet note until it's fixed. The footer also notes when the movie list hasn't refreshed in over 10 days during November or December.
 
 GitHub pauses scheduled workflows in public repos after 60 days without activity, so each fall, before November, turn it back on with `gh workflow enable rebuild-data.yml`.
 

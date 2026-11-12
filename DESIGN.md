@@ -303,7 +303,11 @@ Decided with the owner and built on Nov 11.
 
 - **How it's built:**
   - `musical_classifier.py` asks Claude and saves each film's answers in `musicals.json`. Fable's calls are listed in `musicals_review.md`, and `OVERRIDES` in the script beats any call.
-  - The builder reads `musicals.json` into the "Musical" genre. It doesn't ask Claude itself; new films join the pill after `make musicals`. Until then the builder reports how many films have no answer yet.
+  - The builder reads `musicals.json` into the "Musical" genre; it doesn't ask Claude itself.
+  - **Weekly (the owner's call, Nov 11):** the Monday refresh labels new films in its own step after the build: Opus and Sonnet, then Fable through the API for films they disagree on or aren't sure about, skipping the quiet "none" films (`decide --skip-quiet`).
+    - A failure there never stops new films from publishing; they wait outside the pill. The run's last step then fails it, so GitHub emails the owner.
+    - About 1.5¢ a film for Opus and Sonnet, and about 5¢ for each film Fable decides (measured Nov 11).
+    - More than 50 films at once (a lost answers file, or a changed question) stops the step instead, with an email; those go through `ask --batch` by hand.
   - TMDB's "Music" genre and its "musical" keyword still reach the classifiers but not the page, so a search for "musical" finds the pill's films. The words "singing" and "songs" in a description no longer add a "musical" tag either.
   - `python musical_classifier.py apply` puts the pill into `holiday_engine.json` without a full rebuild, the same way the builder does.
   - **What the models see about a film:** its title, any other English-market titles from TMDB ("Also known as", added Nov 11), year, TMDB genres and keywords, and description. TV movies are often renamed for streaming: Christmas Crush is also Holiday High School Reunion, which IMDb lists as a musical.
@@ -341,7 +345,7 @@ Decided with the owner and built on Nov 11.
   4. A review list shows what Fable decided and why, marking films that no model knew.
   5. Then a spot check of about 20 random films in the pill, since two models that agree can still share a blind spot.
 
-  Estimated at $8 to $15 in all. **Weekly runs are undecided** until the one-time run shows whether the extra steps earn their keep.
+  Estimated at $8 to $15 in all. Weekly runs were decided after it (see "Weekly" above).
 - **How the one-time run went (Nov 11):**
   - The Opus and Sonnet batches took 4 minutes and cost $5.15.
   - 592 films qualified for Fable, about half the catalog, far more than expected: the models were often unsure about obscure TV movies, and neither knew 280 of them.

@@ -13,15 +13,19 @@ Fable's calls are listed in musicals_review.md for a human to skim. To overrule 
 
   python musical_classifier.py ask [--batch]      Opus and Sonnet answer the films that have no answer yet, then
                                                   it reports how many films Fable would decide and the cost
-  python musical_classifier.py decide [--skip-quiet]
+  python musical_classifier.py decide [--skip-quiet] [--no-limit]
                                                   Fable decides those films, then the pill in holiday_engine.json
                                                   is updated. --skip-quiet leaves out films both models call "none"
                                                   that TMDB gives no musical keyword or Music genre
   python musical_classifier.py apply              Updates the pill in holiday_engine.json from musicals.json
 
 --batch uses the Batch API: half the price, but it can take up to 24 hours (usually under one). An interrupted batch
-run picks up its batches again when started the same way. The builder reads musicals.json for the pill; it doesn't
-ask Claude itself.
+run picks up its batches again when started the same way. Without --batch, ask takes at most 50 films, and decide
+takes at most 50 unless given --no-limit, so an unattended run can't run up a bill.
+
+The builder reads musicals.json for the pill; it doesn't ask Claude itself. The weekly refresh runs ask, then
+decide --skip-quiet, as its own step: a problem there never stops the movie data from publishing, but it fails the
+run at the end so GitHub emails about it. Both exit with an error when a film couldn't be answered.
 """
 import argparse
 import asyncio
@@ -46,6 +50,7 @@ DECIDER = "claude-fable-5-1"
 PROMPT_VERSION = 1  # Bump after changing the instructions below to ask about every film again
 PRICES = {"claude-opus-5-5": (4.00, 20.00), "claude-sonnet-5-5": (2.00, 10.00), DECIDER: (10.00, 50.00)}  # $/M in, out
 CONCURRENT = 8
+MAX_UNBATCHED = 50  # More films than this need the Batch API, run by hand; the weekly run refuses them
 GENRE = "Musical"  # The pill's name; it replaces TMDB's "Music" genre
 KINDS = ["musical", "music_show", "some_songs", "none"]
 ENGLISH_MARKETS = {"US", "GB", "CA", "AU", "IE", "NZ"}  # Where a film's other titles are shown to the models
@@ -324,6 +329,7 @@ def ask_in_batches(todo, films, answers, cost, log):
 
 
 def ask(batch, log):
+    """Returns True if every film in the catalog now has both answers."""
     answers = load_answers()
     if BATCHES_FILE.exists() and not batch:
         sys.exit(f"Batches are still running ({BATCHES_FILE.name}); run `ask --batch` to pick them up.")
@@ -332,9 +338,12 @@ def ask(batch, log):
     todo = {mid: whos for mid, whos in todo.items() if whos}
     if not todo and not BATCHES_FILE.exists():
         log("Every film already has both answers.")
+    elif len(todo) > MAX_UNBATCHED and not batch:
+        sys.exit(f"{len(todo)} films need answers, more than the {MAX_UNBATCHED} that normal requests are for. "
+                 "Run `python musical_classifier.py ask --batch` by hand: it's half the price.")
     else:
         if not read_key("ANTHROPIC_API_KEY"): sys.exit("ANTHROPIC_API_KEY not found in the environment or .env.")
-        log(f"Reading {len(todo)} films from TMDB...")
+        log(f"Reading {plural(len(todo), 'film')} from TMDB...")
         films = asyncio.run(fetch_films(list(todo), log))
         todo = {mid: whos for mid, whos in todo.items() if mid in films}
         cost = Cost()
@@ -342,6 +351,7 @@ def ask(batch, log):
         save_answers(answers)
         log(f"Saved the answers, about ${cost.dollars:.2f}." + (f" {failed} answers failed; run again to retry them." if failed else ""))
     report(answers, log)
+    return all(complete(answers.get(mid)) for mid in catalog_ids() if mid not in OVERRIDES)
 
 
 def report(answers, log):
@@ -406,24 +416,32 @@ async def decide_now(todo, films, answers, cost, log):
     return failed
 
 
-def decide(skip_quiet, log):
+def decide(skip_quiet, no_limit, log):
+    """Returns True if Fable decided every film it was asked about."""
     answers = load_answers()
     ids = set(catalog_ids())
     todo = [mid for mid, e in answers.items() if mid in ids and mid not in OVERRIDES
             and needs_decider(e) and not answered(e, "fable") and not (skip_quiet and quiet(e))]
+    ok = True
+    if len(todo) > MAX_UNBATCHED and not no_limit:
+        sys.exit(f"{len(todo)} films are waiting for Fable, more than the {MAX_UNBATCHED} a run decides unless told to. "
+                 "Check the cost with `ask`'s report, then run `python musical_classifier.py decide --no-limit`.")
     if todo:
         if not read_key("ANTHROPIC_API_KEY"): sys.exit("ANTHROPIC_API_KEY not found in the environment or .env.")
-        log(f"Fable is deciding {len(todo)} films...")
+        log(f"Fable is deciding {plural(len(todo), 'film')}...")
         films = asyncio.run(fetch_films(todo, log))
+        missed = len(todo) - sum(mid in films for mid in todo)
         todo = [mid for mid in todo if mid in films]
         cost = Cost()
         failed = asyncio.run(decide_now(todo, films, answers, cost, log))
         save_answers(answers)
         log(f"Fable decided {len(todo) - failed}, about ${cost.dollars:.2f}." + (f" {failed} failed; run again to retry." if failed else ""))
+        ok = not (failed or missed)
     else:
         log("No films are waiting for Fable.")
     write_review(answers, ids)
     apply(log)
+    return ok
 
 
 def write_review(answers, ids):
@@ -472,11 +490,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("ask").add_argument("--batch", action="store_true", help="use the Batch API (half price, slower)")
-    sub.add_parser("decide").add_argument("--skip-quiet", action="store_true",
-                                          help='leave out films both models call "none" with no musical hint from TMDB')
+    decide_args = sub.add_parser("decide")
+    decide_args.add_argument("--skip-quiet", action="store_true",
+                             help='leave out films both models call "none" with no musical hint from TMDB')
+    decide_args.add_argument("--no-limit", action="store_true", help=f"decide more than {MAX_UNBATCHED} films")
     sub.add_parser("apply")
     args = parser.parse_args()
     log = lambda msg: print(msg, flush=True)
-    if args.command == "ask": ask(args.batch, log)
-    elif args.command == "decide": decide(args.skip_quiet, log)
+    # A non-zero exit tells the weekly run there was a problem, so GitHub emails about it
+    if args.command == "ask": sys.exit(0 if ask(args.batch, log) else 1)
+    elif args.command == "decide": sys.exit(0 if decide(args.skip_quiet, args.no_limit, log) else 1)
     else: apply(log)

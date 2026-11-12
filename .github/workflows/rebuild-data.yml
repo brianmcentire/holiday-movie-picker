@@ -52,6 +52,20 @@ jobs:
               sys.exit(f"New build has {new} titles, down from {old}. Not publishing it.")
           PY
 
+      # New films for the Musical pill: Opus and Sonnet answer, and Fable decides the films they disagree on or aren't
+      # sure about. A problem here never stops the movie data from publishing (the new films just wait outside the
+      # pill); the last step then fails the run so GitHub emails about it.
+      - name: Label new films for the Musical pill
+        id: musicals
+        continue-on-error: true
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          asked=0; python musical_classifier.py ask || asked=$?
+          decided=0; python musical_classifier.py decide --skip-quiet || decided=$?
+          exit $(( asked || decided ))
+
       # For the owner's browser script only; the site doesn't load scores.json. Any trouble with MDBList keeps
       # last week's scores, and a failure here never stops the movie data from publishing.
       - name: Fetch outside scores (MDBList)
@@ -63,14 +77,14 @@ jobs:
       - name: Commit and push if the data changed
         id: commit
         run: |
-          if git diff --quiet -- holiday_engine.json holiday_levels.json holiday_levels_review.md scores.json; then
+          if git diff --quiet -- holiday_engine.json holiday_levels.json holiday_levels_review.md scores.json musicals.json musicals_review.md; then
             echo "Data unchanged, nothing to publish."
             echo "pushed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add holiday_engine.json holiday_levels.json holiday_levels_review.md scores.json
+          git add holiday_engine.json holiday_levels.json holiday_levels_review.md scores.json musicals.json musicals_review.md
           git commit -m "Refresh movie data from TMDB ($(date -u +%Y-%m-%d))"
           git pull --rebase origin main
           git push origin HEAD:main
@@ -115,3 +129,10 @@ jobs:
               sys.exit(f"::error::{unsorted} films have no holiday level. Check the build step's log for why.")
           print("Every film has a holiday level.")
           PY
+
+      # Runs even when the check above failed, so both problems show up in the email.
+      - name: Check the Musical pill's new films were labeled
+        if: ${{ !cancelled() && steps.musicals.outcome == 'failure' }}
+        run: |
+          echo "::error::Labeling new films for the Musical pill failed; they stay out of the pill until it works. See the 'Label new films for the Musical pill' step's log."
+          exit 1
