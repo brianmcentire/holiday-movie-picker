@@ -28,7 +28,7 @@
         .state-neutral { background: white; color: #64748b; border-color: #e2e8f0; cursor: pointer; }
         .state-include { background: #3b82f6; color: white; border-color: #3b82f6; cursor: pointer; }
         .state-include.level-btn { background: #16a34a; border-color: #16a34a; } /* evergreen for holiday levels */
-        .state-exclude { background: #ef4444; color: white; border-color: #ef4444; text-decoration: line-through; cursor: pointer; }
+        .state-exclude { background: #ef4444; color: white; border-color: #ef4444; cursor: pointer; } /* red says "not"; a line through it made it a double negative (the owner, Nov 11) */
         .state-disabled { display: none; } 
 
         .movie-card:hover { transform: translateY(-4px); transition: all 0.2s; }
@@ -159,7 +159,7 @@
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
             <div class="header-brand flex items-end justify-between gap-3">
                 <div class="whitespace-nowrap leading-none">
-                    <h1 class="text-xl md:text-2xl font-black tracking-tighter text-slate-900 uppercase">Season's Screenings</h1>
+                    <h1 class="text-xl md:text-2xl font-black tracking-tighter text-slate-900 uppercase"><a href="./" id="home-link">Season's Screenings</a></h1>
                     <p class="text-blue-600 font-light italic text-sm tracking-tight mt-1">a holiday movie matchmaker</p>
                 </div>
                 <span data-stats class="md:hidden text-[9px] leading-tight font-bold text-slate-400 uppercase tracking-widest text-right">...</span>
@@ -896,6 +896,38 @@
             ids = window.watchlist?.filter(ids) ?? ids; // watch list hook
             return ids;
         }
+
+        // For My Watchlist's rows on laptops (watch list hook): how a movie stands with the filters that are set.
+        // Its holiday intensity (green when it's one of the picks, amber when the picks leave it out), each tag or genre
+        // picked (blue) or excluded (red) that it has, and whether the content ratings leave it out.
+        function filterLabels(id) {
+            const tags = movieTags[id] || new Set();
+            const passesGroup = (name, tag) => {
+                const picked = GROUPS[name].tags.filter(t => tagStates.get(t) === 1);
+                return !picked.length || picked.length === GROUPS[name].tags.length || picked.includes(tag);
+            };
+            const labels = [];
+            const level = GROUPS.levels.tags.find(t => tags.has(t.toLowerCase()));
+            if (level) labels.push(passesGroup('levels', level)
+                ? { text: level, tone: 'green', why: 'One of your Holiday Intensity picks' }
+                : { text: level, tone: 'amber', why: 'Not one of your Holiday Intensity picks, so the results leave it out' });
+            tagStates.forEach((state, tag) => {
+                if (!state || groupOf(tag) || !(tags.has(tag) || tags.has(tag.toLowerCase()))) return;
+                labels.push(state === 2
+                    ? { text: tag, tone: 'red', why: `Your filters leave out ${tag}` }
+                    : { text: tag, tone: 'blue', why: `One of your picks: ${tag}` });
+            });
+            const cert = db.movies[id]?.cert;
+            return { labels, certHidden: GROUPS.ratings.tags.includes(cert) && !passesGroup('ratings', cert) };
+        }
+
+        // The site's name goes back to the results: from My Watchlist (watch list hook), or to the top of the page
+        document.getElementById('home-link')?.addEventListener('click', e => {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button > 0) return; // a new tab, as links do
+            e.preventDefault();
+            if (window.watchlist?.isOpen?.()) window.watchlist.close();
+            else scrollTo({ top: 0, behavior: 'smooth' });
+        });
 
         // Random's order: a fair shuffle of every movie, made again on each update unless keepOrder is asked for
         // (the watch list asks when only the list changed, so ticking a movie off doesn't reshuffle the page)

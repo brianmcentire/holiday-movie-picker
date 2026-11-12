@@ -29,6 +29,8 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   - **Content Ratings work the same way** (on and off, never red). With other ratings picked, an excluded rating was hidden anyway, so the red step changed nothing on screen but the chip. Older links that excluded a rating (`without=R`) open the same way as levels, with the same movies. *Changed during the review on Nov 9 without the owner; revert that one commit to bring the red step back.*
   - **Shift-click a rating or a holiday intensity to show only that one** in its group (the owner's request, Nov 11). Shift-click it again, while it's still the only one on, to put that group back as it was. Shift-clicking another button in the same group moves the solo there and still remembers the original. Changing the group any other way forgets it. Each group remembers on its own. Needs a Shift key, so laptops in practice; there's no hint on the page, and it's only remembered until the page reloads.
 - **Not:** on the chip for an excluded tag or genre ("Not: Musical"), not "No:". "No: Musical" can read like an answer to a question; "Not" says what the results are (the owner, Nov 11). The chips show it in capitals.
+- **Mark watched** and **Unmark watched** in the preview, and **Remove from My Watchlist** to match Add to My Watchlist (Nov 11). The My Watchlist pills' chips say "Not: Watched" too.
+- **No line through red pills** (Nov 11): red already says "not", the chips above say "Not:", and the strike made them harder to read.
 - **Clear filters** and **Reset filters**, not Clear all and Reset, so nobody worries a button might delete their watch list.
 - **My Watchlist** where there's room: the laptop button, page and sheet titles, the filters section, tooltips. **My List** where it's tight: the phone's floating button and the "On My List" pill.
 - **Made**, not Saved, for when a saved copy was created.
@@ -97,6 +99,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 ### What's stored
 
 - Only TMDB movie IDs, in the user's order, with a watched flag. It's versioned and kept in localStorage, and everything else comes from the page's own data.
+- **Watched is its own mark (Nov 11, the owner's call):** any movie can be marked watched, on the list or not. A listed movie's mark stays on its list entry; the marks on movies that aren't on the list are kept beside it (`watched` in the same stored object, still `v: 1`, so an older tab keeps the field as it is). Taking a movie off the list, or Clear list, keeps its mark; adding a watched movie to the list keeps it too. Marks made before Nov 11 carry over.
 - A tab still running an older version never writes over a list saved by a newer one (a higher `v`), and keeps any fields it doesn't know about.
 - IDs missing from the data stay stored but hidden; nothing breaks on them.
 - The first add asks the browser to keep the storage (`navigator.storage.persist()`).
@@ -105,11 +108,13 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 
 - **Marks:**
   - On the list: a blue circle with a solid white bookmark at the poster's top right.
-  - Watched: the poster and card fade, with a diagonal green WATCHED ribbon across the top-left corner.
+  - Watched: the poster and card fade, with a diagonal green WATCHED ribbon across the top-left corner. Any watched movie, on the list or not.
+  - **Watched across the site (Nov 11):** the results get the fade and the ribbon; My Watchlist's rows fade only (the posters are too small for a readable ribbon); the preview's poster gets the ribbon but no fade.
   - Not on the list: nothing.
 - **Icon: the bookmark.** The first idea, popcorn, read as a trash can. A bookmark means "save for later" everywhere.
 - **The movie preview (the peek):** a tap or click anywhere on a card opens it (poster, title or description), and so does Enter on a card. It has the poster, the basics and the overview, plus:
-  - **Add to My Watchlist** (or, when the movie is on the list, **Watched it** and **Remove**), the only button;
+  - **Two buttons, stacked, the same two places for every movie** (Nov 11): on top the list, **Add to My Watchlist** (blue) or, on the list, **Remove from My Watchlist** (white); under it **Mark watched** (white, with a plain check) or, once watched, **Unmark watched** (no icon). Why: the old side-by-side "Watched it" and "Remove" read oddly next to Add elsewhere, and "Remove" was unclear out of context. The eye icon is kept for the "more match, hidden by" note, so it isn't used here. Marking watched adds no icon or click target to the posters in the results.
+  - **A line above the title** says "On My Watchlist", "On My Watchlist · Watched" or "Watched";
   - **the rating opens TMDB.** "6.7/10" is TMDB's score, so tapping or clicking it opens the film on TMDB in a new tab, and the preview stays open. There's no hint beyond a pointer and an underline on hover. The owner's browser script makes its IMDb and Rotten Tomatoes scores work the same way.
 
   Why: an empty bookmark on every tile was clutter. Tapping a poster is what everyone does anyway, and phone tiles hide the overview, so the peek gives something back. The cost is one extra tap to reach TMDB.
@@ -117,7 +122,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - **Phones:** the preview is a sheet from the bottom over the dimmed page, and a swipe down closes it.
 - **Laptops and tablets** (720px wide and 560px tall or more): the same preview as a large panel in the middle of the screen, 720px wide, over the same dimmed page.
   - The poster is on the left. The full description shows.
-  - Add to My Watchlist (or Watched it and Remove), 280px wide, centered in the space beside the poster. Left-aligned under the description, it looked off-center. The owner's call on Nov 10.
+  - The two buttons, 280px wide, centered in the space beside the poster. Left-aligned under the description, they looked off-center. The owner's call on Nov 10. A watched movie's poster keeps the same size, so its buttons sit where everyone else's do.
   - ×, Esc or a click outside closes it.
   - Why: it matches the phone, which the owner liked, and it gives laptops Add to My Watchlist and the "why it matched" line. Large and centered reads clearly as its own layer and never moves around.
 - **Adding on laptops:** the bookmark appears only on the poster under the pointer, and clicking it adds the movie. A click anywhere else on the card opens the preview. Cmd-, Ctrl- or Shift-click or a middle click opens TMDB in a new tab, as links do.
@@ -157,17 +162,25 @@ While searching, the preview says why the movie is in the results. The result ca
 - Laptops: its own page, with "‹ All movies" to go back. Phones: a sheet over everything. The link `#watchlist` opens it.
 - The summary line is "3 of 9 watched · Hide watched · Save a copy".
 - Each row has a circle to mark it watched. Rows reorder by the drag grip.
+- **Under the title** (laptops): "Drag to set the order. Tick the circle to mark it watched." It sits on its own line under My Watchlist, near the circles it talks about, leaving the title's right end for the › below (Nov 11).
+- **A row's poster, title or description opens the movie preview** (Nov 11), as a card does in the results; Cmd-, Ctrl- or Shift-click opens TMDB in a new tab. On phones the preview opens over the list sheet. Before, a row went straight to TMDB.
+- **The site's name** (top left) goes back to the results from My Watchlist, like "‹ All movies", keeping the filters and search (Nov 11). Elsewhere it goes to the top of the page.
+- **Labels: how each movie fits your filters** (laptops only, Nov 11, canvas Round 12, the owner's pick A, faded). For people who build a long list and then want to know, say, whether a musical is on it, without going back and forth.
+  - **Folded by default.** A › at the right end of the title's line opens them, ‹ folds them away; it's remembered on the device. The list widens from 860px to 1130px while they're open, so the descriptions keep their width.
+  - **What a row shows:** its holiday intensity always, green when it's one of your picks, amber when your picks leave it out; each tag or genre you excluded that it has, in red (no line through it: red already says "not"); each tag or genre you picked that it has, in blue. Content ratings get no label: the row's rating badge turns amber when your ratings leave it out (R is off by default).
+  - Pale tints, like the chips above the results, so they inform without taking over. A watched row's labels fade with it. They only inform: they aren't buttons, and there's no count.
+  - Not on phones: there's no room.
 - Removing: on phones, swipe a row left, with Undo; on laptops, × on hover.
 - On the laptop page, the top bar's search narrows the list. The rule is that the top bar acts on whatever is below it.
-- **Clear list:** a quiet button at the bottom. It asks first and offers **Save a copy first**. Once confirmed, My Watchlist closes and you're back on the main screen, not looking at an empty list. Undo shows there and brings the list back without reopening it.
+- **Clear list:** a quiet button at the bottom. It asks first and offers **Save a copy first**. Once confirmed, My Watchlist closes and you're back on the main screen, not looking at an empty list. Undo shows there and brings the list back without reopening it. **Watched marks stay as they are** (the owner, Nov 11), and the confirmation says so.
 - There's no "saved on" date in the list, and no "changes since your last save" nudge. The site can't know whether a copy was actually kept, since Save a copy only opens the share sheet or copies a link.
 
 ### Filters
 
-- A **My Watchlist** section sits just under Holiday Intensity. It shows only when the list has movies.
+- A **My Watchlist** section sits just under Holiday Intensity. It shows when the list has movies or any movie is marked watched.
 - It holds two pills that work like every other filter pill (once: only these; twice: hide these; third: back to all):
   - **On My List**;
-  - **Watched**, where tapping twice hides what you've seen.
+  - **Watched**, where tapping twice hides what you've seen. It covers every watched movie, on the list or not.
 - They show as chips above the results. Clear filters and Reset filters reset them. They're remembered on the device.
 - They never go into shared links: they're about your own list, and a friend's is different.
 - Why: this replaced an Unwatched | Watched | All switch under the search box, which cluttered the top and cost a row on phones.
@@ -178,9 +191,10 @@ While searching, the preview says why the movie is in the results. The result ca
 - The link is `#watchlist=1&made=2026-11-09T19:41Z&m=771,10719w,…`:
   - `watchlist=1` is the format version;
   - `made` is when the copy was made, in ISO 8601 universal time to the minute;
-  - `m` is the movies in order, with `w` marking watched.
+  - `m` is the movies in order, with `w` marking watched;
+  - `seen` (Nov 11) is the movies marked watched that aren't on the list. Sharing is also how people save a list, by emailing it to themselves, so a copy carries every watched mark. They only matter when the copy restores onto an empty list; adding from a copy never changes anyone's marks, and Just look shows only the list's own.
 
-  Unknown keys are ignored, and a missing or garbled `made` just shows no date.
+  Unknown keys are ignored (an older page ignores `seen`), and a missing or garbled `made` just shows no date.
 - **Times** show in each phone's own time zone, and nobody is asked for one: "Made Sun, Nov 9 at 2:41 PM · 2 days ago".
 - **Share wording:**
   - title: "My Watchlist · Nov 9, 2:41 PM";
@@ -188,7 +202,7 @@ While searching, the preview says why the movie is in the results. The result ca
 
   iPhone's share sheet shows only the title and the site's name, never the link, and cuts titles off at about 30 characters.
 - **Opening a saved link:**
-  - **Your list is empty:** it's restored as it was, watched marks included. It's your own backup, or a partner handing over the whole list.
+  - **Your list is empty:** it's restored as it was, watched marks included, also those on movies that aren't on the list. It's your own backup, or a partner handing over the whole list.
   - **You already have a list:** a card, "Shared with you", shows the count, the Made line, a poster strip and how many are new to your list. The buttons are **Add 7 new**, **Just look** and **No thanks**.
 - **Just look** shows the shared list as it was sent, with its watched marks, without changing yours.
   - A **Hide watched** link sits beside "9 movies, 3 watched", the same as on your own list.
@@ -198,10 +212,10 @@ While searching, the preview says why the movie is in the results. The result ca
 
 ### The list in the page's address
 
-- On every browser, the page's address carries a copy of the list, kept up to date as it changes: `#watchlist=1&backup=1&made=…&m=…`, plus `&open=1` while My Watchlist is open. On iPhone, Safari shows only the site's name, so nobody sees it there.
+- On every browser, the page's address carries a copy of the list, kept up to date as it changes: `#watchlist=1&backup=1&made=…&m=…`, plus `&seen=…` for watched movies that aren't on the list (Nov 11) and `&open=1` while My Watchlist is open. With an empty list it still carries the watched marks. On iPhone, Safari shows only the site's name, so nobody sees it there.
 - **Why:** bookmarks, history and private windows bring the list back with it, and so does reopening a tab after Safari has cleared the site's storage. On iPhone, Add to Home Screen only keeps the copy if the page was loaded with it; see "Add to Home Screen".
 - **Opening an address with `backup=1`:**
-  - Your list is empty: it fills from the copy ("Restored your watchlist", with Undo). Undo takes out only the movies the copy brought in, so anything added since stays.
+  - Your list is empty: it fills from the copy ("Restored your watchlist", with Undo), watched marks included. Undo takes out only the movies and marks the copy brought in, so anything added since stays.
   - You already have a list: the copy is ignored.
   - **After Clear list, an older copy still restores.** An old bookmark, a reopened tab or a history entry brings the cleared list back onto the empty list, with Undo. Why: simpler, and the owner wants it that way (Nov 10). An earlier build ignored copies made before the clear; that's gone.
   - It's read only when the page opens with that address, not when the address changes in an open tab, so going Back can't undo a Clear list.
@@ -258,6 +272,7 @@ While searching, the preview says why the movie is in the results. The result ca
   - The IMDb score opens IMDb, and 🍅 and 🍿 open Rotten Tomatoes, in a new tab, when the file has the address. Otherwise they're plain text.
   - Old scores still show; hovering one gives its source and date ("MDBList, updated Nov 11").
   - The key is set by clicking "Scores: add your MDBList key" in a preview, or from the Tampermonkey menu, and stays in Tampermonkey's storage.
+  - **On My Watchlist's rows too** (2.4, Nov 11): the same scores after each row's rating, from the file only, so a long list never sends a burst of requests to MDBList. Plain text there, since the row opens the preview, which has the linked scores. They wrap under the rating on a narrow phone row.
 
 ### Finding gems (by hand, when wanted)
 
@@ -405,6 +420,7 @@ Not on the list: short links, a preview picture per list, and syncing between de
 
 ## Revisit later
 
+- **Clear all watched:** a way to take every watched mark off at once, with a confirmation first. Where it goes is undecided; the owner wants it, later (Nov 11).
 - **Films without a holiday level** (when the classifier couldn't run) are hidden by the default Holiday Intensity, though the footer mentions them. They show with Any holiday intensity. Fine as a safe default, or let them through.
 - **TV-G, TV-PG and TV-Y7:** the builder allows them but Content Ratings has no buttons for them, so such a film would be hidden by default and couldn't be picked. None in today's data.
 - **Pill text contrast:** white 10–11px text on the blue, green and red pills is about 3.3–3.8:1, under the 4.5:1 guideline for small text.

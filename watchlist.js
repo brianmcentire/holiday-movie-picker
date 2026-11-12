@@ -5,9 +5,12 @@
 // feature, delete this file, manifest.webmanifest, the script tag and those lines.
 //
 // What it keeps on the device (localStorage), and nothing about the movies themselves:
-//   watchlist       {"v":1,"items":[[771,0],[10719,1]],"made":"2026-11-09T19:41Z"}
-//                   TMDB ids in the user's order with 1 for watched, and when the list last changed
-//   watchlistPrefs  {"v":1,...}  the two filter pills, Hide watched, and the Home Screen tip
+//   watchlist       {"v":1,"items":[[771,0],[10719,1]],"watched":[1585],"made":"2026-11-09T19:41Z"}
+//                   TMDB ids in the user's order with 1 for watched; the movies marked watched that aren't on the
+//                   list (added Nov 2026: a movie can be watched without being on the list; older versions of this
+//                   file keep the field as it is); and when the list or the marks last changed
+//   watchlistPrefs  {"v":1,...}  the two filter pills, Hide watched, the labels on the laptop list, and the Home
+//                   Screen tip
 // Titles, posters and the rest come from the page's own data (db.movies). Ids the data doesn't have are kept but
 // not shown, so a movie that drops out of the data comes back if it returns.
 //
@@ -58,6 +61,23 @@
         return cleanItems(saved.items.map(entry => (Array.isArray(entry) ? { id: entry[0], watched: entry[1] } : null)));
     }
 
+    // Valid ids only, each once
+    function cleanIds(list) {
+        const ids = new Set();
+        for (const raw of list) {
+            const id = cleanId(raw);
+            if (id) ids.add(id);
+            if (ids.size >= MAX_MOVIES) break;
+        }
+        return ids;
+    }
+
+    // The movies marked watched that aren't on the list
+    function loadWatched() {
+        const saved = readJSON(LIST_KEY);
+        return saved?.v === 1 && Array.isArray(saved.watched) ? cleanIds(saved.watched) : new Set();
+    }
+
     // When the list last changed (the made= of the copy in the address), or null
     const loadMade = () => parseMade(readJSON(LIST_KEY)?.made);
     const minuteISO = date => `${date.toISOString().slice(0, 16)}Z`; // 2026-11-09T19:41Z
@@ -70,6 +90,7 @@
             ...(saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {}),
             v: 1,
             items: items.map(item => [Number(item.id), item.watched ? 1 : 0]),
+            watched: offList.size ? [...offList].map(Number) : undefined,
             made: listMade ? minuteISO(listMade) : undefined,
             clearedAt: undefined, // an earlier version kept when Clear list last ran; no longer used
         });
@@ -82,6 +103,7 @@
             listed: triState(saved.listed),     // the On My List pill: 0 off, 1 only these, 2 hide these
             watched: triState(saved.watched),   // the Watched pill, the same way
             hideWatched: saved.hideWatched === true,
+            labels: saved.labels === true,      // the laptop list shows how each movie fits the filters (folded by default)
             tipShown: saved.tipShown === true,  // the Home Screen tip has popped up after the first add
             tipDone: saved.tipDone === true,    // ...and was closed, so it never shows again
         };
@@ -94,8 +116,16 @@
     }
 
     let items = loadItems(); // [{ id: '771', watched: false }, ...] in the user's order
+    // Watched marks on movies that aren't on the list. A movie's mark lives in one place: on its list entry while
+    // it's on the list, here while it isn't. foldWatched moves marks onto entries whenever the list may have grown.
+    let offList = loadWatched();
     let listMade = loadMade();
     const prefs = loadPrefs();
+
+    function foldWatched() {
+        for (const item of items) if (offList.delete(item.id)) item.watched = true;
+    }
+    foldWatched();
 
     // Ask the browser not to clear the site's storage when space runs low (a no-op where unsupported)
     function persistStorage() {
@@ -107,6 +137,10 @@
     const movieFor = id => (typeof db === 'object' && db?.movies?.[id]) || null;
     const shownItems = () => items.filter(item => movieFor(item.id));
     const itemFor = id => items.find(item => item.id === id);
+    // Watched, on the list or not
+    const isWatched = id => !!itemFor(id)?.watched || offList.has(id);
+    // The list has movies, or some movies are marked watched: either way the My Watchlist filters have something to do
+    const hasMarks = () => shownItems().length > 0 || [...offList].some(id => movieFor(id));
     const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
     const yearOf = m => (m.date && m.date !== '0000-00-00' ? m.date.split('-')[0] : 'TBA');
     const ratingOf = m => (m.votes ? `${m.rating.toFixed(1)}/10` : 'Not yet rated');
@@ -130,6 +164,7 @@
         eyeOff: '<path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/>',
         externalLink: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
         chevronLeft: '<path d="m15 18-6-6 6-6"/>',
+        chevronRight: '<path d="m9 18 6-6-6-6"/>',
         trash: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
         clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
         // Safari's Share icon, which the Home Screen tip points to (not the page's own Share results icon)
@@ -152,29 +187,38 @@
     function add(id) {
         id = cleanId(id);
         if (!id || itemFor(id) || items.length >= MAX_MOVIES) return;
-        items.push({ id, watched: false });
+        items.push({ id, watched: offList.delete(id) }); // a movie already marked watched keeps its mark
         if (items.length === 1) persistStorage();
         changed();
         firstAddTip(movieFor(id)?.title ?? 'it');
     }
 
+    // Taking a movie off the list keeps its watched mark
     function remove(id) {
         id = cleanId(id);
         const index = items.findIndex(item => item.id === id);
         if (index < 0) return;
         const [item] = items.splice(index, 1);
+        if (item.watched) offList.add(item.id);
         changed();
         offerUndo(`Removed ${movieFor(id)?.title ?? 'a movie'}`, () => {
             if (itemFor(item.id)) return;
-            items.splice(Math.min(index, items.length), 0, item); // back in its place, watched or not
+            item.watched = offList.delete(item.id); // its mark as it is now
+            items.splice(Math.min(index, items.length), 0, item); // back in its place
             changed();
         });
     }
 
+    // Any movie can be marked watched, on the list or not
     function setWatched(id, watched) {
-        const item = itemFor(cleanId(id));
-        if (!item || item.watched === !!watched) return;
-        item.watched = !!watched;
+        id = cleanId(id);
+        if (!id || isWatched(id) === !!watched) return;
+        const item = itemFor(id);
+        if (item) item.watched = !!watched;
+        else if (!watched) offList.delete(id);
+        else if (offList.size < MAX_MOVIES) offList.add(id);
+        else return;
+        if (watched && !items.length && offList.size === 1) persistStorage(); // the first thing kept
         changed();
     }
 
@@ -201,7 +245,7 @@
             saveItems();
         }
         const refilter = filtersOn(); // the results depend on the list right now
-        if (!shownItems().length) resetFilters(); // an empty list has nothing to filter by
+        if (!hasMarks()) resetFilters(); // no list and no watched marks: nothing to filter by
         refreshChrome();
         if (refilter) window.updateResults?.({ keepOrder: true }); // only the list changed: Random keeps its order
         else markCards();
@@ -211,6 +255,8 @@
 
     function reloadList() {
         items = loadItems();
+        offList = loadWatched();
+        foldWatched();
         listMade = loadMade();
     }
 
@@ -246,7 +292,7 @@
         const byId = new Map(items.map(item => [item.id, item]));
         return ids.filter(id => {
             const item = byId.get(id);
-            return passes(prefs.listed, !!item) && passes(prefs.watched, !!item?.watched);
+            return passes(prefs.listed, !!item) && passes(prefs.watched, !!item?.watched || offList.has(id));
         });
     }
 
@@ -254,7 +300,7 @@
     function addPills(addPill) {
         FILTERS.forEach(({ key, label }) => {
             const state = prefs[key];
-            if (state) addPill(state === 2 ? `NO: ${label}` : label, state === 2, () => setFilter(key, 0));
+            if (state) addPill(state === 2 ? `Not: ${label}` : label, state === 2, () => setFilter(key, 0));
         });
     }
 
@@ -337,7 +383,7 @@
             if (!id) return;
             const item = byId.get(id);
             card.classList.toggle('wl-on', !!item);
-            card.classList.toggle('wl-watched', !!item?.watched);
+            card.classList.toggle('wl-watched', !!item?.watched || offList.has(id));
             const mark = card.querySelector('.wl-mark');
             if (mark.dataset.on === String(!!item)) return;
             mark.dataset.on = !!item;
@@ -623,15 +669,21 @@
     function renderPeek() {
         const m = movieFor(peekId);
         const item = itemFor(peekId);
+        const watched = isWatched(peekId);
         const status = item
-            ? `<div class="wl-peek-status">${icon('bookmark', 11, { fill: 'currentColor' })}On My Watchlist${item.watched ? ' · Watched' : ''}</div>`
-            : '';
-        const actions = !item
-            ? `<button type="button" class="wl-btn wl-btn-blue wl-peek-add" data-peek="add">${icon('bookmarkPlus', 18, { stroke: 2.25 })}Add to My Watchlist</button>`
-            : `<div class="wl-peek-pair">${item.watched
-                ? `<button type="button" class="wl-btn" data-peek="unwatched">${icon('eyeOff', 17)}Not watched</button>`
-                : `<button type="button" class="wl-btn wl-btn-green" data-peek="watched">${icon('eye', 17)}Watched it</button>`}`
-              + `<button type="button" class="wl-btn" data-peek="remove">${icon('bookmarkMinus', 17, { stroke: 2.25 })}Remove</button></div>`;
+            ? `<div class="wl-peek-status">${icon('bookmark', 11, { fill: 'currentColor' })}On My Watchlist${watched ? ' · Watched' : ''}</div>`
+            : watched ? `<div class="wl-peek-status">${icon('check', 11, { stroke: 3 })}Watched</div>` : '';
+        // Two buttons, stacked, the same two places for every movie: the list (Add, blue, or Remove), then watched.
+        // The eye icon is kept for the page's "more match, hidden by" note, so Mark watched has a plain check.
+        const actions = `<div class="wl-peek-stack">${item
+            ? `<button type="button" class="wl-btn" data-peek="remove">${icon('bookmarkMinus', 17, { stroke: 2.25 })}Remove from My Watchlist</button>`
+            : `<button type="button" class="wl-btn wl-btn-blue wl-peek-add" data-peek="add">${icon('bookmarkPlus', 18, { stroke: 2.25 })}Add to My Watchlist</button>`}${watched
+            ? '<button type="button" class="wl-btn" data-peek="unwatched">Unmark watched</button>'
+            : `<button type="button" class="wl-btn" data-peek="watched">${icon('check', 16)}Mark watched</button>`}</div>`;
+        // The poster gets the green Watched ribbon, as on the results, but not their fade
+        const poster = m.poster
+            ? `<img src="${esc(posterAt(m.poster, peekAsPanel.matches ? 'w500' : 'w342'))}" alt="" decoding="async" draggable="false">`
+            : '<span class="wl-noposter"></span>';
         // While searching: why it matches, and the matched words highlighted in the description (not the words that
         // matched the title). An older page without searchReasons gives one reason for the whole search.
         const reasons = typeof searchReasons === 'function' ? searchReasons(peekId)
@@ -643,7 +695,7 @@
         peek.panel.innerHTML = `<div class="wl-grabber" aria-hidden="true"></div>
             <button type="button" class="wl-peek-close" data-peek="close" aria-label="Close">${icon('x', 18, { stroke: 2.25 })}</button>
             <div class="wl-peek-top">
-                ${m.poster ? `<img src="${esc(posterAt(m.poster, peekAsPanel.matches ? 'w500' : 'w342'))}" alt="" decoding="async" draggable="false">` : '<span class="wl-noposter"></span>'}
+                <span class="wl-peek-poster${watched ? ' wl-peek-watched' : ''}">${poster}<span class="wl-ribbon" aria-hidden="true">Watched</span></span>
                 <div class="wl-peek-text">
                     ${status}
                     <h3 id="wl-peek-title" tabindex="-1">${esc(m.title)} <span class="wl-year">(${yearOf(m)})</span></h3>
@@ -700,7 +752,7 @@
     function refreshChrome() {
         const count = shownItems().length;
         document.body.classList.toggle('wl-has-list', count > 0);
-        document.getElementById('wl-filters')?.classList.toggle('hidden', count === 0);
+        document.getElementById('wl-filters')?.classList.toggle('hidden', !hasMarks());
         [[fab, 'My List'], [headerButton, 'My Watchlist']].forEach(([btn, name]) => {
             if (!btn) return;
             const counter = btn.querySelector('.wl-count');
@@ -797,7 +849,8 @@
                     <p class="wl-look-summary"></p>
                     <p class="wl-made"></p>
                     <p class="wl-look-note"></p>
-                    <span class="wl-hint">Drag to set the order. Tick the circle once you've watched it.</span>
+                    <span class="wl-hint">Drag to set the order. Tick the circle to mark it watched.</span>
+                    <button type="button" class="wl-labels-toggle" data-wl="labels"></button>
                 </div>
             </div>
             <div class="wl-scroll">
@@ -918,6 +971,7 @@
     //     backup=1     this is the user's own list kept in the address, not a copy someone shared
     //     made         when the list last changed: ISO 8601 in UTC, to the minute
     //     m            the movies in order, by TMDB id; a trailing w marks one watched
+    //     seen         movies marked watched that aren't on the list (added Nov 2026; older pages ignore it)
     //     open=1       My Watchlist is open (there for a Home Screen app added with the sheet showing)
     // Opening it on an empty list restores the list, with Undo, unless it was made before Clear list last emptied
     // the list here; on a list that has movies, it's quietly replaced by that list's own copy, and it never brings
@@ -934,12 +988,13 @@
     }
 
     const movieList = () => items.map(item => item.id + (item.watched ? 'w' : '')).join(',');
+    const seenPart = () => (offList.size ? `&seen=${[...offList].join(',')}` : '');
 
     // The address's watch-list part for the user's own list: the copy (when it's on and the list has movies),
     // or just #watchlist while My Watchlist is open, or nothing
     function ownHash(open = viewOpen && !looking) {
-        if (!listInAddress() || !items.length) return open ? '#watchlist' : '';
-        return `#watchlist=1&backup=1&made=${minuteISO(listMade || new Date())}&m=${movieList()}${open ? '&open=1' : ''}`;
+        if (!listInAddress() || (!items.length && !offList.size)) return open ? '#watchlist' : '';
+        return `#watchlist=1&backup=1&made=${minuteISO(listMade || new Date())}&m=${movieList()}${seenPart()}${open ? '&open=1' : ''}`;
     }
 
     // Bring the address up to date with the list. Not while it's showing a list someone shared (the card, or
@@ -957,14 +1012,24 @@
     function restoreBackup(copy) {
         const had = new Set(items.map(item => item.id));
         const restored = new Set(copy.items.map(item => item.id).filter(id => !had.has(id)));
+        const hadOffList = new Set(offList);
+        const newSeen = [...copy.seen].filter(id => !offList.has(id) && !had.has(id));
         items = cleanItems([...copy.items, ...items]);
+        newSeen.forEach(id => offList.add(id));
+        foldWatched();
         persistStorage();
         changed({ made: copy.made || new Date() });
         const count = shownItems().length;
-        if (!count) return;
-        note(`Restored your watchlist · ${plural(count, 'movie')}`, {
+        const seen = newSeen.filter(id => movieFor(id) && !itemFor(id)).length;
+        if (!count && !seen) return;
+        note(count ? `Restored your watchlist · ${plural(count, 'movie')}` : `Restored ${plural(seen, 'watched movie')}`, {
             action: 'Undo',
-            onAction: () => { items = items.filter(item => !restored.has(item.id)); changed(); }, // keeps anything done since
+            onAction: () => { // keeps anything done since
+                items.forEach(item => { if (restored.has(item.id) && hadOffList.has(item.id)) offList.add(item.id); });
+                items = items.filter(item => !restored.has(item.id));
+                newSeen.forEach(id => offList.delete(id));
+                changed();
+            },
             timeout: 16000,
         });
     }
@@ -986,6 +1051,14 @@
         if (!viewOpen) return;
         closeOpenRow();
         view.el.classList.toggle('wl-looking', !!looking);
+        const labels = labelsOpen();
+        view.el.classList.toggle('wl-labels-on', labels);
+        const toggleButton = $('[data-wl="labels"]');
+        const toggleLabel = labels ? 'Hide how these fit your filters' : 'Show how these fit your filters';
+        toggleButton.innerHTML = icon(labels ? 'chevronLeft' : 'chevronRight', 18, { stroke: 2.25 });
+        toggleButton.setAttribute('aria-expanded', String(labels));
+        toggleButton.setAttribute('aria-label', toggleLabel);
+        toggleButton.title = toggleLabel;
         if (looking) return renderLook();
         const all = shownItems();
         const rawQuery = pageMode() ? searchInput()?.value.trim() ?? '' : '';
@@ -1016,9 +1089,22 @@
         $('.wl-sheet-tip').hidden = pageMode() || !all.length || !tipApplies();
     }
 
+    // Laptops, on request (the › beside the title, remembered on the device): each row shows how the movie stands with
+    // the filters that are set (index.html's filterLabels). Labels only inform; they aren't buttons.
+    const labelsOpen = () => pageMode() && prefs.labels && !looking && typeof filterLabels === 'function';
+
+    function labelsHTML(fit) {
+        if (!fit) return '';
+        return `<span class="wl-labels">${fit.labels.map(l => `<span class="wl-label wl-label-${esc(l.tone)}" title="${esc(l.why)}">${esc(l.text)}</span>`).join('')}</span>`;
+    }
+
     function rowHTML(item) {
         const m = movieFor(item.id);
         const title = esc(m.title);
+        const fit = labelsOpen() ? filterLabels(item.id) : null;
+        const cert = fit?.certHidden
+            ? `<span class="wl-cert wl-cert-off" title="Your Content Ratings hide ${esc(m.cert)}">${esc(m.cert)}</span>`
+            : `<span class="wl-cert">${esc(m.cert)}</span>`;
         return `<li class="wl-row${item.watched ? ' wl-row-watched' : ''}" data-id="${item.id}">
             <button type="button" class="wl-row-delete" tabindex="-1" aria-hidden="true">${icon('trash', 16)}Remove</button>
             <div class="wl-row-main">
@@ -1027,10 +1113,11 @@
                     ${m.poster ? `<img src="${esc(posterAt(m.poster, 'w185'))}" alt="" loading="lazy" decoding="async" draggable="false">` : '<span class="wl-noposter"></span>'}
                     <span class="wl-text">
                         <span class="wl-name">${title} <span class="wl-year">(${yearOf(m)})</span></span>
-                        <span class="wl-meta"><span class="wl-cert">${esc(m.cert)}</span><span class="wl-rating">${ratingOf(m)}</span></span>
+                        <span class="wl-meta">${cert}<span class="wl-rating">${ratingOf(m)}</span></span>
                         <span class="wl-overview">${esc(m.overview)}</span>
                     </span>
                 </a>
+                ${labelsHTML(fit)}
                 <button type="button" class="wl-x" aria-label="Remove ${title} from My Watchlist">${icon('x', 15, { stroke: 2.5 })}</button>
                 <button type="button" class="wl-grip" aria-label="Move ${title}" aria-describedby="wl-grip-help">${icon('grip', 20, { fill: 'currentColor', stroke: 0 })}</button>
             </div>
@@ -1061,12 +1148,27 @@
         if (action === 'look-hide') return toggleLookHideWatched();
         if (action === 'add-rest') return addAllFromLook();
         if (action === 'add-one') return addOneFromLook(e.target.closest('.wl-row').dataset.id);
+        if (action === 'labels') return toggleLabels();
         const row = e.target.closest('.wl-row');
+        // A row's poster, title or description opens the movie preview, as a card does in the results; with Cmd, Ctrl,
+        // Shift or Alt it's a plain link to TMDB, as links are. A row swiped open just closes.
+        if (row && e.target.closest('.wl-info') && !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)) {
+            e.preventDefault();
+            if (row.classList.contains('wl-open')) return closeOpenRow();
+            if (!row.classList.contains('wl-removing')) openPeek(row.dataset.id);
+            return;
+        }
         if (looking || !row || row.classList.contains('wl-removing')) return;
         const id = row.dataset.id;
         if (e.target.closest('.wl-tick')) setWatched(id, !itemFor(id)?.watched);
         else if (e.target.closest('.wl-x')) remove(id);
         else if (e.target.closest('.wl-row-delete')) removeRow(row);
+    }
+
+    function toggleLabels() {
+        prefs.labels = !prefs.labels;
+        savePrefs();
+        renderView();
     }
 
     function toggleHideWatched() {
@@ -1280,7 +1382,7 @@
     function askToClear() {
         const n = shownItems().length;
         confirmLayer.panel.innerHTML = `<h3 id="wl-confirm-title" class="wl-card-title" tabindex="-1">Clear My Watchlist?</h3>
-            <p class="wl-card-text">This takes ${n === 1 ? 'the one movie' : `all ${n} movies`} off ${onPhone() ? 'this phone' : 'this browser'}’s list. Save a copy first if you might want it back later.</p>
+            <p class="wl-card-text">This takes ${n === 1 ? 'the one movie' : `all ${n} movies`} off ${onPhone() ? 'this phone' : 'this browser'}’s list. Watched marks stay. Save a copy first if you might want the list back later.</p>
             <button type="button" class="wl-btn wl-btn-soft" data-confirm="save">Save a copy first</button>
             <button type="button" class="wl-btn wl-btn-red" data-confirm="clear">Clear list</button>
             <button type="button" class="wl-btn wl-btn-plain" data-confirm="cancel">Cancel</button>`;
@@ -1293,6 +1395,7 @@
     function clearList() {
         const cleared = items;
         items = [];
+        cleared.forEach(item => { if (item.watched) offList.add(item.id); }); // watched marks stay as they are
         changed();
         const results = document.getElementById('results-pane');
         if (results) {
@@ -1301,7 +1404,9 @@
         }
         closeView();
         offerUndo('Cleared My Watchlist', () => {
+            cleared.forEach(item => { item.watched = false; }); // their marks are kept apart now, and come back from there
             items = cleanItems([...cleared, ...items]); // anything added since stays too
+            foldWatched();
             changed();
         });
     }
@@ -1312,11 +1417,13 @@
     //     watchlist=1  the format's version. Links keep opening forever; a different kind of link gets a new number.
     //     made         when the copy was made: ISO 8601 in UTC, to the minute, with the Z
     //     m            the movies in the list's order, by TMDB id; a trailing w marks one watched
+    //     seen         movies marked watched that aren't on the list (added Nov 2026). They matter only when the copy
+    //                  restores onto an empty list (your own backup, say); adding from a copy never changes marks.
     // Read with URLSearchParams, so more keys can be added later without a new version; readers ignore keys
     // they don't know, and a missing or garbled made just means no date. (The list kept in the address is the
     // same format plus backup=1; see "The list in the address".)
     function savedCopyURL(made) {
-        return `${location.origin}${location.pathname}#watchlist=1&made=${minuteISO(made)}&m=${movieList()}`;
+        return `${location.origin}${location.pathname}#watchlist=1&made=${minuteISO(made)}&m=${movieList()}${seenPart()}`;
     }
 
     // "Sun, Nov 9 at 2:41 PM" in the viewer's own time zone and language, with the year when it isn't this one
@@ -1386,7 +1493,7 @@
         const version = params.get('watchlist');
         if (version === '') return { open: true };
         if (version !== '1') return { unreadable: true };
-        const copy = { items: parseMovies(params.get('m')), made: parseMade(params.get('made')) };
+        const copy = { items: parseMovies(params.get('m')), seen: cleanIds((params.get('seen') || '').split(',')), made: parseMade(params.get('made')) };
         if (params.get('backup') === '1') return { backup: true, open: params.get('open') === '1', copy };
         return copy.items.length ? { copy } : { unreadable: true };
     }
@@ -1451,7 +1558,7 @@
         if (link?.unreadable) return; // nothing this version can use: ignore it, and leave it in the address
         // The list in the address comes back only on arrival (so going Back to an older address can't undo a
         // Clear list) and only onto an empty list
-        if ((link?.backup || launchSnapshot) && arriving && !shownItems().length && link.copy.items.length) {
+        if ((link?.backup || launchSnapshot) && arriving && !shownItems().length && (link.copy.items.length || link.copy.seen.size)) {
             restoreBackup(link.copy);
         }
         // A Home Screen app always launches from the address it was added with; open=1 there would reopen My
@@ -1478,6 +1585,8 @@
     // doesn't have, kept out of sight as usual)
     function restoreCopy(copy) {
         items = cleanItems([...copy.items, ...items]);
+        copy.seen.forEach(id => { if (offList.size < MAX_MOVIES) offList.add(id); });
+        foldWatched();
         persistStorage();
         setAddress(ownHash());
         changed();
@@ -1497,6 +1606,7 @@
         if (!fresh.length) return 0;
         if (!items.length) persistStorage();
         items = cleanItems([...items, ...fresh]);
+        foldWatched(); // a movie the user had already marked watched keeps its mark
         changed();
         return fresh.length;
     }
@@ -1792,7 +1902,10 @@
         #wl-peek.wl-shown .wl-peek-sheet { transform: none; }
         .wl-peek-sheet .wl-grabber { margin-bottom: 16px; }
         .wl-peek-top { display: flex; gap: 14px; align-items: flex-start; }
-        .wl-peek-top img, .wl-peek-top .wl-noposter { flex: none; width: 86px; height: 129px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 12px rgba(15,23,42,0.25); }
+        /* The poster box holds the image and the Watched ribbon; the box has the size, corners and shadow */
+        .wl-peek-poster { flex: none; position: relative; overflow: hidden; container-type: inline-size; width: 86px; height: 129px; border-radius: 8px; box-shadow: 0 4px 12px rgba(15,23,42,0.25); }
+        .wl-peek-poster img, .wl-peek-poster .wl-noposter { display: block; width: 100%; height: 100%; object-fit: cover; }
+        .wl-peek-watched .wl-ribbon { display: block; }
         .wl-peek-text { min-width: 0; }
         .wl-peek-status { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 6px; color: #2563eb; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; }
         .wl-peek-text h3 { margin: 0; font-size: 18px; font-weight: 800; line-height: 1.2; color: #0f172a; }
@@ -1805,14 +1918,16 @@
         /* The rating opens TMDB, with no hint beyond the pointer and an underline on hover (the owner's call, Nov 11) */
         .wl-rating-link { text-decoration: none; cursor: pointer; }
         .wl-rating-link:hover { text-decoration: underline; }
-        /* Half a button (23px) further from the description than before, now that More on TMDB is gone */
-        .wl-peek-add { margin-top: 41px; box-shadow: 0 6px 16px -6px rgba(37,99,235,0.6); }
-        .wl-peek-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 41px; }
+        /* The list button over the watched button. Half a button (23px) further from the description than before More
+           on TMDB went. */
+        .wl-peek-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 41px; }
+        .wl-peek-add { box-shadow: 0 6px 16px -6px rgba(37,99,235,0.6); }
+        .wl-peek-stack svg { flex: none; }
         @media (orientation: landscape) and (max-height: 500px) {
             .wl-peek-sheet { padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
-            .wl-peek-top img, .wl-peek-top .wl-noposter { width: 64px; height: 96px; }
+            .wl-peek-poster { width: 64px; height: 96px; }
             .wl-peek-overview { -webkit-line-clamp: 3; }
-            .wl-peek-add, .wl-peek-pair { margin-top: 35px; }
+            .wl-peek-stack { margin-top: 35px; }
         }
         /* Why it matches the search: a line under Rating and Score, and the matched words highlighted in the description */
         .wl-why-box { margin: 8px 0 0; font-size: 12px; line-height: 1.3; color: #475569; }
@@ -1840,16 +1955,16 @@
             #wl-peek.wl-shown .wl-peek-sheet { transform: translate(-50%, -50%); opacity: 1; }
             .wl-peek-sheet .wl-grabber { display: none; }
             .wl-peek-top { display: contents; }
-            .wl-peek-top img, .wl-peek-top .wl-noposter { grid-column: 1; grid-row: 1 / span 2; width: 240px; height: 360px; border-radius: 10px; box-shadow: 0 6px 18px rgba(15,23,42,0.25); }
+            .wl-peek-poster { grid-column: 1; grid-row: 1 / span 2; width: 240px; height: 360px; border-radius: 10px; box-shadow: 0 6px 18px rgba(15,23,42,0.25); }
             .wl-peek-text { grid-column: 2; grid-row: 1; padding-right: 28px; }
             .wl-peek-text h3 { font-size: 24px; }
             .wl-peek-text .wl-meta { margin-top: 8px; }
             .wl-peek-text .wl-rating { font-size: 12px; }
             .wl-why-box { margin-top: 10px; font-size: 13px; }
             .wl-peek-overview { display: block; -webkit-line-clamp: none; margin-top: 12px; font-size: 14px; line-height: 1.55; }
-            /* Add (or Watched it and Remove), 280px wide, centered in the space beside the poster */
+            /* The two buttons, 280px wide, centered in the space beside the poster */
             .wl-peek-actions { grid-column: 2; grid-row: 2; justify-self: center; display: flex; flex-direction: column; gap: 10px; width: min(280px, 100%); margin-top: 20px; }
-            .wl-peek-actions .wl-peek-add, .wl-peek-actions .wl-peek-pair { margin-top: 0; }
+            .wl-peek-actions .wl-peek-stack { margin-top: 0; }
             .wl-peek-close {
                 display: flex; position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; align-items: center; justify-content: center;
                 border: 0; border-radius: 999px; background: #f1f5f9; color: #475569; cursor: pointer;
@@ -1942,7 +2057,7 @@
         @media (orientation: landscape) and (max-height: 500px) { .wl-panel { top: 8px; } }
         .wl-head { flex: none; padding: 8px 16px 10px; border-bottom: 1px solid #e2e8f0; touch-action: none; -webkit-user-select: none; user-select: none; }
         .wl-head .wl-grabber { margin-bottom: 8px; }
-        .wl-back, .wl-hint, .wl-credit { display: none; }
+        .wl-back, .wl-hint, .wl-credit, .wl-labels, .wl-labels-toggle { display: none; }
         .wl-titlebar { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; }
         .wl-title-icon { display: flex; color: #2563eb; }
         .wl-titlebar h2 { flex: 1; margin: 0; font-size: 20px; font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase; color: #0f172a; }
@@ -2066,10 +2181,18 @@
                 font: inherit; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
             }
             .wl-back:hover { color: #2563eb; }
-            .wl-titlebar { flex-wrap: nowrap; align-items: baseline; gap: 16px; max-width: 860px; margin-top: 12px; padding-bottom: 14px; border-bottom: 1px solid #e2e8f0; }
+            .wl-titlebar { flex-wrap: wrap; align-items: baseline; column-gap: 16px; max-width: 860px; margin-top: 12px; padding-bottom: 14px; border-bottom: 1px solid #e2e8f0; }
             .wl-titlebar h2 { flex: none; font-size: 28px; }
             .wl-summary { flex-basis: auto; margin: 0; }
-            .wl-hint { display: block; margin-left: auto; font-size: 10px; font-style: italic; color: #94a3b8; white-space: nowrap; }
+            /* The hint sits on its own line under the title, by the circles it talks about; the › for the labels takes
+               the right end of the title's line */
+            .wl-hint { display: block; order: 99; flex-basis: 100%; margin: 6px 0 0; font-size: 10px; font-style: italic; color: #94a3b8; white-space: nowrap; }
+            .wl-labels-toggle {
+                display: flex; flex: none; align-self: center; margin-left: auto; width: 34px; height: 34px; padding: 0; align-items: center; justify-content: center;
+                border: 1px solid #e2e8f0; border-radius: 10px; background: #ffffff; color: #64748b; cursor: pointer;
+            }
+            .wl-labels-toggle:hover { border-color: #cbd5e1; color: #334155; }
+            #wl-view.wl-looking .wl-labels-toggle { display: none; }
             .wl-scroll { max-width: 860px; overflow: visible; padding: 0; }
             .wl-row { background: none; }
             .wl-row-main { gap: 16px; padding: 12px 0; background: none; touch-action: auto; }
@@ -2090,6 +2213,20 @@
                 background: linear-gradient(rgba(248,250,252,0), #f8fafc 30%);
             }
             .wl-onlist, .wl-addone { margin-right: 0; }
+            /* The labels: how each movie stands with the filters, pale like the chips above the results. The list widens
+               to make room, so the descriptions keep their width. */
+            #wl-view.wl-labels-on .wl-titlebar, #wl-view.wl-labels-on .wl-scroll { max-width: 1130px; }
+            .wl-labels { display: flex; flex: none; flex-wrap: wrap; align-content: center; gap: 5px; width: 230px; }
+            .wl-label {
+                padding: 2px 7px; border: 1px solid; border-radius: 6px; font-size: 9.5px; font-weight: 800; line-height: 1.5;
+                letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
+            }
+            .wl-label-green { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+            .wl-label-amber { background: #fffbeb; border-color: #fde68a; color: #b45309; }
+            .wl-label-red { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
+            .wl-label-blue { background: #eff6ff; border-color: #bfdbfe; color: #2563eb; }
+            .wl-row-watched .wl-labels { opacity: 0.5; }
+            .wl-cert.wl-cert-off { color: #b45309; border-color: #fde68a; background: #fffbeb; }
         }
 
         /* ----- Cards over the page: Clear list, and a saved list opening ----- */
@@ -2136,7 +2273,7 @@
         if (started) return;
         started = true;
         reloadList(); // another tab may have changed it while the page's data loaded
-        if (!shownItems().length) resetFilters();
+        if (!hasMarks()) resetFilters();
         shownCount = shownItems().length; // no bounce for the count the page opens with
         if (items.length && !listMade) { // a list saved before it kept a time: date it now, once
             listMade = new Date();
@@ -2159,7 +2296,9 @@
         // Hooks for index.html
         filter, addPills, hasActiveFilters, clearFilters,
         // For the console and tests
-        add, remove, toggle, setWatched, reorder, clear: clearList, peek: openPeek, open: showMyWatchlist, close: () => closeView(),
+        add, remove, toggle, setWatched, isWatched, reorder, clear: clearList, peek: openPeek, open: showMyWatchlist, close: () => closeView(),
         items: () => items.map(item => ({ ...item })),
+        watchedOffList: () => [...offList],
+        isOpen: () => viewOpen, // index.html: the site's name closes My Watchlist
     };
 })();
