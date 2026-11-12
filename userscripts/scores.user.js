@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Season's Screenings: IMDb and Rotten Tomatoes scores
 // @namespace    https://brianmcentire.github.io/holiday-movie-picker/
-// @version      2.3
-// @description  Adds IMDb, the Tomatometer and the Popcornmeter after the rating in the movie preview, from MDBList.
+// @version      2.4
+// @description  Adds IMDb, the Tomatometer and the Popcornmeter after the rating in the movie preview and on My Watchlist's rows, from MDBList.
 // @match        https://brianmcentire.github.io/holiday-movie-picker/*
 // @match        http://localhost:8000/*
 // @grant        GM_xmlhttpRequest
@@ -261,7 +261,40 @@
         scoresFor(id).then(s => { if (box.isConnected) show(box, s); });
     }
 
+    // My Watchlist's rows (2.4): the same scores after each row's rating, from the file only, so a long list never
+    // sends a burst of requests to MDBList (the preview still asks it for a film the file lacks). Plain text here:
+    // the row itself is the link that opens the preview, and that has the linked scores. On a narrow phone row they
+    // wrap under the rating.
+    const ROW_GAP = matchMedia('(min-width: 1024px)'); // the laptop page; the phone and tablet sheet is narrower
+    function fillRows() {
+        const rows = document.querySelectorAll('#wl-view .wl-row[data-id]');
+        if (!rows.length) return;
+        loadFile().then(file => {
+            if (!file) return;
+            for (const row of rows) {
+                const meta = row.querySelector('.wl-meta');
+                const id = row.dataset.id;
+                if (!meta || meta.querySelector(`.ss-scores[data-id="${id}"]`)) continue;
+                const s = fromFile(file, id);
+                if (!hasScores(s)) continue;
+                const box = document.createElement('span');
+                box.className = 'ss-scores';
+                box.dataset.id = id;
+                const gap = ROW_GAP.matches ? 12 : 8;
+                box.style.cssText = `display: inline-flex; align-items: center; gap: ${gap}px; margin-left: ${gap - SITE_GAP}px; white-space: nowrap;`;
+                const by = s.when ? `MDBList, ${s.when}` : 'MDBList';
+                if (s.imdb) box.append(part('', `IMDb ${s.imdb.toFixed(1)}`, null, `IMDb rating · ${by}`));
+                if (s.tomatoes) box.append(part('🍅', `${s.tomatoes}%`, null, `Tomatometer · ${by}`));
+                if (s.popcorn) box.append(part('🍿', `${s.popcorn}%`, null, `Popcornmeter · ${by}`));
+                meta.style.flexWrap = 'wrap';
+                meta.style.rowGap = '2px';
+                meta.append(box);
+            }
+        });
+    }
+
     loadFile(); // fetched as the page loads, so even the first preview is instant
-    new MutationObserver(fill).observe(document.body, { childList: true, subtree: true });
+    new MutationObserver(() => { fill(); fillRows(); }).observe(document.body, { childList: true, subtree: true });
     fill();
+    fillRows();
 })();
