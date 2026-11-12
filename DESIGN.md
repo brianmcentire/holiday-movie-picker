@@ -128,7 +128,7 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - **The movie preview (the peek):** a tap or click anywhere on a card opens it (poster, title or description), and so does Enter on a card. It has the poster, the basics and the overview, plus:
   - **Two buttons, stacked, the same two places for every movie** (Nov 11): on top the list, **Add to My Watchlist** (blue) or, on the list, **Remove from My Watchlist** (white); under it **Mark watched** (white, with a plain check) or, once watched, **Unmark watched** (no icon). Why: the old side-by-side "Watched it" and "Remove" read oddly next to Add elsewhere, and "Remove" was unclear out of context. The eye icon is kept for the "more match, hidden by" note, so it isn't used here. Marking watched adds no icon or click target to the posters in the results.
   - **A line above the title** says "On My Watchlist", "On My Watchlist · Watched" or "Watched";
-  - **the rating opens TMDB.** "6.7/10" is TMDB's score, so tapping or clicking it opens the film on TMDB in a new tab, and the preview stays open. There's no hint beyond a pointer and an underline on hover. The owner's browser script makes its IMDb and Rotten Tomatoes scores work the same way.
+  - **the rating opens TMDB.** "6.7/10" is TMDB's score, so tapping or clicking it opens the film on TMDB in a new tab, and the preview stays open. There's no hint beyond a pointer and an underline on hover. The IMDb and Rotten Tomatoes scores after it work the same way (see "IMDb and Rotten Tomatoes scores").
 
   Why: an empty bookmark on every tile was clutter. Tapping a poster is what everyone does anyway, and phone tiles hide the overview, so the peek gives something back. The cost is one extra tap to reach TMDB.
   - **More on TMDB was removed** on Nov 11 (the owner's call: the buttons for TMDB, IMDb and Rotten Tomatoes all looked cluttered). Add moved half a button (23px) further from the description on phones: 41px, and 35px on a phone turned sideways. On laptops, the panel shares out the room the button left, so Add moved down about 28px for most films. Films whose long description fills the panel keep 20px.
@@ -267,9 +267,18 @@ While searching, the preview says why the movie is in the results. The result ca
 
 - Notes that are sentences or instructions stay on screen twice as long as the short "Removed X · Undo" ones, and have an × to close them early.
 
-## Outside scores (the owner's browser script)
+## IMDb and Rotten Tomatoes scores
 
-- **`scores.json` is for the owner's Tampermonkey script, not the site.** The page never loads it, so other visitors see and download nothing new. It's public in the repo and at the site's address, though, and holds IMDb and Rotten Tomatoes numbers that MDBList gathers. *The owner accepted that gray area on Nov 11: it's quiet, not private.*
+- **The site shows them** (the owner, Nov 12, reversing Nov 11's "for the owner's script only": no one else was using the script, and Tampermonkey on an iPhone was a hassle). `SHOW_EXTRA_SCORES` at the top of the scores section in `watchlist.js` switches them; set to false, the page never loads `scores.json` and the owner's browser script shows them instead. The owner would switch it off if anyone objected.
+  - *The file was always public, in the repo and at the site's address ("quiet, not private", the owner accepted on Nov 11). What changed is that the page now displays IMDb and Rotten Tomatoes numbers.*
+  - *Encrypting the file was asked about and ruled out: whatever the browser can decrypt, anyone can, since the key would ship with the page.*
+- **In the preview:** "IMDb 7.1 🍅 85% 🍿 79%" after the TMDB rating, the look the owner picked for the script (emoji, option A on the canvas's Round 10). The IMDb score opens IMDb, and 🍅 and 🍿 open Rotten Tomatoes, in a new tab, with the preview left open, like the TMDB rating. Without a known address a score is plain text.
+  - Spacing, as the script had it: 14px apart on the laptop panel when the line fits, else 12; 12px on phones, else 8. When even 8px doesn't fit, the scores move together onto their own line under the rating (often, on a 320px phone; on none of the sample at 375px and up); a score is never split.
+- **On My Watchlist's rows** (and a shared list's, when just looking): the same, as plain text, since the row opens the preview. 8px apart on the phone sheet, 12px on the laptop page; they wrap under the rating on a narrow row.
+- **Hovering a score gives only its date,** "updated Nov 11" (the owner: no source name). **No credit line** for MDBList (the owner's call).
+- **A score with no valid number shows nothing,** no icon; a film with none shows nothing after the rating (12 films on Nov 12). Screen readers hear "Tomatometer 85%" and "Popcornmeter 79%" for the emoji.
+- **Loading:** the file (26 KB compressed) is fetched once the movie data is in, so the first preview usually has its scores at once. A preview opened before then holds an empty place and fills in when it arrives.
+- **With the owner's script on too, nothing shows twice.** The page marks its scores the way the script marks its own (a `.ss-scores` box with the film's id), and the script leaves a film alone when that's there. A film with no scores in the file gets no box, so the script asks MDBList live with the owner's key, for the owner only. The empty place a preview holds before the file arrives keeps the script out until the page decides. Tested both on, with either file arriving first.
 - **Where the numbers come from:** [MDBList](https://mdblist.com), a free hobby service, with the owner's own key (`MDBLIST_API_KEY`). Per film:
   - the IMDb rating (out of 10), the Tomatometer and the Popcornmeter (percents);
   - the IMDb id and the Rotten Tomatoes address;
@@ -289,7 +298,7 @@ While searching, the preview says why the movie is in the results. The result ca
 - **It runs every Monday after the movie data,** as its own step that can't stop the data from publishing. `make scores` runs it by hand.
 - **MDBList fills gaps lazily.** On Nov 11 a first request for It's a Wonderful Life had no RT scores; the full run minutes later had 94% and 95%. Some well-known films (The Grinch, Red One, Violent Night) still had no Tomatometer, and may fill in on a later run.
 - **MDBList can also wipe scores it had.** When it refreshes a film and fails to read Rotten Tomatoes, it saves blanks over the old numbers: It's a Wonderful Life lost both scores and its RT address at 19:25 UTC on Nov 11 (its "updated" time). Popular films refresh most often, so they're hit most. Keeping old values covers it.
-- **The script** (`userscripts/scores.user.js`) adds "IMDb 7.1 🍅 85% 🍿 79%" after the rating in the preview (the owner picked emoji, option A on the canvas's Round 10).
+- **The script** (`userscripts/scores.user.js`) adds "IMDb 7.1 🍅 85% 🍿 79%" after the rating in the preview (the owner picked emoji, option A on the canvas's Round 10). With the site's scores on, it only fills the films the site has none for (above); with them off, it does everything below.
   - It reads `scores.json` once per page, so scores show at once. It asks MDBList live only for a film missing from the file, or when the file can't be read, and only with a key set. A gap in the file isn't filled live, since the file came from MDBList anyway.
   - A score with no valid number shows nothing, no icon. With nothing valid, nothing shows at all.
   - The IMDb score opens IMDb, and 🍅 and 🍿 open Rotten Tomatoes, in a new tab, when the file has the address. Otherwise they're plain text.

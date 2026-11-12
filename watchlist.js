@@ -12,7 +12,8 @@
 //   watchlistPrefs  {"v":1,...}  the two filter pills, Hide watched, the labels on the laptop list, and the Home
 //                   Screen tip
 // Titles, posters and the rest come from the page's own data (db.movies). Ids the data doesn't have are kept but
-// not shown, so a movie that drops out of the data comes back if it returns.
+// not shown, so a movie that drops out of the data comes back if it returns. IMDb and Rotten Tomatoes scores come
+// from scores.json (see SHOW_EXTRA_SCORES).
 //
 // It also keeps a copy of the list in the address (see "The list in the address" below), because storage doesn't
 // always follow the user: an iPhone Home Screen app starts with its own, empty storage, and so does a private
@@ -550,6 +551,102 @@
         });
     }
 
+    // ---------- IMDb and Rotten Tomatoes scores, from scores.json ----------
+    // The weekly data build fetches each film's IMDb rating, Tomatometer and Popcornmeter from MDBList into
+    // scores.json. The preview shows "IMDb 7.1 🍅 85% 🍿 79%" after the TMDB rating, the IMDb score opening IMDb and
+    // 🍅 and 🍿 opening Rotten Tomatoes in a new tab; My Watchlist's rows show the same after theirs, as plain text
+    // (the row opens the preview). Hovering one gives the date it was fetched. A film without scores shows none.
+    // Off (false), the page never loads scores.json, and the owner's browser script (userscripts/scores.user.js)
+    // shows them instead. Both on, they never double up: the page's scores use the script's markup (.ss-scores
+    // with the film's data-id), which the script leaves alone, and a film with no scores here gets no box, so the
+    // script can ask MDBList for it with its own key.
+    const SHOW_EXTRA_SCORES = true;
+    let scoreFile = null; // the file once loaded; { movies: {} } if it couldn't be
+    let scoreLoad = null;
+
+    // Fetched once the page has its movie data, so the first preview usually has them at once
+    function loadScores() {
+        if (!SHOW_EXTRA_SCORES || scoreLoad) return;
+        scoreLoad = fetch('scores.json').then(r => (r.ok ? r.json() : null)).catch(() => null).then(data => {
+            scoreFile = data?.v === 1 && data.movies && typeof data.movies === 'object' ? data : { movies: {} };
+            scoresArrived();
+        });
+    }
+
+    // "2026-11-11" → "Nov 11"
+    function shortDate(v) {
+        if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
+        const d = new Date(`${v}T00:00:00Z`);
+        return isNaN(d) ? null : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+    }
+
+    // A film's scores, or null. Only real numbers count; links only from a well-formed IMDb id or RT address.
+    function scoresOf(id) {
+        const raw = scoreFile && Object.prototype.hasOwnProperty.call(scoreFile.movies, id) ? scoreFile.movies[id] : null;
+        if (!raw || typeof raw !== 'object') return null;
+        const num = (v, low, high) => (typeof v === 'number' && v >= low && v <= high ? v : null);
+        const s = {
+            imdb: num(raw.imdb, 1, 10), tomatoes: num(raw.tomatoes, 1, 100), popcorn: num(raw.popcorn, 1, 100),
+            imdbPage: /^tt\d+$/.test(raw.imdb_id) ? `https://www.imdb.com/title/${raw.imdb_id}/` : null,
+            rtPage: /^m\/[a-z0-9_-]+$/.test(raw.rt) ? `https://www.rottentomatoes.com/${raw.rt}` : null,
+            when: shortDate(raw.at) || shortDate(scoreFile.updated),
+        };
+        return s.imdb || s.tomatoes || s.popcorn ? s : null;
+    }
+
+    // Each score styled like the TMDB rating before it, the emoji upright beside the italic numbers
+    function scoresHTML(id, links) {
+        const s = scoresOf(id);
+        if (!s) return '';
+        const title = s.when ? ` title="updated ${s.when}"` : '';
+        const part = (emoji, text, href, label) => {
+            const inner = `${emoji ? `<span class="ss-emoji">${emoji}</span>` : ''}${text}`;
+            return links && href
+                ? `<a class="wl-rating ss-part ss-link" href="${esc(href)}" target="_blank" rel="noopener" draggable="false" aria-label="${label}"${title}>${inner}</a>`
+                : `<span class="wl-rating ss-part"${title}>${inner}</span>`;
+        };
+        const imdb = s.imdb && `IMDb ${s.imdb.toFixed(1)}`, tomatoes = s.tomatoes && `${Math.round(s.tomatoes)}%`, popcorn = s.popcorn && `${Math.round(s.popcorn)}%`;
+        return `<span class="ss-scores" data-id="${id}" data-site>${
+            (imdb ? part('', imdb, s.imdbPage, imdb) : '')
+            + (tomatoes ? part('🍅', tomatoes, s.rtPage, `Tomatometer ${tomatoes}`) : '')
+            + (popcorn ? part('🍿', popcorn, s.rtPage, `Popcornmeter ${popcorn}`) : '')}</span>`;
+    }
+
+    // The preview's: before the file arrives, an empty box holds the place (and keeps the script out)
+    const peekScoresHTML = id => (!SHOW_EXTRA_SCORES ? '' : scoreFile ? scoresHTML(id, true) : `<span class="ss-scores" data-id="${id}" data-site></span>`);
+
+    function scoresArrived() {
+        const box = peek?.panel.querySelector('.ss-scores[data-site]:empty');
+        if (box) {
+            const html = scoresHTML(box.dataset.id, true);
+            if (html) { box.outerHTML = html; fitScores(); } else box.remove();
+        }
+        // Rows drawn before the file came; any with the script's scores already keep them
+        view?.el.querySelectorAll('.wl-row[data-id] .wl-meta').forEach(meta => {
+            if (!meta.querySelector('.ss-scores')) meta.insertAdjacentHTML('beforeend', scoresHTML(meta.closest('.wl-row').dataset.id, false));
+        });
+    }
+
+    // The preview's spacing between the scores (the TMDB rating included): roomy on the laptop panel (14px, else 12),
+    // 12px on a phone when the whole line fits, else the site's own 8px. When even 8px doesn't fit (narrow phones),
+    // the scores move together onto their own line under the rating, rather than running off the edge. A score is
+    // never split. Measured by overflow, so the panel's opening zoom doesn't matter.
+    function fitScores() {
+        const box = peek?.panel.querySelector('.ss-scores[data-site]');
+        if (!box?.childElementCount || peek.el.hidden) return;
+        const meta = box.parentElement;
+        const tryGaps = ownLine => (peekAsPanel.matches ? [14, 12, 8] : [12, 8]).find(gap => {
+            box.style.gap = `${gap}px`;
+            box.style.marginLeft = ownLine ? '0' : `${gap - 8}px`; // .wl-meta's own gap is 8px
+            return meta.scrollWidth <= meta.clientWidth;
+        });
+        meta.style.flexWrap = '';
+        if (tryGaps(false) !== undefined) return;
+        meta.style.flexWrap = 'wrap';
+        meta.style.rowGap = '4px';
+        if (tryGaps(true) === undefined) { box.style.gap = '8px'; box.style.marginLeft = '0'; }
+    }
+
     // ---------- The peek (the movie preview): a click or tap on a poster ----------
     let peek;
     let peekId = null;
@@ -568,10 +665,11 @@
         peekId = id;
         renderPeek();
         openLayer(peek, peek.panel.querySelector('h3'));
+        fitScores();
         layoutWhy();
     }
-    // The reason lines are fitted to the preview's width, so fit them again when that changes
-    addEventListener('resize', () => { if (peek && !peek.el.hidden) layoutWhy(); });
+    // The scores and the reason lines are fitted to the preview's width, so fit them again when that changes
+    addEventListener('resize', () => { if (peek && !peek.el.hidden) { fitScores(); layoutWhy(); } });
 
     // Why the movie matches the search, in up to two lines under Rating and Score (from the page's searchReasons,
     // one reason for each run of words the movie matches):
@@ -698,7 +796,7 @@
                 <div class="wl-peek-text">
                     ${status}
                     <h3 id="wl-peek-title" tabindex="-1">${esc(m.title)} <span class="wl-year">(${yearOf(m)})</span></h3>
-                    <div class="wl-meta"><span class="wl-cert">${esc(m.cert)}</span><a class="wl-rating wl-rating-link" href="${tmdbURL(peekId)}" target="_blank" rel="noopener" draggable="false" aria-label="${ratingOf(m)} on TMDB">${ratingOf(m)}</a></div>
+                    <div class="wl-meta"><span class="wl-cert">${esc(m.cert)}</span><a class="wl-rating wl-rating-link" href="${tmdbURL(peekId)}" target="_blank" rel="noopener" draggable="false" aria-label="${ratingOf(m)} on TMDB">${ratingOf(m)}</a>${peekScoresHTML(peekId)}</div>
                     <div class="wl-why-box"></div>
                     <p class="wl-peek-overview">${marked(m.overview ?? '', descMarks, 'mark', 'wl-hit')}</p>
                 </div>
@@ -1117,7 +1215,7 @@
                     ${m.poster ? `<img src="${esc(posterAt(m.poster, 'w185'))}" alt="" loading="lazy" decoding="async" draggable="false">` : '<span class="wl-noposter"></span>'}
                     <span class="wl-text">
                         <span class="wl-name">${title} <span class="wl-year">(${yearOf(m)})</span></span>
-                        <span class="wl-meta">${cert}<span class="wl-rating">${ratingOf(m)}</span></span>
+                        <span class="wl-meta">${cert}<span class="wl-rating">${ratingOf(m)}</span>${scoresHTML(item.id, false)}</span>
                         <span class="wl-overview">${esc(m.overview)}</span>
                     </span>
                 </a>
@@ -1822,7 +1920,7 @@
                     ${m.poster ? `<img src="${esc(posterAt(m.poster, 'w185'))}" alt="" loading="lazy" decoding="async" draggable="false">` : '<span class="wl-noposter"></span>'}
                     <span class="wl-text">
                         <span class="wl-name">${title} <span class="wl-year">(${yearOf(m)})</span></span>
-                        <span class="wl-meta"><span class="wl-cert">${esc(m.cert)}</span><span class="wl-rating">${ratingOf(m)}</span></span>
+                        <span class="wl-meta"><span class="wl-cert">${esc(m.cert)}</span><span class="wl-rating">${ratingOf(m)}</span>${scoresHTML(item.id, false)}</span>
                         <span class="wl-overview">${esc(m.overview)}</span>
                     </span>
                 </a>
@@ -1996,6 +2094,15 @@
         /* The rating opens TMDB, with no hint beyond the pointer and an underline on hover (the owner's call, Nov 11) */
         .wl-rating-link { text-decoration: none; cursor: pointer; }
         .wl-rating-link:hover { text-decoration: underline; }
+        /* IMDb and Rotten Tomatoes scores after the rating: 8px apart on the sheet's rows, 12px on the laptop page's;
+           the preview's spacing is set by fitScores */
+        .ss-scores { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .ss-scores:empty { display: none; }
+        .ss-part { display: inline-flex; align-items: center; gap: 3px; }
+        .ss-emoji { font-style: normal; font-size: 1.1em; line-height: 1; }
+        a.ss-link { text-decoration: none; cursor: pointer; }
+        a.ss-link:hover, a.ss-link:focus-visible { text-decoration: underline; }
+        @media (min-width: 1024px) { .wl-row .ss-scores { gap: 12px; margin-left: 4px; } }
         /* The list button over the watched button. Half a button (23px) further from the description than before More
            on TMDB went. */
         .wl-peek-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 41px; }
@@ -2176,7 +2283,7 @@
         .wl-info img, .wl-info .wl-noposter { flex: none; width: 40px; height: 60px; object-fit: cover; border-radius: 6px; background: #f1f5f9; }
         .wl-text { display: block; min-width: 0; }
         .wl-name { display: block; font-size: 13px; font-weight: 700; line-height: 1.25; color: #1e293b; }
-        .wl-text .wl-meta { display: flex; }
+        .wl-text .wl-meta { display: flex; flex-wrap: wrap; row-gap: 2px; } /* the scores wrap under the rating on a narrow row */
         .wl-overview { display: none; }
         .wl-x {
             flex: none; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;
@@ -2391,6 +2498,7 @@
         buildMergeCard();
         watchGrid();
         refreshChrome();
+        loadScores();
         addEventListener('hashchange', () => route());
         queueMicrotask(() => route(true)); // once this first updateResults is done
     }

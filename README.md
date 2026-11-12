@@ -12,7 +12,7 @@ A curated holiday movie discovery engine built with a high-concurrency Python AP
 * **Musical pill:** `musical_classifier.py` asks Claude which films are musicals or music shows (see below).
 * **Watch list:** `watchlist.js` adds a personal list (bookmark movies, mark them watched, reorder, share a copy), stored on the device with no accounts or servers. It's a separate module: removing it means deleting the file, its `<script>` tag and the lines in `index.html` marked `watch list hook`.
 * **Usage stats:** `analytics.js` counts visits and shared links with GoatCounter; it's also separate and removable.
-* **Outside scores (personal):** `scores-builder.py` fetches IMDb and Rotten Tomatoes scores from MDBList into `scores.json`, for the owner's Tampermonkey script in `userscripts/`. The site itself never loads it (see below).
+* **IMDb and Rotten Tomatoes scores:** `scores-builder.py` fetches them from MDBList into `scores.json`, and the movie preview and My Watchlist show them after the TMDB rating. The owner's Tampermonkey script in `userscripts/` can fill in films the file lacks (see below).
 * **Design decisions** and the reasons for them are in [DESIGN.md](DESIGN.md).
 
 ### Usage
@@ -51,13 +51,14 @@ If the classifier can't run (missing key, no credits, API trouble), the new movi
 2. Check that the Claude models named at the top of `holiday_classifier.py` and `musical_classifier.py` are still offered (Anthropic lists retirement dates under [model deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations)) and that the Anthropic account has credit. A retired model doesn't stop the movie data; the new films stay unsorted until its id is changed.
 3. Start one run from the Actions tab, or with `gh workflow run rebuild-data.yml`, and check that it finishes green.
 
-### Outside scores (personal)
-`scores.json` holds each film's IMDb rating, Tomatometer and Popcornmeter, plus its IMDb id and Rotten Tomatoes address, from [MDBList](https://mdblist.com). Only the Tampermonkey script in `userscripts/scores.user.js` reads it; the page doesn't load it.
+### IMDb and Rotten Tomatoes scores
+`scores.json` holds each film's IMDb rating, Tomatometer and Popcornmeter, plus its IMDb id and Rotten Tomatoes address, from [MDBList](https://mdblist.com). The page shows them after the TMDB rating in the movie preview, linked to IMDb and Rotten Tomatoes, and on My Watchlist's rows. To stop showing them, set `SHOW_EXTRA_SCORES = false` in `watchlist.js`; the page then never loads the file.
 
 * Needs a free MDBList API key (mdblist.com, Preferences, API) in `.env` as `MDBLIST_API_KEY=your_key`. Run `make scores` to refresh it by hand.
 * The Monday refresh runs it too, after the movie data, with the key from `gh secret set MDBLIST_API_KEY`. A problem with MDBList never stops the movie data from publishing.
 * A whole refresh takes about 23 requests (50 films each), paced 1.5 seconds apart, out of the free 1,000 a day.
 * If MDBList is down, refuses the key or leaves a score out, the scores from the last good run stay.
+* **The browser script (optional, personal):** with the page's scores on, it only fills in films the file has no scores for, asking MDBList live with your own key; with them off, it shows all the scores itself.
 * **Installing the script:** with Tampermonkey in Chrome, open https://raw.githubusercontent.com/brianmcentire/holiday-movie-picker/main/userscripts/scores.user.js and click Install. Tampermonkey then updates it by itself whenever a pushed version has a higher `@version` (it checks daily; Tampermonkey's menu has "Check for userscript updates" to check now).
 
 ### Future ideas

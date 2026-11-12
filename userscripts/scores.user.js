@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Season's Screenings: IMDb and Rotten Tomatoes scores
 // @namespace    https://brianmcentire.github.io/holiday-movie-picker/
-// @version      2.4
-// @description  Adds IMDb, the Tomatometer and the Popcornmeter after the rating in the movie preview and on My Watchlist's rows, from MDBList.
+// @version      2.5
+// @description  Adds IMDb, the Tomatometer and the Popcornmeter after the rating in the movie preview and on My Watchlist's rows, from MDBList. When the site shows its own scores, it fills in only the films the site has none for.
 // @match        https://brianmcentire.github.io/holiday-movie-picker/*
 // @match        http://localhost:8000/*
 // @grant        GM_xmlhttpRequest
@@ -17,9 +17,15 @@
 
 // Tampermonkey updates itself from GitHub, so raise @version with every change, or it won't notice.
 
+// The site shows these scores itself since Nov 12 (SHOW_EXTRA_SCORES in watchlist.js), in the markup this script
+// makes: a .ss-scores box with the film's data-id. This script leaves alone any film that already has one, so with
+// both on it only fills in the films the site has no scores for, asking MDBList with your key. With the site's
+// scores off, it shows them all.
+
 // Where the scores come from:
-// 1. scores.json, next to the site. The weekly data build fetches every film's scores from MDBList into it; the site
-//    itself never loads it. It's read once per page load, so every preview after that shows its scores instantly.
+// 1. scores.json, next to the site. The weekly data build fetches every film's scores from MDBList into it (the site
+//    reads it too, when its own scores are on). It's read once per page load, so every preview after that shows its
+//    scores instantly.
 //    Old scores are always shown; each score's tooltip says when it was fetched.
 // 2. MDBList directly, only for a film the file doesn't have scores for (one added since the last build), or when
 //    the file can't be read. That needs your MDBList key, which lives in Tampermonkey's storage, never in this file.
