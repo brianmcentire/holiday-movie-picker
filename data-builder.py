@@ -9,6 +9,7 @@ from datetime import date
 from pathlib import Path
 
 import holiday_classifier
+import musical_classifier
 
 # --- CONFIGURATION ---
 BASE_DIR = Path(__file__).resolve().parent
@@ -93,7 +94,6 @@ VIBE_TRIGGERS = {
     "miserable": "miser", "miserly": "miser", "scrooge": "miser", "grumpy": "miser",
     "slapstick": "slapstick comedy", "funny": "slapstick comedy", "goofy": "slapstick comedy",
     "romance": "romance", "romcom": "romance", "fall in love": "romance", "dating": "romance",
-    "musical": "musical", "singing": "musical", "songs": "musical",
     "supernatural": "supernatural", "ghost": "supernatural", "spirits": "supernatural",  # Not "spirit": it matches "Christmas spirit"
     "magic": "magic", "magical": "magic",
     
@@ -132,6 +132,11 @@ LEVEL_TAGS = {"about": "holiday story", "set_at": "holiday setting", "adjacent":
 
 # TMDB keywords that say nothing about the movie's content
 JUNK_TAGS = {"aftercreditsstinger", "duringcreditsstinger", "woman director", "holiday"}
+
+# The Musical pill (musical_classifier.py) replaces TMDB's patchy "musical" keyword and its "Music" genre. The
+# classifiers still see both; they just don't reach the page, so a search for "musical" finds the pill's films.
+REPLACED_TAGS = {"musical"}
+HINT_ONLY_GENRES = {"Music"}
 
 # The people search can find a film by (the page matches a surname, or a full name). For the 1,136 films of
 # Nov 2026, these came to about 8,500 names (7,000 of them actors), adding 78KB to the compressed download.
@@ -249,7 +254,7 @@ async def main():
         }
 
         # Vibes -> Lowercase
-        movie_vibes = {v.lower() for v in keywords} - JUNK_TAGS
+        movie_vibes = {v.lower() for v in keywords} - JUNK_TAGS - REPLACED_TAGS
         movie_vibes.add(cert.lower())
 
         overview_lower = m['overview'].lower()
@@ -258,7 +263,8 @@ async def main():
             if pattern.search(overview_lower): movie_vibes.add(vibe.lower())
 
         for v in movie_vibes: inverted_index[v].append(mid)
-        for g in genres: genre_index[g].append(mid)
+        for g in genres:
+            if g not in HINT_ONLY_GENRES: genre_index[g].append(mid)
         add_holiday_tag(mid, holiday_name)
         film_info[mid] = {"title": m['title'], "year": (m.get('release_date') or '')[:4] or "unknown",
                           "genres": genres, "keywords": keywords, "overview": m['overview']}
@@ -368,6 +374,12 @@ async def main():
                 if not index[tag]: del index[tag]
         if left_out:
             print(f"Left out {len(left_out)} films with no real holiday connection (see holiday_levels_review.md).", file=sys.stderr)
+
+        # The Musical pill, from the answers saved in musicals.json; new films join it once they're asked about
+        musical, unanswered = musical_classifier.pill_films(list(movie_metadata))
+        if musical: genre_index[musical_classifier.GENRE] = musical
+        if unanswered:
+            print(f"Musical pill: {musical_classifier.plural(unanswered, 'film')} with no answer yet (make musicals).", file=sys.stderr)
 
         # The page shows a quiet note when films are waiting for a holiday level or the data is stale
         status = {"built": date.today().isoformat(), "unsorted": unsorted}

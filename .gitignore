@@ -3,3 +3,4 @@
 __pycache__/
 .dev-server.pid
 .dev-server.log
+.musical-batches.json

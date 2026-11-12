@@ -9,6 +9,7 @@ A curated holiday movie discovery engine built with a high-concurrency Python AP
 * **Builder:** `data-builder.py` uses `asyncio` and `aiohttp` to fetch and normalize data from TMDB, including the actors, directors and writers that search can find each film by.
 * **Holiday levels:** `holiday_classifier.py` asks Claude how much the holiday matters to each film (see below).
 * **Frontend:** `index.html` is a standalone static site that filters the generated `holiday_engine.json` in real-time.
+* **Musical pill:** `musical_classifier.py` asks Claude which films are musicals or music shows (see below).
 * **Watch list:** `watchlist.js` adds a personal list (bookmark movies, mark them watched, reorder, share a copy), stored on the device with no accounts or servers. It's a separate module: removing it means deleting the file, its `<script>` tag and the lines in `index.html` marked `watch list hook`.
 * **Usage stats:** `analytics.js` counts visits and shared links with GoatCounter; it's also separate and removable.
 * **Outside scores (personal):** `scores-builder.py` fetches IMDb and Rotten Tomatoes scores from MDBList into `scores.json`, for the owner's Tampermonkey script in `userscripts/`. The site itself never loads it (see below).
@@ -29,6 +30,13 @@ Each film gets a level: **holiday story** (the holiday is the story, like *Elf*)
 Claude Opus 5.5 classifies each film and says how sure it is, and Claude Haiku 5.5 gives an independent second opinion. When they disagree, or Opus isn't sure, Opus referees at higher effort. Results are saved in `holiday_levels.json`, so each film is classified once; new films cost a fraction of a cent each.
 
 `holiday_levels_review.md` lists the calls worth a human look. To overrule one, add it to `OVERRIDES` in `holiday_classifier.py`. After changing the classifier's instructions, bump `PROMPT_VERSION` to classify every film again (about $10).
+
+### Musical pill
+The Genres pill **Musical** holds musicals and music shows: concerts, variety specials and documentaries about musicians. Claude Opus 5.5 and Claude Sonnet 5.5 each say what kind of film it is, and Claude Fable 5.1 makes the call when they disagree or aren't sure. Answers are saved in `musicals.json`, so each film is asked once, and Fable's calls are listed in `musicals_review.md`.
+
+* **New films:** the weekly refresh doesn't ask Claude, so run `make musicals` now and then. It costs pennies for a handful of films.
+* **The whole catalog** (done once on Nov 11): `python musical_classifier.py ask --batch` uses the Batch API at half price; it can take up to a day, usually under an hour. It then says how many films Fable would decide and what that would cost, and `python musical_classifier.py decide` runs Fable.
+* To overrule a call, add the film's TMDB id to `OVERRIDES` in `musical_classifier.py`, then run `python musical_classifier.py apply`.
 
 ### Automatic refresh
 A GitHub Action (`.github/workflows/rebuild-data.yml`) rebuilds `holiday_engine.json` every Monday in November and December. If the data changed, it commits the new file, then rebuilds the live site. You can also start it from the Actions tab.

@@ -297,10 +297,15 @@ for n, m in enumerate(sorted(picks, key=lambda m: -m['score'])[:TOP], 1):
 EOF
 ```
 
-## Musical pill (planned, not built)
+## Musical pill
 
-Decided with the owner on Nov 11; building waits for the owner's go.
+Decided with the owner and built on Nov 11.
 
+- **How it's built:**
+  - `musical_classifier.py` asks Claude and saves each film's answers in `musicals.json`. Fable's calls are listed in `musicals_review.md`, and `OVERRIDES` in the script beats any call.
+  - The builder reads `musicals.json` into the "Musical" genre. It doesn't ask Claude itself; new films join the pill after `make musicals`. Until then the builder reports how many films have no answer yet.
+  - TMDB's "Music" genre and its "musical" keyword still reach the classifiers but not the page, so a search for "musical" finds the pill's films. The words "singing" and "songs" in a description no longer add a "musical" tag either.
+  - `python musical_classifier.py apply` puts the pill into `holiday_engine.json` without a full rebuild, the same way the builder does.
 - **TMDB's "Music" genre pill becomes "Musical",** filled from Claude's answer instead of TMDB's. One pill, not two. It works like the other genre pills: include, exclude, reset. Mostly it's for leaving musicals out, and some people will want only them. No old links need to keep working; nobody but the owner uses the pill yet.
 - **Why not an existing label:** none is reliable. TMDB has no Musical genre (its "Music" genre lumps musicals in with concerts and films about musicians), and its user-added "musical" tag misses Rudolph (1964) and Emmet Otter while tagging The Lion in Winter. IMDb's and MDBList's Musical labels miss Rudolph (1964), The Year Without a Santa Claus and Nativity!. All three were checked on Nov 11.
 - **What Claude is asked:** which of four kinds a film is, plus a rough count of full songs performed on screen:
