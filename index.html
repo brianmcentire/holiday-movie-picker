@@ -1183,13 +1183,13 @@
                 const hidden = group.tags.filter(t => tagStates.get(t) === 2);
                 const label = (shown.length === 0 || shown.length === group.tags.length) && !hidden.length ? group.all
                     : shown.length && shown.length < group.tags.length ? `${group.prefix}${shown.map(shortLabel).join(', ')}`
-                    : `NO: ${group.noPrefix || ''}${hidden.map(shortLabel).join(', ')}`;
+                    : `Not: ${group.noPrefix || ''}${hidden.map(shortLabel).join(', ')}`;
                 addPill(label, !shown.length && hidden.length > 0, () => resetGroup(name), group.green);
             });
 
             tagStates.forEach((state, tag) => {
                 if (state === 0 || groupOf(tag)) return;
-                addPill((state === 2 ? 'NO: ' : '') + tag, state === 2, () => resetTag(tag));
+                addPill((state === 2 ? 'Not: ' : '') + tag, state === 2, () => resetTag(tag));
             });
             window.watchlist?.addPills(addPill); // watch list hook
             document.getElementById('filters-panel').dataset.active = container.children.length; // shown on the folded strip
