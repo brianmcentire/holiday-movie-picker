@@ -306,6 +306,7 @@ Decided with the owner and built on Nov 11.
   - The builder reads `musicals.json` into the "Musical" genre. It doesn't ask Claude itself; new films join the pill after `make musicals`. Until then the builder reports how many films have no answer yet.
   - TMDB's "Music" genre and its "musical" keyword still reach the classifiers but not the page, so a search for "musical" finds the pill's films. The words "singing" and "songs" in a description no longer add a "musical" tag either.
   - `python musical_classifier.py apply` puts the pill into `holiday_engine.json` without a full rebuild, the same way the builder does.
+  - **What the models see about a film:** its title, any other English-market titles from TMDB ("Also known as", added Nov 11), year, TMDB genres and keywords, and description. TV movies are often renamed for streaming: Christmas Crush is also Holiday High School Reunion, which IMDb lists as a musical.
 - **TMDB's "Music" genre pill becomes "Musical",** filled from Claude's answer instead of TMDB's. One pill, not two. It works like the other genre pills: include, exclude, reset. Mostly it's for leaving musicals out, and some people will want only them. No old links need to keep working; nobody but the owner uses the pill yet.
 - **Why not an existing label:** none is reliable. TMDB has no Musical genre (its "Music" genre lumps musicals in with concerts and films about musicians), and its user-added "musical" tag misses Rudolph (1964) and Emmet Otter while tagging The Lion in Winter. IMDb's and MDBList's Musical labels miss Rudolph (1964), The Year Without a Santa Claus and Nativity!. All three were checked on Nov 11.
 - **What Claude is asked:** which of four kinds a film is, plus a rough count of full songs performed on screen:
@@ -354,6 +355,7 @@ Decided with the owner and built on Nov 11.
     - Drummer Boy (2026): nobody knew it, and Fable judged it from its details;
     - Christmas Crush (2012): Fable put it in, saying it was released as a musical, which is worth checking;
     - Captain Underpants Mega Blissmas and The Leprechauns' Christmas Gold: Fable's own lowest-confidence calls.
+  - **A recheck with other titles:** 58 of the films Fable didn't know have another English title on TMDB, and one more agent looked at them with those titles. It recognized 7, only one of them by its other title (A Christmas Truce, which is also The Christmas Truce). None moved into the pill.
   - **What it says about weekly runs:** Fable changed the outcome only on films where the two models disagreed or leaned uncertain, never on the quiet "none" films. A weekly step could skip those (`--skip-quiet`).
 - **Not used:**
   - curated lists: none found on GitHub, and Wikipedia's lists (behind the Wikidata check) barely cover TV specials and TV movies;

@@ -48,6 +48,7 @@ PRICES = {"claude-opus-5-5": (4.00, 20.00), "claude-sonnet-5-5": (2.00, 10.00), 
 CONCURRENT = 8
 GENRE = "Musical"  # The pill's name; it replaces TMDB's "Music" genre
 KINDS = ["musical", "music_show", "some_songs", "none"]
+ENGLISH_MARKETS = {"US", "GB", "CA", "AU", "IE", "NZ"}  # Where a film's other titles are shown to the models
 PILL_KINDS = {"musical", "music_show"}
 
 # Your calls, which beat Claude's: TMDB id -> kind
@@ -173,11 +174,12 @@ async def fetch_films(ids, log):
         for attempt in range(4):
             async with semaphore:
                 try:
-                    async with session.get(url, params={"append_to_response": "keywords"}) as r:
+                    async with session.get(url, params={"append_to_response": "keywords,alternative_titles"}) as r:
                         if r.status == 200:
                             d = await r.json()
                             films[mid] = {
                                 "title": d["title"], "year": (d.get("release_date") or "")[:4] or "unknown",
+                                "aka": other_titles(d),
                                 "genres": [g["name"] for g in d.get("genres", [])],
                                 "keywords": [" ".join(k["name"].split()) for k in d.get("keywords", {}).get("keywords", [])],
                                 "overview": d.get("overview") or "",
@@ -196,8 +198,22 @@ async def fetch_films(ids, log):
     return films
 
 
+def other_titles(tmdb_movie):
+    """The film's other English-market titles on TMDB. TV movies are often renamed for streaming, and a model may
+    know one under its other name (Christmas Crush is also Holiday High School Reunion)."""
+    seen = {tmdb_movie["title"].lower(), (tmdb_movie.get("original_title") or "").lower()}
+    titles = []
+    for t in tmdb_movie.get("alternative_titles", {}).get("titles", []):
+        title = " ".join((t.get("title") or "").split())
+        if t.get("iso_3166_1") in ENGLISH_MARKETS and title and title.lower() not in seen:
+            seen.add(title.lower())
+            titles.append(title)
+    return titles[:5]
+
+
 def film_prompt(film):
-    return (f"Title: {film['title']} ({film['year']})\nGenres: {', '.join(film['genres']) or 'unknown'}\n"
+    aka = f"Also known as: {' / '.join(film['aka'])}\n" if film.get("aka") else ""
+    return (f"Title: {film['title']} ({film['year']})\n{aka}Genres: {', '.join(film['genres']) or 'unknown'}\n"
             f"TMDB keywords: {', '.join(film['keywords']) or 'none'}\nDescription: {film['overview'] or 'none'}")
 
 

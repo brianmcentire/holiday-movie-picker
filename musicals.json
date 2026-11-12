@@ -95,10 +95,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "A Lifetime gift-exchange-program rom-com; nothing suggests on-screen performances.",
+   "reason": "A dialogue-driven gift-exchange romcom with nothing pointing to songs performed on screen.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -613,11 +614,13 @@
  "1024776": {
   "fable": {
    "kind": "none",
-   "knows_film": false,
-   "reason": "An Icicle Falls family romcom by description, told in dialogue with no sign of on-screen songs.",
+   "known_as": "Christmas on Candy Cane Lane",
+   "knows_film": true,
+   "reason": "A Great American Family comedy from Sheila Roberts's Icicle Falls novel, told in dialogue with no performed numbers.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -1083,10 +1086,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Hallmark family drama about recreating a grandmother's sauce; nothing suggests performed songs.",
+   "reason": "A family drama about recreating a grandmother's sauce; nothing suggests on-screen singing.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -1934,10 +1938,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Doppelganger crime rom-com with nothing in the premise or the reviewers' notes pointing to performed songs.",
+   "reason": "A doppelganger crime romcom carried by dialogue, with no sign of songs.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -1963,10 +1968,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "A prince-and-figure-skater TV romance; skating, not singing, and nothing suggests performed songs.",
+   "reason": "A prince-and-skater romance where any music backs skating rather than being sung on screen.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -1991,11 +1997,13 @@
  "1032581": {
   "fable": {
    "kind": "some_songs",
-   "knows_film": false,
-   "reason": "Fake-prince rom-com whose aspiring-musician heroine probably performs once or twice in a dialogue-driven story.",
+   "known_as": "Crown Prince of Christmas",
+   "knows_film": true,
+   "reason": "The Great American Family fake-prince romcom gives its aspiring-musician heroine a performance or two, but the story is all dialogue.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -2021,10 +2029,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "A TV romance about a painter and an art festival; no sign of performed songs in the premise or reviews.",
+   "reason": "An art-festival romance with no indication of singing beyond the soundtrack.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -2050,10 +2059,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Kidnapped-dog holiday romance-mystery; nothing in the details or reviewer reasons suggests singing on screen.",
+   "reason": "A dognapping romance-mystery told in dialogue, with no performed songs suggested.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -2816,10 +2826,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "A wedding-planning romcom sequel by description, with nothing suggesting on-screen musical numbers.",
+   "reason": "A wedding-planning romcom sequel with nothing pointing to on-screen songs.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -2845,10 +2856,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Amish bakery cookbook romance; the setting and genres point to dialogue with at most incidental music.",
+   "reason": "An Amish bakery and cookbook romance told in dialogue, with no sign of performed music.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -2961,10 +2973,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Viral-wish-letter blended-family romance; nothing in the premise suggests performances.",
+   "reason": "A viral-wish-letter romance with no indication of singing on screen.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -3019,10 +3032,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Unknown to me; a BET+-style proposal romcom with nothing in the details suggesting on-screen singing.",
+   "reason": "A proposal-mishap romcom sequel whose description gives no sign of performed songs.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -3127,10 +3141,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "A food-pantry romance I don't know; the 'Haul out the holly' line is a tagline quoting a song, not evidence of performed numbers.",
+   "reason": "A food-pantry romance told in dialogue; the 'We Need a Little Christmas' line is a tagline, not evidence of a number.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -3501,10 +3516,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Rival-realtors rom-com with nothing in the premise pointing to on-screen songs.",
+   "reason": "A rival-realtors romcom with nothing suggesting on-screen songs.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -3530,10 +3546,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Stranded-model romance with nothing in the premise suggesting on-screen singing.",
+   "reason": "A stranded-model romance told in dialogue, with no sign of performed music.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -3588,10 +3605,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Charity-event rom-com with nothing in its premise pointing to performed songs.",
+   "reason": "A charity-event matchmaking romcom; a benefit could host a number, but nothing in the details says so.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -3617,10 +3635,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "A Hallmark-style decorating romance told in dialogue; nothing points to songs performed on screen.",
+   "reason": "A house-decorating romance with music likely only on the soundtrack.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -3675,10 +3694,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Save-the-inn wedding rom-com; the premise points to dialogue with music only on the soundtrack.",
+   "reason": "A save-the-inn wedding romcom with no indication of songs performed on screen.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -4713,10 +4733,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Bachelor-pageant holiday romcom built on activities rather than performances; the details give no sign that singing is a feature.",
+   "reason": "A bachelor-pageant romcom built on holiday activities and dialogue, not singing.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -5242,10 +5263,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "A skier-and-brewmaster romance by description, dialogue-driven with no sign of singing.",
+   "reason": "A skier-and-brewmaster romance with nothing pointing to performed songs.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -6929,10 +6951,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "2024 matchmaking holiday romcom; the details describe a dialogue-driven story with no sign of performed songs.",
+   "reason": "A matchmaking romcom told in dialogue, with no sign of on-screen music.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -7329,10 +7352,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Low-budget dog comedy with a burglary plot; nothing about it suggests on-screen singing.",
+   "reason": "A low-budget dog-and-burglar family comedy told in dialogue and slapstick, with no performed songs suggested.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -7953,10 +7977,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "TMNT Home Alone-parody action-comedy short about a toy company; nothing suggests on-screen musical numbers.",
+   "reason": "A Home Alone-style TMNT action-comedy short; the first Chrome Alone had no songs and nothing suggests this one does.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -8959,10 +8984,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "The Prep & Landing specials are scored elf action-comedies with no performed songs, and nothing suggests this sequel changes that.",
+   "reason": "The Prep & Landing specials are score-driven elf buddy comedies without on-screen songs, and nothing suggests this sequel differs.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -9588,10 +9614,11 @@
   "fable": {
    "kind": "some_songs",
    "knows_film": false,
-   "reason": "Unknown to me; a supper-club drama with a song-and-dance man implies a few performances in a dialogue-driven story.",
+   "reason": "A supper club run by a song-and-dance man promises a few performances, but the description reads as a family drama told in dialogue.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -9675,10 +9702,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Unknown to me; a Jill Shalvis-based hometown romance by description with no sign of musical numbers.",
+   "reason": "A hometown romance from a Jill Shalvis novel, with nothing pointing to songs on screen.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -9909,10 +9937,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Unknown to me; a dinner-table-for-eight TV romance by description with no sign of singing.",
+   "reason": "A Christmas-dinner-table romance told in dialogue, with no sign of performed music.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -9938,10 +9967,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Unknown to me; an amnesia holiday romance by description, dialogue-driven with no performed songs.",
+   "reason": "An amnesia romance told in dialogue, with nothing suggesting on-screen songs.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -10017,10 +10047,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Unknown to me; a riches-to-rags family romcom by description with no indication of songs.",
+   "reason": "A riches-to-rags family comedy with no indication of musical numbers.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -10334,11 +10365,13 @@
  "209284": {
   "fable": {
    "kind": "none",
-   "knows_film": false,
-   "reason": "Depression-era family drama about a dollar's worth of gifts; nothing suggests more than an incidental carol.",
+   "known_as": "Christmas for a Dollar",
+   "knows_film": true,
+   "reason": "A Depression-era family drama from Gale Sears's book, told in dialogue with at most an incidental carol.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -13177,10 +13210,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Christmas-cards mystery told through sleuthing and dialogue; nothing points to performed songs.",
+   "reason": "A mystery-suitor detective story told in dialogue, with no sign of singing.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -14401,11 +14435,13 @@
  "369060": {
   "fable": {
    "kind": "none",
-   "knows_film": false,
-   "reason": "Low-budget wartime romance told in dialogue; nothing suggests singing beyond a possible carol moment.",
+   "known_as": "The Christmas Truce",
+   "knows_film": true,
+   "reason": "The Hallmark Battle of the Bulge romance is a wartime drama told in dialogue; I recall no featured singing.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -15772,11 +15808,13 @@
  "429743": {
   "fable": {
    "kind": "none",
-   "knows_film": false,
-   "reason": "Small family comedy about scaling back a holiday party; nothing suggests songs performed on screen.",
+   "known_as": "Christmas with the Andersons",
+   "knows_film": true,
+   "reason": "A small family comedy about scaling back a party, told in dialogue with no performed numbers.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -17663,10 +17701,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Unknown to me; a brothers-and-time-traveler comedy by description with no indication of songs.",
+   "reason": "A time-traveler brothers comedy with nothing pointing to songs on screen.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -19798,10 +19837,11 @@
   "fable": {
    "kind": "some_songs",
    "knows_film": false,
-   "reason": "Body-swap TV comedy where the struggling-singer lead performs a couple of songs; the story is dialogue.",
+   "reason": "A body-swap comedy told in dialogue whose singer lead plausibly performs a song or two.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -19976,11 +20016,13 @@
  "564675": {
   "fable": {
    "kind": "none",
-   "knows_film": false,
-   "reason": "Indie farce about a teen staging a fake family Christmas; nothing points to on-screen musical numbers.",
+   "known_as": "I'll Be Next Door for Christmas",
+   "knows_film": true,
+   "reason": "An indie farce about a staged fake Christmas dinner, told in dialogue with no song numbers I recall.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -20048,10 +20090,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "A small faith-based Salvation Army Santa drama I don't know; the details point to a dialogue-driven story rather than one carried by songs.",
+   "reason": "A faith-based drama about a single mom and a Salvation Army Santa, with no sign of performed songs.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -21182,10 +21225,11 @@
   "fable": {
    "kind": "some_songs",
    "knows_film": false,
-   "reason": "TV romance about an aspiring R&B singer; a few studio or stage performances in a dialogue-driven story.",
+   "reason": "A music-business romance about an aspiring R&B singer likely has a few performances, but the plot is a dialogue-driven romance.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -21819,10 +21863,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "A fake-dating hometown romance; nothing in the premise or reviews points to performed songs.",
+   "reason": "A fake-dating hometown romance with nothing pointing to on-screen songs.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -22184,11 +22229,13 @@
  "67589": {
   "fable": {
    "kind": "none",
-   "knows_film": false,
-   "reason": "2007 TV family romcom about a separated couple on a beach vacation; the details and reviewer reasons give no sign of singing on screen.",
+   "known_as": "An Accidental Christmas",
+   "knows_film": true,
+   "reason": "The Lifetime beach-house reconciliation romance is told in dialogue with no performed music.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -22843,10 +22890,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Holiday-assistant-for-hire romance with no sign of on-screen singing.",
+   "reason": "A holiday-assistant-for-hire romance told in dialogue, with no sign of singing.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -23375,10 +23423,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Novelist-and-blacksmith village romance; the details describe a standard dialogue-driven holiday TV movie with no sign of performed songs.",
+   "reason": "A novelist-and-blacksmith village romance with nothing suggesting performed songs.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -23720,10 +23769,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Handmade-ornaments town-fair romance; the premise points to dialogue with soundtrack music only.",
+   "reason": "An ornament-making fair romance told in dialogue, with no indication of songs on screen.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -23996,10 +24046,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "A dog-rescue holiday romance by description, told in dialogue with no indication of singing.",
+   "reason": "A dog-rescue romance with nothing pointing to on-screen music.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -24680,10 +24731,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Low-budget lawyer-and-contractor romance; nothing in the premise suggests on-screen singing.",
+   "reason": "A lawyer-and-contractor romance told in dialogue, with no sign of performed songs.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -24851,10 +24903,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Christmas-queen rivalry rom-com with nothing in the premise suggesting on-screen singing.",
+   "reason": "A Christmas-rivalry romcom with no indication of songs beyond the soundtrack.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -24988,10 +25041,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Low-budget snowed-in au pair romance; the details describe a dialogue-driven story with no sign of performed songs.",
+   "reason": "A snowed-in au pair romance told in dialogue, with nothing suggesting musical numbers.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -25067,10 +25121,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Food-correspondent romance with a diner opening as its hook; nothing points to on-screen singing.",
+   "reason": "A food-correspondent diner romance with no sign of on-screen singing.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -25146,10 +25201,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Party-planner-fixer romance with nothing in the premise suggesting on-screen songs.",
+   "reason": "A party-planner romance told in dialogue, with music likely only in the background.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -25196,10 +25252,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Small Christmas-tree-farm romance; the details describe a standard dialogue-driven TV movie with no sign of performed songs.",
+   "reason": "A tree-farm festival romance with nothing pointing to performed songs.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -25225,10 +25282,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Embassy-ball decorating romance; the details describe a standard dialogue-driven TV movie and neither reviewer saw any sign of performed songs.",
+   "reason": "An embassy-ball decorating romance told in dialogue, with no indication of singing.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -27058,10 +27116,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "A low-budget waitress-and-do-gooder romcom by description, with no sign of singing.",
+   "reason": "A waitress-and-do-gooder romcom with no sign of songs on screen.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -27087,10 +27146,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Decorator-meets-reclusive-writer romance told in dialogue; nothing points to on-screen singing.",
+   "reason": "A decorator-and-writer romance told in dialogue, with music only on the soundtrack.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -27116,10 +27176,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Alaska photographer romance; the premise points to dialogue with music only on the soundtrack.",
+   "reason": "A Northern Lights photographer romance with nothing suggesting performed songs.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -27203,10 +27264,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "A Christmas-lovers-website romcom by description, with nothing suggesting on-screen songs.",
+   "reason": "An author-and-website romcom told in dialogue, with no sign of on-screen music.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -27709,12 +27771,13 @@
  },
  "910816": {
   "fable": {
-   "kind": "some_songs",
+   "kind": "none",
    "knows_film": false,
-   "reason": "Theatre-set TV romance staging A Christmas Carol; a rehearsal or performance moment in a dialogue-driven story.",
+   "reason": "A theatre romance staging a straight-play A Christmas Carol; nothing in the details points to more than a carol moment.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unsure"
+   "why_asked": "unsure",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -28200,10 +28263,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Farm-store fake-family TV rom-com; the premise and genres point to dialogue with soundtrack music only.",
+   "reason": "A fake-family farm romcom told in dialogue, with no indication of songs.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
@@ -28329,10 +28393,11 @@
   "fable": {
    "kind": "none",
    "knows_film": false,
-   "reason": "Candle-making-business romance; the premise points to dialogue with music only on the soundtrack.",
+   "reason": "A candle-making-business romance with nothing pointing to performed music.",
    "version": 1,
    "via": "Claude Code agent",
-   "why_asked": "unknown"
+   "why_asked": "unknown",
+   "with_other_titles": true
   },
   "music_hint": false,
   "opus": {
