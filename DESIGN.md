@@ -278,6 +278,21 @@ While searching, the preview says why the movie is in the results. The result ca
 - **The reason line for several words:** "…" or partial names when it doesn't fit; people and tags mixed on one line; naming every person whose name starts with a typed word (Bob Newhart for "new" in "new york").
 - **The title count:** blue whenever any filter is on. It follows the number instead, so turning R on (still "More than 1,000") stays grey.
 
+## Future polish
+
+Ideas for sharing a list and not losing one, liked by the owner on Nov 11 but not scheduled. Ranked, best first.
+
+Where a list gets lost today: closing a tab in a normal window keeps it. It's lost in a private window, in an app's built-in browser (Instagram, Facebook, WhatsApp and the like keep their own storage), after Safari goes 7 days without a visit (unless it's reopened from a bookmark or history), and on another browser or device.
+
+1. **Movie titles in the share text:** "My watchlist from Season's Screenings: Elf, Klaus, The Holdovers and 6 more", with the link. It reads at a glance in the chat, turns up when searching messages later, and still helps if the link breaks. Small.
+2. **Say a link is a copy,** in the "Link copied" note and on the "Shared with you" card: "They get their own copy; changes don't sync. Ask them to send theirs back." Couples may expect a shared list to stay in step. Tiny Little Office (tinylittleoffice.com, also "the link is the document") added the same line after a group sent a sign-up sheet to 20 people and got 20 separate copies back. One sentence.
+3. **A note in app browsers:** when the page opens inside Instagram, Facebook or similar (their browsers name themselves), a quiet line: "Your list may not stay here. Open in Safari." Small.
+4. **One reminder to save a copy,** once the list reaches about 5 movies and never again: "Your list lives in this browser. Save a copy to keep it safe." Small, but it could feel naggy.
+5. **"Send yours back"** on a list someone sent you, sharing the combined list in one tap. Medium.
+6. **Remember lists people sent you,** so a list opened with Just look can be found again without digging up the message. Medium.
+
+Not on the list: short links, a preview picture per list, and syncing between devices. Each needs a server or accounts; lists are short enough as links already.
+
 ## Revisit later
 
 - **Films without a holiday level** (when the classifier couldn't run) are hidden by the default Holiday Intensity, though the footer mentions them. They show with Any holiday intensity. Fine as a safe default, or let them through.
