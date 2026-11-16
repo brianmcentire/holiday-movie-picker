@@ -89,12 +89,15 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
   - Columns with filters open → folded: upright phone 2 → 3; tablet 3 → 4; sideways phone 4 → 5.
 - **Long tags wrap** in the narrow filters column instead of making it scroll sideways.
 - **The header is two rows below 1024px wide:** the site's name with the title count at its right, then search and sort across the full width. Tablets and narrow windows joined phones here on Nov 12: in one row, 768 to 1023px had no room for the title count, so it showed nowhere, and an upright iPad's search box was 250px wide. Sideways phones keep their single row.
-- **Sideways phones** (landscape, no taller than 500px):
-  - The whole page scrolls, so Safari tucks its own bars away.
+- **Phones scroll the whole page,** upright (639px wide and narrower) or sideways (landscape, no taller than 500px). Upright phones joined on Nov 15, the owner's call: Safari's bar took room the results could use.
+  - When the page scrolls down, Safari shrinks its own bar to a small pill with the site's name (a thin strip on older iPhones) and the page fills the screen. Any scroll up brings it back, so nobody is locked in.
   - The filters stay pinned beside the results and scroll on their own. A swipe that starts on the filters never moves the page. While the top bar shows, the filters sit just below it, so it never covers their top.
-  - The top bar is one row (title, search, sort). It slides away while scrolling down and comes straight back on any scroll up.
-  - Why: locked to the screen with two scrolling halves, the page never scrolled, so Safari's bars never collapsed and little room was left.
-  - Upright phones keep the two scrolling halves. Turning a phone upright again puts the page back at the top; otherwise a page scrolled sideways would hide the top bar with no way back.
+  - The top bar slides away while scrolling down and comes straight back on any scroll up. Upright it keeps its two rows; sideways it's one row (title, search, sort).
+  - Folding or opening the filters while scrolled brings the top bar back, because the results shift as the columns change.
+  - Why: locked to the screen with two scrolling halves, the page never scrolled, so Safari's bars never collapsed and little room was left. Upright, the results get about 45% more height while scrolling: three rows of posters where two fit.
+  - **A page can't hide Safari's bars itself.** iPhone Safari has no full-screen call for pages (`requestFullscreen` doesn't exist there; checked on iOS 27.0) and no kiosk setting a site can ask for. Safari's own menu has Hide Toolbar, but only the user can pick it. The other way is Add to Home Screen, parked.
+  - **Tested on the simulator (Nov 15),** iPhone on iOS 27.0: scrolling down and up, a swipe on the filters at the top and while scrolled, the folded filters, the one-per-row view, My Watchlist and the movie preview opened while scrolled (the page keeps its place), a filter tapped while scrolled, and turning sideways and back. Scrolling was also checked on iOS 17.2, where Safari's bars are bigger and give back more. Not tested: a real iPhone, and Safari's Bottom and Top tab layouts.
+- **Tablets keep the two scrolling halves** (640px and wider, unless it's a sideways phone). A page left scrolled when the window becomes that wide goes back to the top; otherwise the top bar would be hidden with no way back.
 - **Smaller posters in the grid:** phones and tablets load TMDB's 342-pixel posters instead of the 500-pixel ones, which is plenty for those card sizes. Each is about 60% smaller, with under half the pixels to decode while scrolling, and scrolling on an iPhone went from laggy to smooth. The one-per-row view and laptops keep the 500-pixel posters.
 - **Laptops:** the filters' scrollbar appears only while the pointer is over them. It sat between filters and results looking like a stray mark. The results scroll with the page (wheel or the window's scrollbar).
 
@@ -248,20 +251,34 @@ While searching, the preview says why the movie is in the results. The result ca
 
 ### Add to Home Screen (parked)
 
-- **Parked on Nov 11, the owner's call:** the fixes it needs are too much for a simple, fun site. The tip stays off; its code stays in place.
-- **The Home Screen tip is built but switched off** (`HOME_SCREEN_TIP` in `watchlist.js`). Two findings on iOS 27 made it a poor promise:
-  - **iPhone saves the address the page was loaded with,** not the one the page updates afterwards. A list built after the page loaded isn't in that address, so the Home Screen app starts empty. A page reloaded with the list in its address does carry it (tested on the simulator).
-  - **A Home Screen app keeps its own storage, separate from Safari's,** and links someone texts you always open in Safari. People who use both would have two lists drifting apart.
-- **Picking it back up would need:**
-  - **Show me how:** a button in the tip that reloads the page with the list in its address, then shows the Share-menu steps, so the new app starts with the list.
-  - **Paste a list:** a way to get a list someone texted you into the Home Screen app, since links open in Safari.
-  - **Decide about Delete Watchlist there:** a Home Screen app saved with the list in its address (which Show me how would do) brings that list back, with Undo, every time it starts fresh after Delete Watchlist. That's the "an older copy still restores" rule; the app may need an exception.
-- **If it's back, the tip will read:** "Added Klaus." then, on its own line, "Add Season's Screenings to your Home Screen: open Safari's Share menu ⬆ and choose Add to Home Screen."
+- **Still parked (owner, Nov 15).** Of the two problems below, the first now has a fix and the second doesn't. The owner counts the second as the blocker, because it could confuse people. The tip stays off (`HOME_SCREEN_TIP` in `watchlist.js`); its code stays in place. It was first parked on Nov 11 as too much for a simple, fun site.
+- **Problem 1, with a fix ready: the app starts empty.**
+  - **The cause is the manifest (tested Nov 15).** Safari reads it once, when the page loads, and Add to Home Screen saves the manifest's start address. Ours names none, so that's the address the page was loaded with, not the one the page has kept up to date since. A list built after the page loaded isn't in it.
+  - **The fix: give iPhone and iPad no manifest.** Add to Home Screen then saves the page's current address, which carries the list, and the app fills its empty list from it the first time it opens. No reload and no extra step.
+  - **Tested on the simulator.** A copy of the site without the manifest link, two movies and a watched mark added after the page loaded, then Add to Home Screen. The app opened full screen with "Restored your watchlist · 2 movies" and the watched mark (iOS 27.0). A bare test page without a manifest saved its current address on iOS 26.0 and 17.2 too. Not tried: a real iPhone, iOS 18, Android.
+  - **Tried and ruled out (iOS 27.0):**
+    - A cookie holding the list. The app doesn't get Safari's cookies.
+    - Swapping in a manifest that names the list's address once the page has loaded, or replacing the manifest link. Safari keeps the one it read at load.
+    - Changing the address with `location.hash` instead of `replaceState`.
+- **Problem 2, the blocker: two lists.**
+  - A Home Screen app keeps its own storage, separate from Safari's. From the day it's added, the app's list and Safari's list drift apart.
+  - A link someone texts you opens in Safari, never in the app, with or without a manifest (tested Nov 15, iOS 27.0). A friend's list lands beside Safari's list, not the app's.
+  - No quiet way across was found. The site has no server to pass a list through, and the app and Safari share no storage. The only bridges are steps the user takes: **Paste a list** in the app (copy the link in Messages, paste it in the app), or adding the site to the Home Screen again from Safari.
+  - It lifts if iPhone ever opens a site's links in its Home Screen app. Check again on a new iOS.
+- **If it's picked up, build this (recommended Nov 15):**
+  1. **No manifest on iPhone and iPad.** Add the manifest link from script on other devices only (on Android an installed app should share Chrome's storage, so the list is already there; not tested). Name the app with `<meta name="apple-mobile-web-app-title" content="Season's Screenings">`. Add `mobile-web-app-capable` and the older `apple-mobile-web-app-capable` so iOS before 26 opens it full screen; iOS 26 and later offer "Open as Web App", already switched on, for any site.
+  2. **Switch the tip on, and sell the room:** "Want more room? Add Season's Screenings to your Home Screen: open Safari's Share menu ⬆ and choose Add to Home Screen. Your list comes along." The places stay as planned below.
+  3. **The app uses its launch copy once.** It always opens at the address it was added with, so after Delete Watchlist in the app, the next fresh start would bring the day-one list back (the "an older copy still restores" rule). Remember on the device that the copy has been used. If the app's storage is ever cleared, the copy restores again, which is what you'd want.
+  4. **The app starts with the default filters.** The saved address also holds whatever filters were on when it was added, and the app would open filtered that way every time.
+  5. **A few pixels more above the site's name in the app.** The status bar's blur touches the top of the letters.
+  6. **Paste a list stays out** unless the owner wants it as the answer to problem 2.
+- **The tip, if it's back:** "Added Klaus." then, on its own line, the tip.
   - It names Safari's Share menu, with Safari's icon, because Add to Home Screen exists only there. Our Share results button can't do it.
+  - On iOS 26 and 27, Share is inside Safari's menu button, and Add to Home Screen is behind More (26) or View More (27) in the sheet. The tip can't point straight at it, so keep the wording loose.
   - The planned places are once right after the very first add, and at the bottom of the list on phones. It's iPhone Safari only, and never shown once closed or once the site is on the Home Screen.
-- **The app name is "Season's Screenings"** (the manifest's `short_name`), and the manifest has no fixed start address.
-- **A Home Screen app's launch address only fills an empty list.** It always opens at the address it was added with, so any list in that address (the backup copy or a shared copy) is a snapshot from then. It's never shown as "Shared with you", and it never reopens My Watchlist at launch.
-- **Why it would matter:** opened from the Home Screen, the site runs full screen without Safari's bars, and Safari doesn't clear its storage after 7 days without a visit. The list in the address already helps with the 7-day clearing in Safari, since reopening the tab or a history entry brings it back.
+- **The app name is "Season's Screenings"** (the manifest's `short_name`), and the manifest has no fixed start address. Giving it one wouldn't help: iPhone would save that address instead of the one with the list.
+- **A Home Screen app's launch address only fills an empty list.** It always opens at the address it was added with, so any list in that address (the backup copy or a shared copy) is a snapshot from then. It's never shown as "Shared with you", and it never reopens My Watchlist at launch. (Built.)
+- **Why it would matter:** opened from the Home Screen, the site runs full screen without Safari's bars, and Safari doesn't clear its storage after 7 days without a visit. The list in the address already helps with the 7-day clearing in Safari, since reopening the tab or a history entry brings it back. Upright phones now get most of that room in Safari itself; see "Phones and tablets".
 
 ### Toasts
 
