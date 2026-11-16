@@ -9031,6 +9031,27 @@
   "title": "Prep & Landing: The Snowball Protocol",
   "year": "2025"
  },
+ "1551025": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 title, and everything in its description and keywords points to a dialogue-driven holiday romcom about a bodyguard and an action star, with nothing suggesting on-screen musical performances.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 title specifically; the description and keywords point to a standard holiday romcom told through dialogue, with no sign of on-screen musical numbers beyond possible incidental carols.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Guarding Stars",
+  "year": "2026"
+ },
  "15566": {
   "music_hint": false,
   "opus": {
@@ -9386,6 +9407,27 @@
    "version": 1
   },
   "title": "A Grand Biltmore Christmas",
+  "year": "2026"
+ },
+ "1611767": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "low",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this title. From the description it reads as a dialogue-driven rival-coworkers road-trip rom-com with no sign of songs at its center, though a brief car sing-along can't be ruled out.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "low",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't have reliable knowledge of this 2026 title; the description and keywords point to a standard enemies-to-lovers holiday road-trip rom-com with no sign of on-screen singing beyond possibly a car sing-along.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Clashing Through the Snow",
   "year": "2026"
  },
  "16129": {
@@ -9805,6 +9847,34 @@
   },
   "title": "I'll Be Home for Christmas",
   "year": "1998"
+ },
+ "1715686": {
+  "fable": {
+   "kind": "some_songs",
+   "knows_film": false,
+   "reason": "I have no reliable knowledge of this 2026 Disney special, but a slapstick Home Alone parody with Mickey is almost certainly dialogue-and-gag driven, and Disney's recent Mickey Christmas specials typically include a holiday song or two rather than being built around musical numbers.",
+   "version": 1,
+   "why_asked": "unsure"
+  },
+  "music_hint": false,
+  "opus": {
+   "confidence": "low",
+   "kind": "some_songs",
+   "knows_film": false,
+   "reason": "This appears to be a 2026 Disney animated special parodying Home Alone that I have no reliable knowledge of, and Mickey specials like this usually tell a slapstick story with maybe a song or two, so I'm guessing \"some_songs\".",
+   "songs": 1,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "low",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't have reliable knowledge of this 2026 title; it appears to be a slapstick Home Alone-style Mickey Mouse short-form special driven by dialogue and action, so I assume songs are minimal or only on the soundtrack.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Mickey's Home Alone",
+  "year": "2026"
  },
  "17379": {
   "music_hint": false,

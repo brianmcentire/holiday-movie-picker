@@ -49,4 +49,4 @@ Kinds: **musical** and **music_show** are in the pill · **some_songs** and **no
 | The Nutcracker Prince (1990) `13759` | **none** | none | musical | disagree | A dialogue-driven Canadian adaptation with Tchaikovsky as score; its one original song plays over the credits, and the Mouse King and Sugar Plum numbers reviewer B describes are not in the film. |
 | Tom and Jerry: A Nutcracker Tale (2007) `24696` | **none** | some_songs | music_show | disagree | A near-dialogue-free slapstick retelling with Tchaikovsky's score behind the dancing; no one sings a song, so for a filter about singing it is score only. |
 
-39 calls to review. Fable decided 581 films in all; on the rest it agreed with both models.
+39 calls to review. Fable decided 580 films in all; on the rest it agreed with both models.

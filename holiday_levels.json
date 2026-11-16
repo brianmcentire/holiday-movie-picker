@@ -4139,6 +4139,18 @@
   "version": 2,
   "year": "2025"
  },
+ "1551025": {
+  "confidence": "medium",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "Judging from the description and keywords rather than knowledge of the film, it looks like a holiday-romance romcom on a Montana ranch, with Christmas framing the story and its romance in the style of Hallmark-type Christmas movies.",
+  "referee": "Little is known of this specific 2026 film, but it is marketed and tagged as a Christmas holiday romance in the Hallmark mold, with Christmas framing the courtship and its emotional payoff, so it fits 'about'.",
+  "title": "Guarding Stars",
+  "version": 2,
+  "year": "2026"
+ },
  "15566": {
   "confidence": "high",
   "haiku": "about",
@@ -4304,6 +4316,18 @@
   "reason": "A sequel to the Hallmark-style 'A Biltmore Christmas' tagged as a Christmas romance, this time-travel fantasy at Biltmore House is almost certainly built around Christmas traditions and spirit, though I don't know the film itself.",
   "referee": "As a Hallmark Christmas romance sequel built on its predecessor's Christmas-magic premise at a holiday-dressed Biltmore House, the holiday is the film's subject rather than mere setting.",
   "title": "A Grand Biltmore Christmas",
+  "version": 2,
+  "year": "2026"
+ },
+ "1611767": {
+  "confidence": "medium",
+  "haiku": "set_at",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Christmas-titled enemies-to-lovers romcom built around a holiday road trip home reads as a seasonal holiday romance where Christmas runs through the premise and payoff.",
+  "referee": "A Christmas-punned holiday romcom whose premise, deadline and payoff all hinge on getting home for Christmas, it fits the seasonal holiday-romance mold the guidelines treat as being about the holiday.",
+  "title": "Clashing Through the Snow",
   "version": 2,
   "year": "2026"
  },
@@ -4498,6 +4522,18 @@
   "title": "I'll Be Home for Christmas",
   "version": 2,
   "year": "1998"
+ },
+ "1715686": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Disney animated Christmas special that parodies Home Alone, built around Christmas plans, Christmas dinner and getting the family back together for the holiday, so Christmas is central throughout.",
+  "referee": null,
+  "title": "Mickey's Home Alone",
+  "version": 2,
+  "year": "2026"
  },
  "17207": {
   "confidence": "medium",
