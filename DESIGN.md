@@ -22,6 +22,13 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 - The page and each module are cached separately. When a release changes `index.html` and `watchlist.js` in ways that must match, add a version to the script's address (`watchlist.js?v=2`) in the same commit.
 - No service worker: an offline cache layer would make stale versions more likely, not less.
 
+## Which films get in
+
+- **Unrated films need 100 TMDB votes** (`MIN_VOTES_UNRATED` in `data-builder.py`), so popular ones like Netflix's Love Hard get in and hundreds of small unrated TV movies don't. Unrated films from TV studios (Hallmark, Lifetime, Great American Family, UP, ION) need only the usual 10 votes and are labeled TV Movie.
+- **This year's streamer films don't wait for votes** (the owner, Nov 16; `STREAMER_NOTE`). An unrated film released this year whose US release on TMDB carries a note naming Netflix, Prime Video, Disney+ or Apple TV skips the 100 votes, so it's on the site before it's out. From next year it needs the votes like any unrated film, and drops out if it hasn't got them (the owner: fine). It stays "NR". Nov 2026 added 3: Clashing Through the Snow, Guarding Stars and Mickey's Home Alone.
+  - **The release note, not the production company:** TMDB credits a streamer's film to the company that made it (Netflix's are often Motion Picture Corporation of America's), so a list of companies would have missed Netflix's Guarding Stars. 105 of the site's 487 films from 2019 on carry a note naming a streamer. A bare "Amazon" doesn't count: small films list it among the stores that rent them.
+  - **Only those four:** every Hulu, HBO Max, Peacock and Paramount+ original on the site from 2019 on has a US rating, so the vote rule never kept them out.
+
 ## Words
 
 - **Holiday Intensity**, not Holiday Level. Level felt impersonal. The buttons read as answers under it ("It's the story", "It's the setting", "It's adjacent"). The summary chip says "Any holiday intensity". The hidden names in links stay "Holiday story" and so on.
@@ -483,4 +490,5 @@ Also possible, not wanted for now (owner, Nov 12):
 - **Mail's subject line:** check on a real iPhone whether Mail uses the share title as the subject.
 - **People search drifts a little week to week:** TMDB's popularity scores change, so a borderline supporting actor can drop in and out between rebuilds.
 - **Classic casts thin out past the 10th billed:** old stars score low on TMDB popularity, so supporting players further down are missing (Jack Albertson, 14th in the 1947 Miracle on 34th Street).
+- **TV movies TMDB hasn't credited to their studio yet** (found Nov 16, offered, not decided): 17 of this year's Hallmark (8), Great American Family (7) and UP (2) films were left out, because without the studio they count as unrated and need 100 votes. TMDB's editors usually add the studio within weeks. A US release note saying "Hallmark" or "Great American Family" would catch 6 of them now, the same way as the streamers.
 - **iPhone Safari bookmarks** may save the loaded address the same way Add to Home Screen does. If so, a bookmark on iPhone won't always carry the list. Test before relying on it.

@@ -18,7 +18,7 @@ CONCURRENT_REQUESTS = 10
 MIN_VOTES = 10               # Waived for this year's releases, which haven't had time to collect votes
 THIS_YEAR = str(date.today().year)
 MIN_VOTES_R = 100            # R films need a real audience, with no new-release waiver
-MIN_VOTES_UNRATED = 100      # Unrated films get in only if popular, like many Netflix originals
+MIN_VOTES_UNRATED = 100      # Unrated films get in only if popular, like many Netflix originals (this year's: see STREAMER_NOTE)
 UNRATED_CLASSIC_BEFORE = 1990  # ...except older ones, like TV specials that were never rated, which need only MIN_VOTES
 MAX_RETRIES = 5
 MAX_PAGES_PER_HOLIDAY = 100  # Safety cap on polling depth
@@ -70,6 +70,13 @@ TV_STUDIOS = {
     9027: "Hallmark Hall of Fame Productions", 180934: "Great American Media", 3431: "Lifetime",
     210724: "UPtv", 111898: "UP Entertainment", 84068: "ION Television",
 }
+
+# This year's unrated films from these streaming services skip MIN_VOTES_UNRATED, so they're in before they've
+# had time to collect votes (Clashing Through the Snow, Prime Video, Nov 2026). From next year they need the
+# votes like any unrated film. TMDB credits a streamer's film to the company that made it (Netflix's are often
+# Motion Picture Corporation of America's), so the note on its US release, like "Netflix", names the service.
+# Not a bare "Amazon": small films list it among the stores that rent them.
+STREAMER_NOTE = re.compile(r"netflix|prime video|freevee|disney|apple tv", re.IGNORECASE)
 API_ROOT = "https://api.themoviedb.org/3"
 
 CORE_GENRES = {
@@ -204,6 +211,12 @@ async def fetch_movie_details(session, semaphore, movie_id):
             break
     return keywords, cert, genres, data
 
+def from_streamer(data):
+    """True when a note on the film's US release names a STREAMER_NOTE service."""
+    return any(STREAMER_NOTE.search(r.get('note') or '')
+               for country in data.get('release_dates', {}).get('results', []) if country['iso_3166_1'] == 'US'
+               for r in country['release_dates'])
+
 def pick_people(credits, votes):
     """The people search finds this film by, as {"cast": [...], "directors": [...], "writers": [...]} with
     names in billing order; empty lists are left out to keep the file small."""
@@ -327,6 +340,7 @@ async def main():
                     votes = m.get('vote_count', 0)
                     is_classic = (m.get('release_date') or '9999')[:4] < str(UNRATED_CLASSIC_BEFORE)
                     unrated_min = MIN_VOTES if is_classic else MIN_VOTES_UNRATED
+                    if (m.get('release_date') or '').startswith(THIS_YEAR) and from_streamer(data): unrated_min = 0
                     if cert not in ALLOWED_CERTS and not (cert == 'NR' and votes >= unrated_min): continue
                     if cert == 'R' and votes < MIN_VOTES_R: continue
                     if cert in ('R', 'NR') and any(EXPLICIT_KEYWORDS.search(k.lower()) for k in keywords): continue
