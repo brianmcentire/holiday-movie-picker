@@ -4151,6 +4151,18 @@
   "version": 2,
   "year": "2004"
  },
+ "1559980": {
+  "confidence": "medium",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "I don't know this 2026 film, but the title, the keywords (Christmas spirit, miracle, faith) and the save-the-church-before-Christmas premise point to a faith-based Christmas movie built around the holiday's spirit.",
+  "referee": "Titled after Christmas, framed around saving a church by Christmas, and tagged with Christmas spirit and miracle themes, this faith-based family musical drama appears built around the holiday's meaning and payoff, making it a Christmas movie at heart.",
+  "title": "The Gospel of Christmas",
+  "version": 2,
+  "year": "2026"
+ },
  "1567605": {
   "confidence": "high",
   "haiku": "about",
@@ -4582,6 +4594,30 @@
   "title": "Silent Night",
   "version": 2,
   "year": "2002"
+ },
+ "1773345": {
+  "confidence": "medium",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Christmas romantic comedy built around a magical wish trapping the hero in a repeating Christmas Eve, so the holiday is central to its premise and payoff.",
+  "referee": "A magical Christmas wish traps the hero in a repeating Christmas Eve in a seasonal rom-com, so the holiday runs through the premise, setting and likely emotional payoff.",
+  "title": "The Nights Before Christmas",
+  "version": 2,
+  "year": "2026"
+ },
+ "1773350": {
+  "confidence": "medium",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "From the description and keywords, this appears to be a made-for-TV-style Christmas romance built around a hometown Christmas return and a holiday event, which places the holiday at the heart of the story.",
+  "referee": "This is a formulaic made-for-TV Christmas romance whose homecoming, holiday ranch event and emotional payoff all revolve around Christmas, which is exactly the Hallmark-style case the \"about\" level describes.",
+  "title": "My Christmas Cowboy",
+  "version": 2,
+  "year": "2026"
  },
  "1773368": {
   "confidence": "high",
@@ -8339,6 +8375,18 @@
   "version": 2,
   "year": "1994"
  },
+ "48875": {
+  "confidence": "medium",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "This Looney Tunes short is built around Christmas morning: Sylvester swaps his own gift for Tweety, and the gags run on presents, the tree and Christmas carols, so the holiday is the whole premise.",
+  "referee": "The short's entire premise, setting and gags spring from Christmas morning gift-giving under the tree, making it a Christmas cartoon through and through rather than a generic chase with holiday dressing.",
+  "title": "Gift Wrapped",
+  "version": 2,
+  "year": "1952"
+ },
  "48880": {
   "confidence": "high",
   "haiku": "about",
@@ -10088,6 +10136,18 @@
   "reason": "A TV-style Christmas romance built around a town's Christmas wishing-box tradition, with the holiday central to the premise and plot.",
   "referee": null,
   "title": "A Christmas Wish",
+  "version": 2,
+  "year": "2019"
+ },
+ "626296": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A made-for-TV Christmas romance centered on staging a Christmas Eve show, where the holiday is the core of the story and its payoff.",
+  "referee": null,
+  "title": "No Time Like Christmas",
   "version": 2,
   "year": "2019"
  },

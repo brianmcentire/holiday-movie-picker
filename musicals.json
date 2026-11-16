@@ -3690,6 +3690,27 @@
   "title": "Christmas Keepsake",
   "year": "2023"
  },
+ "1180394": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "A small TV holiday romance about flipping an inherited house; nothing suggests on-screen musical performances, and such films are typically dialogue-driven with soundtrack music only.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this specific title, but it reads as a standard dialogue-driven Christmas romcom about flipping an inherited house, with any music likely just on the soundtrack.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Flipping for Christmas",
+  "year": "2023"
+ },
  "1180400": {
   "fable": {
    "kind": "none",
@@ -9031,6 +9052,34 @@
   "title": "Surviving Christmas",
   "year": "2004"
  },
+ "1559980": {
+  "fable": {
+   "kind": "some_songs",
+   "knows_film": false,
+   "reason": "I don't have reliable knowledge of this 2026 Tyler Perry title; the gospel-church setting and Music tag point to several choir or worship performances, but a save-the-church-from-foreclosure plot is most likely carried by dialogue rather than by the songs, so I'm siding with the reviewers' shared call.",
+   "version": 1,
+   "why_asked": "unsure"
+  },
+  "music_hint": true,
+  "opus": {
+   "confidence": "low",
+   "kind": "some_songs",
+   "knows_film": false,
+   "reason": "I don't know this 2026 Tyler Perry title; the premise and the Music genre tag suggest gospel choir performances in church scenes, but a save-the-church drama like this is most likely told mainly through dialogue.",
+   "songs": 3,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "low",
+   "kind": "some_songs",
+   "knows_film": false,
+   "reason": "I don't have reliable knowledge of this 2026 title, so I'm inferring from the Music genre tag and gospel-church setting that it likely includes several choir or worship performances, but the plot about saving a church from foreclosure suggests a mostly dialogue-driven drama.",
+   "songs": 4,
+   "version": 1
+  },
+  "title": "The Gospel of Christmas",
+  "year": "2026"
+ },
  "1567605": {
   "fable": {
    "kind": "none",
@@ -9903,6 +9952,48 @@
   },
   "title": "Silent Night",
   "year": "2002"
+ },
+ "1773345": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "low",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 TV movie, and nothing in its time-loop romantic comedy description suggests on-screen musical performances beyond typical incidental holiday music.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "low",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't recognize this 2026 TV movie; its romance-comedy time-loop premise and genre tags point to a dialogue-driven story with no sign of on-screen musical numbers.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "The Nights Before Christmas",
+  "year": "2026"
+ },
+ "1773350": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "low",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 TV romance itself; going by its ranch-romance premise and keywords, which point to no musical content, it is most likely a dialogue-driven Christmas movie without on-screen songs.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't have specific knowledge of this 2026 TV romance, and its genres, keywords and plot (a disgraced host, a ranch holiday event, horse therapy) point to a dialogue-driven holiday romance with at most incidental music.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "My Christmas Cowboy",
+  "year": "2026"
  },
  "1773368": {
   "fable": {
@@ -11977,6 +12068,27 @@
   },
   "title": "'Twas the Night Before Christmas",
   "year": "1974"
+ },
+ "265923": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "musical",
+   "knows_film": true,
+   "reason": "Like most VeggieTales episodes, this special is built around several sung numbers, including 'Can't Believe It's Christmas', the Buzz-Saw Louie theme and the Silly Song 'Oh, Santa!', which carry the story and its message.",
+   "songs": 4,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "musical",
+   "knows_film": true,
+   "reason": "This VeggieTales special is built around a handful of full songs, such as the Buzz-Saw Louie jingle, the Silly Song with the Pirates (Larry-Boy-style segment), and the closing Christmas number, with a story that mixes dialogue and musical numbers, so it works as a song-driven animated special.",
+   "songs": 4,
+   "version": 1
+  },
+  "title": "VeggieTales: The Toy That Saved Christmas",
+  "year": "1996"
  },
  "26809": {
   "music_hint": false,
@@ -17381,6 +17493,27 @@
   "title": "A Flintstones Christmas Carol",
   "year": "1994"
  },
+ "48875": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": true,
+   "reason": "This Looney Tunes Sylvester-and-Tweety short is a slapstick chase cartoon, and its Christmas music is background scoring with at most brief snippets of singing rather than full performed songs.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": true,
+   "reason": "Gift Wrapped is a 1952 Looney Tunes short (Sylvester, Tweety, Hector) driven by slapstick chase gags, with Christmas music mainly in the score and Tweety's brief bits of singing rather than full performed songs.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Gift Wrapped",
+  "year": "1952"
+ },
  "48880": {
   "fable": {
    "kind": "some_songs",
@@ -20816,6 +20949,34 @@
    "version": 1
   },
   "title": "A Christmas Wish",
+  "year": "2019"
+ },
+ "626296": {
+  "fable": {
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "This Lifetime romance starring Broadway's Kyle Dean Massey builds toward a Christmas Eve show with a couple of performance scenes, but the story is told almost entirely through dialogue rather than through songs.",
+   "version": 1,
+   "why_asked": "unsure"
+  },
+  "music_hint": true,
+  "opus": {
+   "confidence": "low",
+   "kind": "some_songs",
+   "knows_film": false,
+   "reason": "A Christmas Eve show to save a theater suggests a few performances, likely a rehearsal and a finale, but TV romance movies like this are mostly told in dialogue, and I don't know the specific film well.",
+   "songs": 2,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "low",
+   "kind": "some_songs",
+   "knows_film": false,
+   "reason": "I don't know this title well; the premise of staging a Christmas Eve show to save a theater suggests a few performance scenes, but the genre mix and typical TV romance format point to a dialogue-driven story rather than a full musical.",
+   "songs": 3,
+   "version": 1
+  },
+  "title": "No Time Like Christmas",
   "year": "2019"
  },
  "626299": {
@@ -25117,6 +25278,27 @@
   "title": "The Holdovers",
   "year": "2023"
  },
+ "844819": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't specifically know this film, but it appears to be a standard cooking-themed holiday TV romance, a type whose story is carried by dialogue with no notable on-screen musical performances.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "This looks like a standard cooking-themed holiday romance TV movie told in dialogue, and nothing in the description or genres suggests on-screen singing beyond possible background music.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "A Christmas to Savour",
+  "year": "2021"
+ },
  "844869": {
   "fable": {
    "kind": "none",
@@ -28258,6 +28440,27 @@
   },
   "title": "Home Alone 3",
   "year": "1997"
+ },
+ "971464": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "A Hallmark-style genealogy romance on a Christmas tree farm, told through dialogue, with no known on-screen song performances beyond perhaps incidental carols.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "This reads as a standard Hallmark-style holiday romance about genealogy and a Christmas tree farm, with no sign of performed songs beyond possible background carols, but I don't know the specific film well enough to rule out a brief carol scene.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "My Favorite Christmas Tree",
+  "year": "2022"
  },
  "971475": {
   "fable": {

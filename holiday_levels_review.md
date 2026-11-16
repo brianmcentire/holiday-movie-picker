@@ -125,7 +125,6 @@ Levels: **about** the holiday is the story · **set_at** set at the holidays, an
 | Toy Story That Time Forgot (2014) `256835` | **adjacent** | set_at | set_at | Christmas mainly explains why there are new toys and a post-holiday playdate, but the dinosaur-cult adventure and Trixie's arc would work just as well around a birthday, so the holiday is backdrop rather than something that shapes the story's mood or themes. |
 | An American Tail (1986) `4978` | **none** | none | set_at | Hanukkah appears only in the brief opening scene before the pogrom, and the rest of this immigration adventure has no holiday setting or seasonal themes, so the holiday is a passing moment rather than something that shapes the film. |
 | An Ice Palace Romance (2023) `1180655` | **none** | none | set_at | This is a Hallmark Winterfest movie about an ice rink and ice palace in the general winter season, with no meaningful connection to Christmas or any other covered holiday despite the loose TMDB tags. |
-| Christmas in July (1940) `34778` | **none** | none | none | Preston Sturges' comedy is set in summer and only uses 'Christmas in July' as a metaphor for the windfall and gift-buying spree, with no actual holiday connection. |
 | Houseguest (1995) `17207` | **none** | none | adjacent | Houseguest's Christmas touches are incidental scenery in a mob-chase, mistaken-identity comedy, too slight and unstructural to make it a holiday-set film. |
 | Jack Frost (1934) `70539` | **none** | none | none | The short is about autumn turning to winter and a bear cub's disobedience, with no Christmas or other holiday content, so the season is weather, not a holiday. |
 | Once Upon a Deadpool (2018) `567604` | **none** | none | adjacent | The holiday link comes from the December release, the marketing and a few framing gags, while the re-edited Deadpool 2 story itself has no Christmas setting or themes. |
@@ -133,4 +132,4 @@ Levels: **about** the holiday is the story · **set_at** set at the holidays, an
 | Snow Buddies (2008) `14059` | **none** | none | adjacent | Snow Buddies is a winter sled-dog adventure with snow but no meaningful Christmas or other holiday content; the holiday keywords reflect the wintry setting and its Christmas-themed sequel rather than the film itself. |
 | Tommy (1975) `11326` | **none** | none | set_at | Christmas is confined to a single musical number in a decades-spanning rock opera about trauma, pinball and messianic celebrity, so it amounts to a passing scene rather than a seasonal frame. |
 
-123 films to review.
+122 films to review.

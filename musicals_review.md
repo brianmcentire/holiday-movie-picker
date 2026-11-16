@@ -42,7 +42,6 @@ Kinds: **musical** and **music_show** are in the pill · **some_songs** and **no
 | Santa's Workshop (1932) `67167` | **some_songs** | musical | some_songs | disagree | A seven-minute Silly Symphony set to music with the elves' sung work song and Santa's rhymes, but essentially one or two sung passages around visual gags, not a run of numbers. |
 | The Bear Who Slept Through Christmas (1973) `147492` | **some_songs** | musical | musical | unsure | Ted E. Bear's search for Christmas is a narrated, dialogue-driven special with a title song and a couple of Doug Goodwin numbers, mostly over his wanderings, in the Frosty mold rather than a musical. |
 | The Little Drummer Boy: Book II (1976) `26536` | **some_songs** | musical | some_songs | disagree | Greer Garson's narration and dialogue carry Aaron's bells story, with the title song, Brutus's greedy number and Do You Hear What I Hear as its few songs. |
-| The Night Before Christmas (1933) `53929` | **some_songs** | musical | some_songs | disagree | A Silly Symphony in which the poem's opening is sung and the toys parade to music, but it is one sung passage and gags set to score, not a run of numbers. |
 | The Small One (1978) `27287` | **some_songs** | some_songs | musical | disagree | Disney's featurette has the boy's tender title song and the merchants' comic number, about three songs in 26 minutes, with the story carried by dialogue and narration. |
 | Alien Xmas (2020) `656561` | **none** | some_songs | musical | disagree | The Chiodo Brothers' stop-motion special is a dialogue-driven comedy adventure with no musical numbers; reviewer B's account of original songs and composers is confused. |
 | Bah, Humduck!: A Looney Tunes Christmas (2006) `13248` | **none** | none | musical | disagree | A dialogue-and-slapstick Christmas Carol parody with Daffy as Scrooge; a brief carol moment at most, and reviewer B's original-song account does not match the film. |
@@ -50,4 +49,4 @@ Kinds: **musical** and **music_show** are in the pill · **some_songs** and **no
 | The Nutcracker Prince (1990) `13759` | **none** | none | musical | disagree | A dialogue-driven Canadian adaptation with Tchaikovsky as score; its one original song plays over the credits, and the Mouse King and Sugar Plum numbers reviewer B describes are not in the film. |
 | Tom and Jerry: A Nutcracker Tale (2007) `24696` | **none** | some_songs | music_show | disagree | A near-dialogue-free slapstick retelling with Tchaikovsky's score behind the dancing; no one sings a song, so for a filter about singing it is score only. |
 
-40 calls to review. Fable decided 592 films in all; on the rest it agreed with both models.
+39 calls to review. Fable decided 581 films in all; on the rest it agreed with both models.
