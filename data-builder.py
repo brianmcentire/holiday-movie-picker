@@ -67,9 +67,17 @@ ALLOWED_CERTS = {'G', 'PG', 'PG-13', 'R', 'TV-G', 'TV-PG', 'TV-Y7', 'TV Movie'}
 # Their unrated films are let in and labeled "TV Movie".
 TV_STUDIOS = {
     4056: "Hallmark Entertainment", 6435: "Hallmark Productions", 53015: "Hallmark Media",
-    9027: "Hallmark Hall of Fame Productions", 180934: "Great American Media", 3431: "Lifetime",
-    210724: "UPtv", 111898: "UP Entertainment", 84068: "ION Television",
+    9027: "Hallmark Hall of Fame Productions", 3431: "Lifetime",
 }
+# TMDB often lists only the company that made a TV movie for Hallmark or Lifetime, not the network. This year's
+# unrated ones are let in anyway when a US release note or US streaming channel names the network (What If
+# Christmas: Hallmark+, Nov 2026). From next year they need MIN_VOTES_UNRATED, unless TMDB has added the studio.
+TV_NETWORK_NOTE = re.compile(r"hallmark|lifetime", re.IGNORECASE)
+
+# Left out: these networks' films rate below Hallmark's and Lifetime's (IMDb 5.6 against 6.3 in Nov 2026), by
+# studio or a US release note naming the network, unless also tied to Hallmark, Lifetime or a STREAMER_NOTE service.
+LEFT_OUT_NETWORKS = {180934: "Great American Media", 210724: "UPtv", 111898: "UP Entertainment", 84068: "ION Television"}
+LEFT_OUT_NETWORK_NOTE = re.compile(r"great american|gac family|\bup ?tv\b|^ion\b|^pax\b", re.IGNORECASE)  # Pax: ION's old name
 
 # This year's unrated films from these streaming services skip MIN_VOTES_UNRATED, so they're in before they've
 # had time to collect votes (Clashing Through the Snow, Prime Video, Nov 2026). From next year they need the
@@ -187,7 +195,7 @@ async def fetch_with_retry(session, url, params, semaphore):
 
 async def fetch_movie_details(session, semaphore, movie_id):
     url = f"{API_ROOT}/movie/{movie_id}"
-    params = {"append_to_response": "keywords,release_dates,credits"}
+    params = {"append_to_response": "keywords,release_dates,credits,watch/providers"}
     data = await fetch_with_retry(session, url, params, semaphore)
     if not data: return None
     
@@ -211,11 +219,27 @@ async def fetch_movie_details(session, semaphore, movie_id):
             break
     return keywords, cert, genres, data
 
+def us_notes(data):
+    """The notes on the film's US releases, like "Netflix" or "Hallmark Channel"."""
+    return [(r.get('note') or '').strip() for country in data.get('release_dates', {}).get('results', [])
+            if country['iso_3166_1'] == 'US' for r in country['release_dates']]
+
+def us_channels(data):
+    """The US subscription services streaming the film, like "Hallmark+ Amazon Channel" (JustWatch's data, via TMDB)."""
+    return [p['provider_name'] for p in data.get('watch/providers', {}).get('results', {}).get('US', {}).get('flatrate', [])]
+
 def from_streamer(data):
     """True when a note on the film's US release names a STREAMER_NOTE service."""
-    return any(STREAMER_NOTE.search(r.get('note') or '')
-               for country in data.get('release_dates', {}).get('results', []) if country['iso_3166_1'] == 'US'
-               for r in country['release_dates'])
+    return any(STREAMER_NOTE.search(n) for n in us_notes(data))
+
+def tied_to(data, studios, note):
+    """True when one of the studios made the film, or a note on its US release matches."""
+    return (any(c['id'] in studios for c in data.get('production_companies', []))
+            or any(note.search(n) for n in us_notes(data)))
+
+def from_left_out_network(data):
+    return (tied_to(data, LEFT_OUT_NETWORKS, LEFT_OUT_NETWORK_NOTE)
+            and not (tied_to(data, TV_STUDIOS, TV_NETWORK_NOTE) or from_streamer(data)))
 
 def pick_people(credits, votes):
     """The people search finds this film by, as {"cast": [...], "directors": [...], "writers": [...]} with
@@ -330,17 +354,20 @@ async def main():
                         failed_lookups += 1
                         continue
                     keywords, cert, genres, data = detail
+                    is_new = (m.get('release_date') or '').startswith(THIS_YEAR)
                     if cert == "NR" and any(c['id'] in TV_STUDIOS for c in data.get('production_companies', [])):
+                        cert = "TV Movie"
+                    elif cert == "NR" and is_new and any(TV_NETWORK_NOTE.search(x) for x in us_notes(data) + us_channels(data)):
                         cert = "TV Movie"
                     if str(m['id']) in movie_metadata: continue  # Listed twice on one page
 
                     # Quality Gate
-                    if "Horror" in genres or str(m['id']) in SKIP_IDS: continue
+                    if "Horror" in genres or str(m['id']) in SKIP_IDS or from_left_out_network(data): continue
                     if (m.get('release_date') or '9999')[:4] < str(EARLIEST_YEAR): continue
                     votes = m.get('vote_count', 0)
                     is_classic = (m.get('release_date') or '9999')[:4] < str(UNRATED_CLASSIC_BEFORE)
                     unrated_min = MIN_VOTES if is_classic else MIN_VOTES_UNRATED
-                    if (m.get('release_date') or '').startswith(THIS_YEAR) and from_streamer(data): unrated_min = 0
+                    if is_new and from_streamer(data): unrated_min = 0
                     if cert not in ALLOWED_CERTS and not (cert == 'NR' and votes >= unrated_min): continue
                     if cert == 'R' and votes < MIN_VOTES_R: continue
                     if cert in ('R', 'NR') and any(EXPLICIT_KEYWORDS.search(k.lower()) for k in keywords): continue

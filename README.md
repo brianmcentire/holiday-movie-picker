@@ -40,7 +40,7 @@ The Genres pill **Musical** holds musicals and music shows: concerts, variety sp
 * To overrule a call, add the film's TMDB id to `OVERRIDES` in `musical_classifier.py`, then run `python musical_classifier.py apply`.
 
 ### Automatic refresh
-A GitHub Action (`.github/workflows/rebuild-data.yml`) rebuilds `holiday_engine.json` every Monday in November and December. If the data changed, it commits the new file, then rebuilds the live site. You can also start it from the Actions tab.
+A GitHub Action (`.github/workflows/rebuild-data.yml`) rebuilds `holiday_engine.json` every Monday in November and December. If the data changed, it commits the new file, then rebuilds the live site. You can also start it from the Actions tab. GitHub starts scheduled runs late when it's busy (about 10½ hours late on Nov 9 and 16, 2026); a run started by hand begins at once.
 
 One-time setup: run `gh secret set TMDB_API_KEY` and `gh secret set ANTHROPIC_API_KEY` in this folder, pasting each key when prompted.
 
