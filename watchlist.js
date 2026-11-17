@@ -175,6 +175,8 @@
         pen: '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>',
         tag: '<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>',
         text: '<path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/>',
+        // More on IMDb
+        arrowUpRight: '<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
     };
 
     function icon(name, size, { fill = 'none', stroke = 2, cls = '', label = '' } = {}) {
@@ -789,6 +791,14 @@
         const descMarks = typeof searchMarks !== 'function' || !reasons ? []
             : reasons.flatMap((r, i) => (r.kind === 'title' || r.kind === 'none' ? []
                 : searchMarks(m.overview ?? '', r.run).map(([start, end]) => [start, end, i]))).sort((x, y) => x[0] - y[0]);
+        // Under the description: "Trailer | More on IMDb ↗", each opening a new tab. No trailer, no "Trailer"; no
+        // IMDb id, More on TMDB.
+        const outLink = (href, html) => `<a class="wl-more" href="${esc(href)}" target="_blank" rel="noopener" draggable="false">${html}</a>`;
+        const trailer = /^[\w-]{11}$/.test(m.trailer ?? '') ? outLink(`https://www.youtube.com/watch?v=${m.trailer}`, 'Trailer') : '';
+        const more = /^tt\d+$/.test(m.imdb_id ?? '')
+            ? outLink(`https://www.imdb.com/title/${m.imdb_id}/`, `More on IMDb${icon('arrowUpRight', 12, { stroke: 2.5 })}`)
+            : outLink(tmdbURL(peekId), `More on TMDB${icon('arrowUpRight', 12, { stroke: 2.5 })}`);
+        const linkLine = `<p class="wl-peek-more">${trailer ? `${trailer}<span class="wl-more-sep" aria-hidden="true">|</span>` : ''}${more}</p>`;
         peek.panel.innerHTML = `<div class="wl-grabber" aria-hidden="true"></div>
             <button type="button" class="wl-peek-close" data-peek="close" aria-label="Close">${icon('x', 18, { stroke: 2.25 })}</button>
             <div class="wl-peek-top">
@@ -799,6 +809,7 @@
                     <div class="wl-meta"><span class="wl-cert">${esc(m.cert)}</span><a class="wl-rating wl-rating-link" href="${tmdbURL(peekId)}" target="_blank" rel="noopener" draggable="false" aria-label="${ratingOf(m)} on TMDB">${ratingOf(m)}</a>${peekScoresHTML(peekId)}</div>
                     <div class="wl-why-box"></div>
                     <p class="wl-peek-overview">${marked(m.overview ?? '', descMarks, 'mark', 'wl-hit')}</p>
+                    ${linkLine}
                 </div>
             </div>
             <div class="wl-peek-actions">
@@ -806,8 +817,8 @@
             </div>`;
     }
 
-    // Each choice closes the peek, and the poster behind shows what changed. The rating is a plain link to TMDB:
-    // it opens a new tab and leaves the peek open.
+    // Each choice closes the peek, and the poster behind shows what changed. The rating, the scores and the line
+    // under the description are plain links: they open a new tab and leave the peek open.
     function onPeekClick(e) {
         const action = e.target.closest('[data-peek]')?.dataset.peek;
         if (!action) return;
@@ -2103,16 +2114,22 @@
         a.ss-link { text-decoration: none; cursor: pointer; }
         a.ss-link:hover, a.ss-link:focus-visible { text-decoration: underline; }
         @media (min-width: 1024px) { .wl-row .ss-scores { gap: 12px; margin-left: 4px; } }
-        /* The list button over the watched button. Half a button (23px) further from the description than before More
-           on TMDB went. */
-        .wl-peek-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 41px; }
+        /* Under the description: "Trailer | More on IMDb ↗" in grey (canvas Round 14, Nov 17) */
+        .wl-peek-more { margin: 10px 0 0; font-size: 12.5px; line-height: 1.45; white-space: nowrap; }
+        .wl-more { color: #64748b; font-weight: 600; text-decoration: none; }
+        .wl-more svg { display: inline-block; vertical-align: -1px; margin-left: 2px; }
+        .wl-more:hover, .wl-more:focus-visible { color: #475569; text-decoration: underline; }
+        .wl-more-sep { margin: 0 9px; color: #cbd5e1; }
+        /* The list button over the watched button, 30px under that line */
+        .wl-peek-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 30px; }
         .wl-peek-add { box-shadow: 0 6px 16px -6px rgba(37,99,235,0.6); }
         .wl-peek-stack svg { flex: none; }
         @media (orientation: landscape) and (max-height: 500px) {
             .wl-peek-sheet { padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
             .wl-peek-poster { width: 64px; height: 96px; }
             .wl-peek-overview { -webkit-line-clamp: 3; }
-            .wl-peek-stack { margin-top: 35px; }
+            .wl-peek-more { margin-top: 6px; }
+            .wl-peek-stack { margin-top: 24px; }
         }
         /* Why it matches the search: a line under Rating and Score, and the matched words highlighted in the description */
         .wl-why-box { margin: 8px 0 0; font-size: 12px; line-height: 1.3; color: #475569; }
@@ -2147,6 +2164,9 @@
             .wl-peek-text .wl-rating { font-size: 12px; }
             .wl-why-box { margin-top: 10px; font-size: 13px; }
             .wl-peek-overview { display: block; -webkit-line-clamp: none; margin-top: 12px; font-size: 14px; line-height: 1.55; }
+            /* Centered over the buttons: across the whole column (the text keeps 28px clear of the close button) */
+            .wl-peek-more { margin: 14px -28px 0 0; font-size: 14px; text-align: center; }
+            .wl-more-sep { margin: 0 11px; }
             /* The two buttons, 280px wide, centered in the space beside the poster */
             .wl-peek-actions { grid-column: 2; grid-row: 2; justify-self: center; display: flex; flex-direction: column; gap: 10px; width: min(280px, 100%); margin-top: 20px; }
             .wl-peek-actions .wl-peek-stack { margin-top: 0; }

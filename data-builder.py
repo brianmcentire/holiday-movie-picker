@@ -166,6 +166,11 @@ PEOPLE_MIN_POPULARITY = 1.5   # TMDB's popularity for a person: bit parts are un
 SOURCE_AUTHOR_JOBS = {"Novel", "Book", "Short Story"}
 WRITER_JOBS = {"Screenplay", "Writer", "Story"}
 
+# The preview's "Trailer | More on IMDb" line: each film's IMDb id and one YouTube trailer, both from TMDB
+IMDB_ID = re.compile(r"^tt\d+$")
+YOUTUBE_KEY = re.compile(r"^[A-Za-z0-9_-]{11}$")
+TRAILER_NAME = re.compile(r"trailer|preview", re.IGNORECASE)  # Hallmark calls its trailers previews
+
 def load_api_key():
     """Read TMDB_API_KEY (the API Read Access Token) from the environment or a local .env file."""
     key = os.environ.get("TMDB_API_KEY")
@@ -195,7 +200,8 @@ async def fetch_with_retry(session, url, params, semaphore):
 
 async def fetch_movie_details(session, semaphore, movie_id):
     url = f"{API_ROOT}/movie/{movie_id}"
-    params = {"append_to_response": "keywords,release_dates,credits,watch/providers"}
+    params = {"append_to_response": "keywords,release_dates,credits,watch/providers,videos",
+              "include_video_language": "en,null"}  # English videos, and those with no language set
     data = await fetch_with_retry(session, url, params, semaphore)
     if not data: return None
     
@@ -258,6 +264,24 @@ def pick_people(credits, votes):
         if names: people[field] = names
     return people
 
+def pick_trailer(videos):
+    """The YouTube trailer the preview links to, as its video id, or None. Most films have one or none; for the
+    rest (98 of 1,038 in Nov 2026), the first that's official (from the studio's own channel), then one named as a
+    trailer or preview (Die Hard's "The Greatest Christmas Story" is filed as a trailer), then the sharpest, then
+    the newest. Newest picks an anniversary or 4K re-release trailer over a blurry original. TMDB has no view
+    counts."""
+    trailers = [v for v in (videos or {}).get('results', [])
+                if v.get('site') == 'YouTube' and v.get('type') == 'Trailer' and YOUTUBE_KEY.match(v.get('key') or '')]
+    if not trailers: return None
+    return max(trailers, key=lambda v: (bool(v.get('official')), bool(TRAILER_NAME.search(v.get('name') or '')),
+                                        v.get('size') or 0, v.get('published_at') or ''))['key']
+
+def links(details):
+    """{"imdb_id": ..., "trailer": ...} for the preview, each left out when TMDB has none."""
+    found = {"imdb_id": details.get('imdb_id') if IMDB_ID.match(details.get('imdb_id') or '') else None,
+             "trailer": pick_trailer(details.get('videos'))}
+    return {k: v for k, v in found.items() if v}
+
 async def main():
     semaphore = asyncio.Semaphore(CONCURRENT_REQUESTS)
     movie_metadata = {}
@@ -279,7 +303,7 @@ async def main():
         if holiday_name != "Christmas" and mid not in inverted_index[tag]:
             inverted_index[tag].append(mid)
 
-    def add_movie(m, keywords, cert, genres, holiday_name, credits):
+    def add_movie(m, keywords, cert, genres, holiday_name, details):
         mid = str(m['id'])
         movie_metadata[mid] = {
             "title": m['title'], "overview": m['overview'],
@@ -287,7 +311,8 @@ async def main():
             "votes": m.get('vote_count', 0),
             "cert": cert, "date": m.get('release_date') or '0000-00-00',
             "poster": f"https://image.tmdb.org/t/p/w500{m['poster_path']}",
-            **pick_people(credits, m.get('vote_count', 0)),
+            **links(details),
+            **pick_people(details.get('credits'), m.get('vote_count', 0)),
         }
 
         # Vibes -> Lowercase
@@ -380,7 +405,7 @@ async def main():
                             continue
 
                     if len(movie_metadata) >= TOTAL_MAX_LIMIT: break
-                    add_movie(m, keywords, cert, genres, holiday_name, data.get('credits'))
+                    add_movie(m, keywords, cert, genres, holiday_name, data)
                     valid_in_batch += 1
 
                 print(f"[{label}] Added {valid_in_batch}. Total: {len(movie_metadata)}", file=sys.stderr)
@@ -396,7 +421,7 @@ async def main():
             if not data.get('poster_path'):
                 print(f"\nWarning: always-include movie {mid} has no poster on TMDB yet, skipping.", file=sys.stderr)
                 continue
-            add_movie(data, keywords, cert, genres, ALWAYS_INCLUDE[mid], data.get('credits'))
+            add_movie(data, keywords, cert, genres, ALWAYS_INCLUDE[mid], data)
 
         if not movie_metadata:
             sys.exit("\nBuild failed: no titles found. Keeping the existing holiday_engine.json.")

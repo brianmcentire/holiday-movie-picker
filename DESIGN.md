@@ -149,6 +149,13 @@ What Season's Screenings settled on, and why where it isn't obvious. Mocks for m
 
   Why: an empty bookmark on every tile was clutter. Tapping a poster is what everyone does anyway, and phone tiles hide the overview, so the peek gives something back. The cost is one extra tap to reach TMDB.
   - **More on TMDB was removed** on Nov 11 (the owner's call: the buttons for TMDB, IMDb and Rotten Tomatoes all looked cluttered). Add moved half a button (23px) further from the description on phones: 41px, and 35px on a phone turned sideways. On laptops, the panel shares out the room the button left, so Add moved down about 28px for most films. Films whose long description fills the panel keep 20px.
+  - **"Trailer | More on IMDb ↗" under the description** (Nov 17, canvas Round 14, the owner's design). Why: nothing in the preview said where to find more about a film. The title area stays as it was ("already as cluttered as I want").
+    - **The look:** a grey line of text links, a lighter grey divider, and underlines on hover. The arrow is on More on IMDb only, as the owner wrote it. Each link opens a new tab (YouTube's app on a phone) and leaves the preview open.
+    - **On phones** it lines up with the description, 10px under it, and Add sits 30px under the line. The sheet is 17px taller than before (the owner's call: the first mock kept the old height and looked cramped). Sideways: 6px and 24px, 13px taller.
+    - **On laptops** it's centered over the buttons, 14px under the description. It sits in space that was empty, so the panel keeps its size.
+    - **Films without a trailer** (292 of 1,038 on Nov 17) show only More on IMDb. **Films without an IMDb id** (3) say More on TMDB.
+    - **Which trailer:** one per film, picked by the builder from TMDB's YouTube trailers (`pick_trailer` in `data-builder.py`). Only 98 films have more than one. The pick is official first (from the studio's channel), then a name with "trailer" or "preview" in it, then the sharpest, then the newest. Newest prefers an anniversary or 4K re-release trailer over a blurry original: Elf gets its 2022 4K trailer, Die Hard its 30th-anniversary one.
+    - **The data:** `imdb_id` and `trailer` (the YouTube video id) on each film in `holiday_engine.json`, from the TMDB details the builder already fetches (`videos` added to them). Not from `scores.json`, so the line doesn't wait for that file or depend on MDBList.
 - **Phones:** the preview is a sheet from the bottom over the dimmed page, and a swipe down closes it.
 - **Laptops and tablets** (720px wide and 560px tall or more): the same preview as a large panel in the middle of the screen, 720px wide, over the same dimmed page.
   - The poster is on the left. The full description shows.
@@ -464,6 +471,12 @@ Decided with the owner and built on Nov 11.
 - **The laptop preview:** a popover next to the clicked card. It's fiddly near the screen's edges, and it moves around.
 - **Links to TMDB, IMDb and Rotten Tomatoes under Add** (canvas Round 11, Nov 11): a "More on:" line of text links, the same line in small capitals, and rows of equal buttons with each site's name and the arrow. All looked cluttered; the rating links to TMDB instead.
   - *If buttons ever come back, the owner's pick is E:* plain buttons like the old More on TMDB, equal widths, labeled TMDB, IMDb and "Tomatoes", with slightly tighter letter spacing so "Tomatoes" fits a laptop's 88px button. "Rotten Tom." doesn't fit, and "RT" is less known.
+- **Trailer and More on IMDb** (Nov 17), before the line under the description:
+  - a trailer cue on the poster, tapping the poster to play it (canvas Round 13): a play button in the middle, or a small "Trailer" tag in the corner. The owner liked neither. The middle button covered faces on a phone's small poster; the tag covered part of a title.
+  - the poster opening IMDb, Rotten Tomatoes or TMDB, whichever has the film: nothing says the poster is a link;
+  - More on IMDb at the end of the description's last line on laptops (Round 13): it can't do that on phones, where the description is cut off at 6 lines;
+  - the title area: the owner wants nothing more there;
+  - picking the most-watched trailer: TMDB has no view counts, and YouTube's would need a Google API key as another secret, for 98 films.
 - **People search:** a fixed top 10 or 20 actors per film; producers; a switch on the page to turn it off.
 - **The reason line for several words:** "…" or partial names when it doesn't fit; people and tags mixed on one line; naming every person whose name starts with a typed word (Bob Newhart for "new" in "new york").
 - **The title count:** blue whenever any filter is on. It follows the number instead, so turning R on (still "More than 1,000") stays grey.
@@ -498,5 +511,6 @@ Also possible, not wanted for now (owner, Nov 12):
 - **People search drifts a little week to week:** TMDB's popularity scores change, so a borderline supporting actor can drop in and out between rebuilds.
 - **Classic casts thin out past the 10th billed:** old stars score low on TMDB popularity, so supporting players further down are missing (Jack Albertson, 14th in the 1947 Miracle on 34th Street).
 - **Where to watch** (designed Nov 17; not built, the owner's choice): up to three service logos in the preview, biggest service first, linked to TMDB's Where to Watch page. The picks, their alternatives and the numbers are in [future/where-to-watch.md](future/where-to-watch.md).
+- **Trailers that disappear:** 192 films' only trailer is a fan upload, which YouTube can take down; the link then opens "Video unavailable". The builder could ask YouTube's keyless oEmbed address whether each picked video still exists (it answers 200, or 400 for a missing one) and fall back to the next. Not built. Nor is a hand list of trailer picks to override, like the classifiers' OVERRIDES; add one if a pick looks wrong.
 - **The title search reads only TMDB's first 2,000 results** (`MAX_PAGES_PER_HOLIDAY`, 100 pages). "christmas" had 5,002 in Nov 2026, so a little-known film with "Christmas" in its title but no christmas keyword can be missed, as Hallmark's Mr. & Mrs. Christmas was on Nov 17. Reading all of them would take about 150 more requests a run.
 - **iPhone Safari bookmarks** may save the loaded address the same way Add to Home Screen does. If so, a bookmark on iPhone won't always carry the list. Test before relying on it.
