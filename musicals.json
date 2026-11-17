@@ -9130,6 +9130,27 @@
   "title": "Ebenezer",
   "year": "2026"
  },
+ "1570217": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this specific 2026 Hallmark-style ski lodge romance, and nothing in its keywords or description points to on-screen singing, so it is most likely a dialogue-driven film with music only on the soundtrack.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't recognize this 2026 title, but as a Hallmark-style romantic comedy about a hotel manager and a ski lodge owner, it's most likely dialogue-driven with only soundtrack carols and no meaningful on-screen singing.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Snowbound for the Holidays",
+  "year": "2026"
+ },
  "1570488": {
   "fable": {
    "kind": "none",
@@ -9300,6 +9321,27 @@
   },
   "title": "Donovan's Reef",
   "year": "1963"
+ },
+ "1592343": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "low",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 TV movie, but its premise (an artist saving a Christmas market, a romance with an architect) suggests a typical dialogue-driven holiday rom-com with no featured musical performances, though a brief carol scene is possible.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 title, and the description points to a typical romantic comedy TV movie told in dialogue, with any carols likely just background or a brief market scene.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "O Little Christmas Market",
+  "year": "2026"
  },
  "1594516": {
   "fable": {
@@ -9876,6 +9918,27 @@
   "title": "Mickey's Home Alone",
   "year": "2026"
  },
+ "1729134": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this film specifically, but it appears to be a Hallmark-style NFL Christmas romance told through dialogue, with no sign of on-screen musical performances beyond perhaps a fight-song moment.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 title, but as a romantic comedy TV movie about a reporter and a Bears superfan, it is almost certainly dialogue-driven with only soundtrack music and no on-screen performances.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Holiday Touchdown: A Bears Love Story",
+  "year": "2026"
+ },
  "17379": {
   "music_hint": false,
   "opus": {
@@ -9917,6 +9980,27 @@
   },
   "title": "Kind Lady",
   "year": "1935"
+ },
+ "1741641": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't recognize this 2026 TV romance, and nothing in its description or genres points to on-screen musical performances beyond what a typical holiday rom-com might include.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't recognize this 2026 TV romance, and the description reads as a standard dialogue-driven holiday romcom with no sign of on-screen performances beyond possible incidental carols.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Checking Inn for Christmas",
+  "year": "2026"
  },
  "174311": {
   "music_hint": false,
@@ -10023,6 +10107,27 @@
   "title": "Silent Night",
   "year": "2002"
  },
+ "1773195": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this title; it appears to be a standard dialogue-driven holiday TV romance about saving a bowling alley, with no indication of on-screen musical performances.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 title specifically; it appears to be a standard holiday romantic comedy about a bowling alley tournament, with no indication of on-screen singing beyond possible soundtrack music.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Winter Wonderlanes",
+  "year": "2026"
+ },
  "1773345": {
   "music_hint": false,
   "opus": {
@@ -10063,6 +10168,48 @@
    "version": 1
   },
   "title": "My Christmas Cowboy",
+  "year": "2026"
+ },
+ "1773357": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 title; it appears to be a dialogue-driven Christmas romance about a screen-free holiday, with nothing suggesting songs are performed on screen.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't recognize this 2026 title; the description and Romance genre point to a dialogue-driven holiday romance with no sign of on-screen song performances.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Holiday Unplugged",
+  "year": "2026"
+ },
+ "1773363": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 TV romance, and its description and keywords point to a dialogue-driven scrapbook-project love story with no sign of on-screen musical performances.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 title specifically, but the description and genres point to a standard holiday romance-comedy told through dialogue, with no sign of on-screen musical performances.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Merry Memories",
   "year": "2026"
  },
  "1773368": {
@@ -10122,6 +10269,27 @@
    "version": 1
   },
   "title": "Who's Coming for Christmas?",
+  "year": "2026"
+ },
+ "1773380": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this specific 2026 TV movie, but the description is a fashion-designer alternate-reality romance with no sign of musical performances, so any songs are likely only on the soundtrack.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't recognize this 2026 TV movie; the description and genres (romance, sci-fi, alternate realities) point to a dialogue-driven holiday romance with no sign of on-screen musical performances.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "What If Christmas",
   "year": "2026"
  },
  "1773382": {

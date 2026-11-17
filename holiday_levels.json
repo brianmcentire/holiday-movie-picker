@@ -4187,6 +4187,18 @@
   "version": 2,
   "year": "2026"
  },
+ "1570217": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Hallmark Christmas romance where Christmas magic at a ski lodge drives the love story, squarely a holiday movie by genre convention.",
+  "referee": null,
+  "title": "Snowbound for the Holidays",
+  "version": 2,
+  "year": "2026"
+ },
  "1570488": {
   "confidence": "medium",
   "haiku": "about",
@@ -4270,6 +4282,18 @@
   "title": "Donovan's Reef",
   "version": 2,
   "year": "1963"
+ },
+ "1592343": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Hallmark-style Christmas romance centered on saving a town's Christmas market and building to a Christmas miracle, so the holiday is the subject.",
+  "referee": null,
+  "title": "O Little Christmas Market",
+  "version": 2,
+  "year": "2026"
  },
  "1594516": {
   "confidence": "high",
@@ -4547,6 +4571,18 @@
   "version": 2,
   "year": "1995"
  },
+ "1729134": {
+  "confidence": "medium",
+  "haiku": "set_at",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "This appears to be a Hallmark-style Christmas romance in the NFL-partnership series, where a homecoming at Christmas and the holiday spirit frame the love story, which is the 'about' category by definition.",
+  "referee": "As a Hallmark Countdown to Christmas romance whose homecoming, courtship and payoff are steeped in the holiday season, it fits the guideline's Hallmark Christmas romance example despite its football hook.",
+  "title": "Holiday Touchdown: A Bears Love Story",
+  "version": 2,
+  "year": "2026"
+ },
  "17379": {
   "confidence": "medium",
   "haiku": "adjacent",
@@ -4570,6 +4606,18 @@
   "title": "Kind Lady",
   "version": 2,
   "year": "1935"
+ },
+ "1741641": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Hallmark-style Christmas romance set at a Christmas retreat where the heroine learns the season's true magic, so the holiday is the subject.",
+  "referee": null,
+  "title": "Checking Inn for Christmas",
+  "version": 2,
+  "year": "2026"
  },
  "174311": {
   "confidence": "medium",
@@ -4631,6 +4679,18 @@
   "version": 2,
   "year": "2002"
  },
+ "1773195": {
+  "confidence": "medium",
+  "haiku": "set_at",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "This appears to be a Hallmark-style holiday romance in which a Thanksgiving homecoming and a winter tournament to save the family bowling alley, tagged Christmas, make the season central to the story.",
+  "referee": "It is a Hallmark-style Thanksgiving-to-Christmas homecoming romance whose title, framing and emotional payoff are steeped in the holiday season, which squarely fits the rubric's holiday-romance example.",
+  "title": "Winter Wonderlanes",
+  "version": 2,
+  "year": "2026"
+ },
  "1773345": {
   "confidence": "medium",
   "haiku": "about",
@@ -4655,6 +4715,30 @@
   "version": 2,
   "year": "2026"
  },
+ "1773357": {
+  "confidence": "medium",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Hallmark-style Christmas romance built around planning a screen-free Christmas, so the holiday and its spirit are central to the story.",
+  "referee": "A Christmas TV romance built around planning a screen-free family Christmas, with the holiday's spirit of togetherness and healing central to its emotional arc, fits squarely in the Hallmark-style holiday romance category.",
+  "title": "Holiday Unplugged",
+  "version": 2,
+  "year": "2026"
+ },
+ "1773363": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "This appears to be a TV-style Christmas romance built around a Christmas scrapbook project and a relationship that comes to a head by Christmas, which makes the holiday central to the story.",
+  "referee": null,
+  "title": "Merry Memories",
+  "version": 2,
+  "year": "2026"
+ },
  "1773368": {
   "confidence": "high",
   "haiku": "about",
@@ -4676,6 +4760,18 @@
   "reason": "A Hallmark-style Christmas romance centered on hosting a Christmas Eve dinner and small Christmas miracles, so the holiday is the subject.",
   "referee": null,
   "title": "Who's Coming for Christmas?",
+  "version": 2,
+  "year": "2026"
+ },
+ "1773380": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Christmas romance in the Hallmark mold, built around a magical Christmas ornament, Christmas galas and a holiday-spirit lesson, so the holiday runs through the whole story.",
+  "referee": null,
+  "title": "What If Christmas",
   "version": 2,
   "year": "2026"
  },
