@@ -62,6 +62,7 @@ If the classifier can't run (missing key, no credits, API trouble), the new movi
 * **Installing the script:** with Tampermonkey in Chrome, open https://raw.githubusercontent.com/brianmcentire/holiday-movie-picker/main/userscripts/scores.user.js and click Install. Tampermonkey then updates it by itself whenever a pushed version has a higher `@version` (it checks daily; Tampermonkey's menu has "Check for userscript updates" to check now).
 
 ### Future ideas
+* **Where to watch:** logos of the services streaming each film, in the preview. Designed but not built: [future/where-to-watch.md](future/where-to-watch.md).
 * **Pick for me:** a button that spotlights one film from the current filters.
 * **Falling snow:** a soothing, gentle snowfall in the page background.
 * **Released filter:** a group like Content Ratings with plain decade buttons (Before 1970 · '70s & '80s · '90s & 2000s · 2010 & later), all on by default, so people who skip older movies can turn them off. Factual labels on purpose: names like "Retro" make a judgment, and whether a film feels dated depends on the film and the viewer (A Christmas Story and Die Hard still play for kids who can't stand Christmas Vacation).
