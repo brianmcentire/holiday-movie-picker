@@ -474,9 +474,12 @@ Decided with the owner and built on Nov 11.
 - **Trailer and More on IMDb** (Nov 17), before the line under the description:
   - a trailer cue on the poster, tapping the poster to play it (canvas Round 13): a play button in the middle, or a small "Trailer" tag in the corner. The owner liked neither. The middle button covered faces on a phone's small poster; the tag covered part of a title.
   - the poster opening IMDb, Rotten Tomatoes or TMDB, whichever has the film: nothing says the poster is a link;
-  - More on IMDb at the end of the description's last line on laptops (Round 13): it can't do that on phones, where the description is cut off at 6 lines;
-  - the title area: the owner wants nothing more there;
-  - picking the most-watched trailer: TMDB has no view counts, and YouTube's would need a Google API key as another secret, for 98 films.
+  - More on IMDb at the end of the description's last line on laptops, on its own line on phones (Round 13): the owner wanted it in the same place on both. Phones cut the description off at 6 lines, so it couldn't end the text there;
+  - the title as the link, with a ↗ after it: the owner wants nothing more in the title area ("already as cluttered as I want");
+  - also proposed, not picked: making the rating and scores look tappable (the link color or a dotted underline, and a ↗ at the row's end), and an ⓘ button beside the close ✕;
+  - playing the trailer inside the preview with YouTube's player: heavier, it brings YouTube's cookies, some trailers block embedding, and phones go full screen anyway;
+  - picking the most-watched trailer: TMDB has no view counts, and YouTube's would need a Google API key as another secret, for 98 films;
+  - picking the oldest trailer instead of the newest: it gets the original theatrical trailers, but they're often blurry uploads (Elf's is 360p).
 - **People search:** a fixed top 10 or 20 actors per film; producers; a switch on the page to turn it off.
 - **The reason line for several words:** "…" or partial names when it doesn't fit; people and tags mixed on one line; naming every person whose name starts with a typed word (Bob Newhart for "new" in "new york").
 - **The title count:** blue whenever any filter is on. It follows the number instead, so turning R on (still "More than 1,000") stays grey.
