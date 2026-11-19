@@ -6,7 +6,7 @@ Live demo here - https://brianmcentire.github.io/holiday-movie-picker/
 A curated holiday movie discovery engine built with a high-concurrency Python API client and a static HTML and JS frontend with no build step (Tailwind and Lucide load from CDNs).
 
 ### Architecture
-* **Builder:** `data-builder.py` uses `asyncio` and `aiohttp` to fetch and normalize data from TMDB, including the actors, directors and writers that search can find each film by, and each film's IMDb id and YouTube trailer for the preview's "Trailer | More on IMDb" line.
+* **Builder:** `data-builder.py` uses `asyncio` and `aiohttp` to fetch and normalize data from TMDB, including the actors, directors and writers that search can find each film by, and each film's IMDb id and YouTube trailer for the preview's "Trailer | More on IMDb" line (checking with YouTube that the trailer still plays).
 * **Holiday levels:** `holiday_classifier.py` asks Claude how much the holiday matters to each film (see below).
 * **Frontend:** `index.html` is a standalone static site that filters the generated `holiday_engine.json` in real-time.
 * **Musical pill:** `musical_classifier.py` asks Claude which films are musicals or music shows (see below).

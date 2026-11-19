@@ -173,6 +173,9 @@ WRITER_JOBS = {"Screenplay", "Writer", "Story"}
 IMDB_ID = re.compile(r"^tt\d+$")
 YOUTUBE_KEY = re.compile(r"^[A-Za-z0-9_-]{11}$")
 TRAILER_NAME = re.compile(r"trailer|preview", re.IGNORECASE)  # Hallmark calls its trailers previews
+YOUTUBE_OEMBED = "https://www.youtube.com/oembed"  # Says whether a video still plays (see youtube_plays)
+YOUTUBE_CONCURRENT = 4       # About 760 checks a build, a few at a time
+MAX_TRAILERS_GONE = 0.1      # More than this share of trailers "gone" means YouTube's answers changed, not the videos
 
 def load_api_key():
     """Read TMDB_API_KEY (the API Read Access Token) from the environment or a local .env file."""
@@ -278,23 +281,69 @@ def pick_people(credits, votes):
         if names: people[field] = names
     return people
 
-def pick_trailer(videos):
-    """The YouTube trailer the preview links to, as its video id, or None. Most films have one or none; for the
-    rest (98 of 1,038 in Nov 2026), the first that's official (from the studio's own channel), then one named as a
-    trailer or preview (Die Hard's "The Greatest Christmas Story" is filed as a trailer), then the sharpest, then
-    the newest. Newest picks an anniversary or 4K re-release trailer over a blurry original. TMDB has no view
-    counts."""
+def rank_trailers(videos):
+    """The film's YouTube trailers as video ids, best first; the preview links to the first that still plays (see
+    check_trailers). Most films have one or none; for the rest (98 of 1,038 in Nov 2026), official ones first (from
+    the studio's own channel), then ones named as a trailer or preview (Die Hard's "The Greatest Christmas Story" is
+    filed as a trailer), then the sharpest, then the newest. Newest picks an anniversary or 4K re-release trailer
+    over a blurry original. TMDB has no view counts."""
     trailers = [v for v in (videos or {}).get('results', [])
                 if v.get('site') == 'YouTube' and v.get('type') == 'Trailer' and YOUTUBE_KEY.match(v.get('key') or '')]
-    if not trailers: return None
-    return max(trailers, key=lambda v: (bool(v.get('official')), bool(TRAILER_NAME.search(v.get('name') or '')),
-                                        v.get('size') or 0, v.get('published_at') or ''))['key']
+    return [v['key'] for v in sorted(trailers, reverse=True, key=lambda v: (
+        bool(v.get('official')), bool(TRAILER_NAME.search(v.get('name') or '')), v.get('size') or 0, v.get('published_at') or ''))]
 
 def links(details):
     """{"imdb_id": ..., "trailer": ...} for the preview, each left out when TMDB has none."""
     found = {"imdb_id": details.get('imdb_id') if IMDB_ID.match(details.get('imdb_id') or '') else None,
-             "trailer": pick_trailer(details.get('videos'))}
+             "trailer": next(iter(rank_trailers(details.get('videos'))), None)}
     return {k: v for k, v in found.items() if v}
+
+async def youtube_plays(session, semaphore, key):
+    """Whether the YouTube video still plays, from YouTube's oEmbed address (public, no key): False for a private
+    (403) or removed (404) video; True when it plays (200), or plays on YouTube but not in other sites' players
+    (401, which an age check also gives). None when YouTube doesn't answer or answers something else."""
+    params = {"url": f"https://www.youtube.com/watch?v={key}", "format": "json"}
+    for attempt in range(3):
+        async with semaphore:
+            try:
+                async with session.get(YOUTUBE_OEMBED, params=params) as resp:
+                    if resp.status in (403, 404): return False
+                    if resp.status in (200, 401): return True
+                    if resp.status != 429 and resp.status < 500: return None
+            except (aiohttp.ClientError, asyncio.TimeoutError):
+                pass
+        await asyncio.sleep(2 ** attempt)
+    return None
+
+async def check_trailers(movies, options, log):
+    """Swaps each film's trailer that YouTube calls private or removed for its next one that plays, or drops it, so
+    the preview shows only More on IMDb. TMDB keeps listing videos their owners have since hidden (Fox's own
+    Miracle on 34th Street trailer, 8 of 764 in Nov 2026). options: {film id: its trailers, best first}; a film
+    kept from last week's build has only its pick. A trailer YouTube didn't answer about stays."""
+    picks = {mid: m['trailer'] for mid, m in movies.items() if m.get('trailer')}
+    semaphore = asyncio.Semaphore(YOUTUBE_CONCURRENT)
+    # Its own session: the TMDB token stays with TMDB
+    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+        answers = await asyncio.gather(*[youtube_plays(session, semaphore, key) for key in picks.values()])
+        gone = [mid for mid, plays in zip(picks, answers) if plays is False]
+        if len(gone) > MAX_TRAILERS_GONE * len(picks):
+            log(f"Warning: YouTube called {len(gone)} of {len(picks)} trailers private or removed, too many to trust; all stay.")
+            return
+        for mid in gone:
+            later = [key for key in options.get(mid, []) if key != picks[mid]]
+            replacement = None
+            for key in later:
+                if await youtube_plays(session, semaphore, key) is not False:
+                    replacement = key
+                    break
+            if replacement:
+                movies[mid]['trailer'] = replacement
+            else:
+                del movies[mid]['trailer']
+            log(f"Trailer {'replaced' if replacement else 'dropped'} (private or removed on YouTube): {movies[mid]['title']}")
+    unanswered = sum(plays is None for plays in answers)
+    if unanswered:
+        log(f"Trailers: YouTube didn't answer about {unanswered}; they stay.")
 
 def word_pattern(word):
     """A title-search word as a whole word, so "xmas" doesn't match "Xmasters"."""
@@ -357,6 +406,7 @@ async def main():
     inverted_index = defaultdict(list)
     genre_index = defaultdict(list)
     film_info = {}  # What the holiday classifier sees about each film
+    trailer_options = {}  # Each film's trailers, best first, for check_trailers
     failed_lookups = 0
 
     def add_holiday_tag(mid, holiday_name):
@@ -376,6 +426,7 @@ async def main():
             **links(details),
             **pick_people(details.get('credits'), m.get('vote_count', 0)),
         }
+        trailer_options[mid] = rank_trailers(details.get('videos'))
 
         # Vibes -> Lowercase
         movie_vibes = {v.lower() for v in keywords} - JUNK_TAGS - REPLACED_TAGS
@@ -534,6 +585,9 @@ async def main():
         if musical: genre_index[musical_classifier.GENRE] = musical
         if unanswered:
             print(f"Musical pill: {musical_classifier.plural(unanswered, 'film')} with no answer yet (make musicals).", file=sys.stderr)
+
+        print("\n--- Checking the trailers still play on YouTube ---", file=sys.stderr)
+        await check_trailers(movie_metadata, trailer_options, lambda msg: print(msg, file=sys.stderr))
 
         # The page shows a quiet note when films are waiting for a holiday level or the data is stale
         status = {"built": date.today().isoformat(), "unsorted": unsorted}
