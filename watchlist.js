@@ -177,6 +177,8 @@
         text: '<path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/>',
         // More on IMDb
         arrowUpRight: '<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
+        // Trailer's play cue: a filled circle with a white triangle
+        playDisc: '<circle cx="12" cy="12" r="11" fill="currentColor" stroke="none"/><path d="M9.8 7.6v8.8l7-4.4z" fill="#fff" stroke="#fff" stroke-width="1"/>',
     };
 
     function icon(name, size, { fill = 'none', stroke = 2, cls = '', label = '' } = {}) {
@@ -794,7 +796,7 @@
         // Under the description: "Trailer | More on IMDb ↗", each opening a new tab. No trailer, no "Trailer"; no
         // IMDb id, More on TMDB.
         const outLink = (href, html) => `<a class="wl-more" href="${esc(href)}" target="_blank" rel="noopener" draggable="false">${html}</a>`;
-        const trailer = /^[\w-]{11}$/.test(m.trailer ?? '') ? outLink(`https://www.youtube.com/watch?v=${m.trailer}`, 'Trailer') : '';
+        const trailer = /^[\w-]{11}$/.test(m.trailer ?? '') ? outLink(`https://www.youtube.com/watch?v=${m.trailer}`, `${icon('playDisc', 14, { cls: 'wl-more-cue' })}Trailer`) : '';
         const more = /^tt\d+$/.test(m.imdb_id ?? '')
             ? outLink(`https://www.imdb.com/title/${m.imdb_id}/`, `More on IMDb${icon('arrowUpRight', 12, { stroke: 2.5 })}`)
             : outLink(tmdbURL(peekId), `More on TMDB${icon('arrowUpRight', 12, { stroke: 2.5 })}`);
@@ -2120,6 +2122,7 @@
         .wl-more svg { display: inline-block; vertical-align: -1px; margin-left: 2px; }
         .wl-more:hover, .wl-more:focus-visible { color: #475569; text-decoration: underline; }
         .wl-more-sep { margin: 0 9px; color: #cbd5e1; }
+        .wl-more svg.wl-more-cue { width: 1.15em; height: 1.15em; vertical-align: -0.24em; margin: 0 4px 0 0; } /* sized to the text, phone to laptop */
         /* The list button over the watched button, 30px under that line */
         .wl-peek-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 30px; }
         .wl-peek-add { box-shadow: 0 6px 16px -6px rgba(37,99,235,0.6); }

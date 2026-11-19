@@ -63,6 +63,7 @@ If the classifier can't run (missing key, no credits, API trouble), the new movi
 
 ### Future ideas
 * **Where to watch:** logos of the services streaming each film, in the preview. Designed but not built: [future/where-to-watch.md](future/where-to-watch.md).
+* **IMDb in Top Rated:** rank by IMDb's and TMDB's votes together, so a small, devoted audience can't lift a film near the top, with IMDb's rating on the cards to match. Measured but not built: see "Top Rated with IMDb's votes" in [DESIGN.md](DESIGN.md).
 * **Pick for me:** a button that spotlights one film from the current filters.
 * **Falling snow:** a soothing, gentle snowfall in the page background.
 * **Released filter:** a group like Content Ratings with plain decade buttons (Before 1970 · '70s & '80s · '90s & 2000s · 2010 & later), all on by default, so people who skip older movies can turn them off. Factual labels on purpose: names like "Retro" make a judgment, and whether a film feels dated depends on the film and the viewer (A Christmas Story and Die Hard still play for kids who can't stand Christmas Vacation).
