@@ -15,8 +15,11 @@ import musical_classifier
 BASE_DIR = Path(__file__).resolve().parent
 TOTAL_MAX_LIMIT = 1500       # Safety cap, not a target
 CONCURRENT_REQUESTS = 10 
-MIN_VOTES = 10               # Waived for this year's releases, which haven't had time to collect votes
+MIN_VOTES = 10               # Waived for this year's releases, which haven't had time to collect votes...
 THIS_YEAR = str(date.today().year)
+NEW_RELEASE_DAYS = 183       # ...but only in their first 6 months: a film out longer with no votes has had the time
+SHORT_FILM_MINUTES = 40      # ...and only at this length or more (the Academy's line between short and feature), so a
+                             # short uploaded with a rating typed in doesn't get in (Dick Dangerous: Christmas EVIL, 6 min)
 MIN_VOTES_R = 100            # R films need a real audience, with no new-release waiver
 MIN_VOTES_UNRATED = 100      # Unrated films get in only if popular, like many Netflix originals (this year's: see STREAMER_NOTE)
 UNRATED_CLASSIC_BEFORE = 1990  # ...except older ones, like TV specials that were never rated, which need only MIN_VOTES
@@ -191,6 +194,7 @@ async def fetch_with_retry(session, url, params, semaphore):
                 async with session.get(url, params=params) as resp:
                     if resp.status == 200: return await resp.json()
                     if resp.status == 401: sys.exit("TMDB rejected TMDB_API_KEY. Use the API Read Access Token, not the short API Key.")
+                    if resp.status == 404: return {}  # Not on TMDB, as when it merges away a duplicate film; None means no answer
                     if resp.status == 429: await asyncio.sleep(2 + (2 ** attempt))
                     # A passing server error would otherwise end a search's paging early and drop its later pages
                     elif resp.status >= 500: await asyncio.sleep(2 ** attempt)
@@ -198,13 +202,16 @@ async def fetch_with_retry(session, url, params, semaphore):
             except (aiohttp.ClientError, asyncio.TimeoutError): await asyncio.sleep(2 ** attempt)
     return None
 
+DETAIL_PARAMS = {"append_to_response": "keywords,release_dates,credits,watch/providers,videos",
+                 "include_video_language": "en,null"}  # English videos, and those with no language set
+
 async def fetch_movie_details(session, semaphore, movie_id):
-    url = f"{API_ROOT}/movie/{movie_id}"
-    params = {"append_to_response": "keywords,release_dates,credits,watch/providers,videos",
-              "include_video_language": "en,null"}  # English videos, and those with no language set
-    data = await fetch_with_retry(session, url, params, semaphore)
+    data = await fetch_with_retry(session, f"{API_ROOT}/movie/{movie_id}", DETAIL_PARAMS, semaphore)
     if not data: return None
-    
+    return (*parse_details(data), data)
+
+def parse_details(data):
+    """(keywords, US rating, genres) from a film's TMDB details."""
     # Spacing tidied ("family business " → "family business"); the page's links match tags ignoring spacing
     keywords = [' '.join(k['name'].split()) for k in data.get('keywords', {}).get('keywords', [])]
     
@@ -223,7 +230,14 @@ async def fetch_movie_details(session, semaphore, movie_id):
             rated = [c for c in certs if c != "NR"]
             cert = (rated or certs or ["NR"])[0]
             break
-    return keywords, cert, genres, data
+    return keywords, cert, genres
+
+def load_last_build():
+    """The holiday_engine.json this build replaces (last week's), or {} if there isn't one."""
+    try:
+        return json.loads((BASE_DIR / "holiday_engine.json").read_text())
+    except (OSError, ValueError):
+        return {}
 
 def us_notes(data):
     """The notes on the film's US releases, like "Netflix" or "Hallmark Channel"."""
@@ -282,6 +296,61 @@ def links(details):
              "trailer": pick_trailer(details.get('videos'))}
     return {k: v for k, v in found.items() if v}
 
+def word_pattern(word):
+    """A title-search word as a whole word, so "xmas" doesn't match "Xmasters"."""
+    return re.compile(rf"\b{word}\b", re.IGNORECASE)
+
+def passes_quick_checks(m, title_pattern):
+    """Checks that need no extra request, run before fetching a movie's details."""
+    if title_pattern and not title_pattern.search(m.get('title', '')): return False
+    is_new = (m.get('release_date') or '').startswith(THIS_YEAR)
+    return (m.get('original_language') == 'en' and bool(m.get('poster_path'))
+            and (m.get('vote_count', 0) >= MIN_VOTES or is_new))
+
+def new_feature(data):
+    """True for a film released in the last NEW_RELEASE_DAYS (or not out yet) that runs at least SHORT_FILM_MINUTES
+    (or has no runtime listed yet, as before release): what this year's MIN_VOTES waiver is for."""
+    try:
+        age = (date.today() - date.fromisoformat(data.get('release_date') or '')).days
+    except ValueError:
+        return False
+    runtime = data.get('runtime') or 0
+    return age <= NEW_RELEASE_DAYS and (runtime == 0 or runtime >= SHORT_FILM_MINUTES)
+
+def passes_gate(m, keywords, cert, genres, data):
+    """The quality gate, once a film's details are in: its rating as the page shows it (unrated films from TV
+    studios become "TV Movie"), or None to leave it out."""
+    is_new = (m.get('release_date') or '').startswith(THIS_YEAR)
+    if m.get('vote_count', 0) < MIN_VOTES and not new_feature(data): return None
+    if cert == "NR" and any(c['id'] in TV_STUDIOS for c in data.get('production_companies', [])):
+        cert = "TV Movie"
+    elif cert == "NR" and is_new and any(TV_NETWORK_NOTE.search(x) for x in us_notes(data) + us_channels(data)):
+        cert = "TV Movie"
+    if "Horror" in genres or str(m['id']) in SKIP_IDS or from_left_out_network(data): return None
+    year = (m.get('release_date') or '9999')[:4]
+    if year < str(EARLIEST_YEAR): return None
+    votes = m.get('vote_count', 0)
+    unrated_min = MIN_VOTES if year < str(UNRATED_CLASSIC_BEFORE) else MIN_VOTES_UNRATED
+    if is_new and from_streamer(data): unrated_min = 0
+    if cert not in ALLOWED_CERTS and not (cert == 'NR' and votes >= unrated_min): return None
+    if cert == 'R' and votes < MIN_VOTES_R: return None
+    if cert in ('R', 'NR') and any(EXPLICIT_KEYWORDS.search(k.lower()) for k in keywords): return None
+    return cert
+
+# New Year's and Thanksgiving films also need a holiday or Christmas keyword, so they're likely about the season
+SEASON_ANCHORED = {"New Year's", "Thanksgiving"}
+ANCHOR_TAGS = {"holiday", "holidays", "christmas"}
+
+def anchored(holiday_name, keywords):
+    return holiday_name not in SEASON_ANCHORED or any(k.lower() in ANCHOR_TAGS for k in keywords)
+
+def holidays_of(data, keywords):
+    """The holidays the searches would find a film under now, by a holiday keyword or a word in its title."""
+    ids = {str(k['id']) for k in data.get('keywords', {}).get('keywords', [])}
+    found = [name for name, query in HOLIDAY_QUERIES.items() if ids & set(query.split('|')) and anchored(name, keywords)]
+    found += [name for name, words in TITLE_SEARCHES.items() if any(word_pattern(w).search(data.get('title', '')) for w in words)]
+    return list(dict.fromkeys(found))
+
 async def main():
     semaphore = asyncio.Semaphore(CONCURRENT_REQUESTS)
     movie_metadata = {}
@@ -289,13 +358,6 @@ async def main():
     genre_index = defaultdict(list)
     film_info = {}  # What the holiday classifier sees about each film
     failed_lookups = 0
-
-    def passes_quick_checks(m, title_pattern):
-        """Checks that need no extra request, run before fetching a movie's details."""
-        if title_pattern and not title_pattern.search(m.get('title', '')): return False
-        is_new = (m.get('release_date') or '').startswith(THIS_YEAR)
-        return (m.get('original_language') == 'en' and bool(m.get('poster_path'))
-                and (m.get('vote_count', 0) >= MIN_VOTES or is_new))
 
     def add_holiday_tag(mid, holiday_name):
         # Prevent 'christmas' tag flooding: only other holidays get a tag
@@ -331,6 +393,19 @@ async def main():
         film_info[mid] = {"title": m['title'], "year": (m.get('release_date') or '')[:4] or "unknown",
                           "genres": genres, "keywords": keywords, "overview": m['overview']}
 
+    def keep_last_weeks_copy(mid, last):
+        """For a film TMDB didn't answer about this time: its entry, tags and genres as last week's build had them.
+        Its holiday level and Musical pill answer come from their saved files, as for every film."""
+        m = last["movies"][mid]
+        movie_metadata[mid] = m
+        level_tags = set(LEVEL_TAGS.values())
+        tags = [t for t, ids in last.get("index", {}).items() if mid in ids and t not in level_tags]
+        genres = [g for g, ids in last.get("genres", {}).items() if mid in ids and g != musical_classifier.GENRE]
+        for t in tags: inverted_index[t].append(mid)
+        for g in genres: genre_index[g].append(mid)
+        film_info[mid] = {"title": m["title"], "year": m["date"][:4], "genres": genres, "keywords": tags,
+                          "overview": m["overview"]}
+
     headers = {"Authorization": f"Bearer {load_api_key()}"}
     async with aiohttp.ClientSession(headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as session:
         print("Season's Screenings: Starting Movie Data Source Build...", file=sys.stderr)
@@ -353,12 +428,20 @@ async def main():
         studio_ids = "|".join(str(i) for i in TV_STUDIOS)
         searches += [(name, discover_url, {"sort_by": "popularity.desc", "with_original_language": "en", "with_keywords": ids, "with_companies": studio_ids}, None)
                      for name, ids in HOLIDAY_QUERIES.items()]
-        searches += [(name, search_url, {"query": word, "include_adult": "false"}, re.compile(rf"\b{word}\b", re.IGNORECASE))
-                     for name, words in TITLE_SEARCHES.items() for word in words]
+        # Title searches go one release year at a time. TMDB's search stops at 2,000 results, which "christmas" passes
+        # (5,002 in Nov 2026), and its pages repeat some films in place of others, a different set each run (2,000 rows
+        # held 1,586 films), so films came and went from week to week. A year's search gives each film once. Through
+        # next year, as the single search did; a film with no release date isn't found, and none in the catalog lacked one.
+        years = range(EARLIEST_YEAR, int(THIS_YEAR) + 2)
+        searches += [(name, search_url, {"query": word, "include_adult": "false", "primary_release_year": year}, word_pattern(word))
+                     for name, words in TITLE_SEARCHES.items() for word in words for year in years]
 
         for holiday_name, url, base_params, title_pattern in searches:
             label = f'{holiday_name} titles: "{base_params["query"]}"' if "query" in base_params else holiday_name
-            print(f"\n--- Fetching: {label} ---", file=sys.stderr)
+            year = base_params.get("primary_release_year")
+            if year in (None, years[0]):
+                print(f"\n--- Fetching: {label}{', one release year at a time' if year else ''} ---", file=sys.stderr)
+            if year: label += f" {year}"
 
             for page in range(1, MAX_PAGES_PER_HOLIDAY + 1):
                 print(f"[{label}] Page {page}...", file=sys.stderr, end='\r')
@@ -379,37 +462,42 @@ async def main():
                         failed_lookups += 1
                         continue
                     keywords, cert, genres, data = detail
-                    is_new = (m.get('release_date') or '').startswith(THIS_YEAR)
-                    if cert == "NR" and any(c['id'] in TV_STUDIOS for c in data.get('production_companies', [])):
-                        cert = "TV Movie"
-                    elif cert == "NR" and is_new and any(TV_NETWORK_NOTE.search(x) for x in us_notes(data) + us_channels(data)):
-                        cert = "TV Movie"
                     if str(m['id']) in movie_metadata: continue  # Listed twice on one page
-
-                    # Quality Gate
-                    if "Horror" in genres or str(m['id']) in SKIP_IDS or from_left_out_network(data): continue
-                    if (m.get('release_date') or '9999')[:4] < str(EARLIEST_YEAR): continue
-                    votes = m.get('vote_count', 0)
-                    is_classic = (m.get('release_date') or '9999')[:4] < str(UNRATED_CLASSIC_BEFORE)
-                    unrated_min = MIN_VOTES if is_classic else MIN_VOTES_UNRATED
-                    if is_new and from_streamer(data): unrated_min = 0
-                    if cert not in ALLOWED_CERTS and not (cert == 'NR' and votes >= unrated_min): continue
-                    if cert == 'R' and votes < MIN_VOTES_R: continue
-                    if cert in ('R', 'NR') and any(EXPLICIT_KEYWORDS.search(k.lower()) for k in keywords): continue
-
-                    # For events like New Year's/Thanksgiving, require a "Holiday" or "Christmas" tag
-                    # to ensure the movie is likely actually about the Holiday Season
-                    if holiday_name in ["New Year's", "Thanksgiving"]:
-                        anchor_tags = {"holiday", "holidays", "christmas"}
-                        if not any(k.lower() in anchor_tags for k in keywords):
-                            continue
-
+                    cert = passes_gate(m, keywords, cert, genres, data)
+                    if not cert or not anchored(holiday_name, keywords): continue
                     if len(movie_metadata) >= TOTAL_MAX_LIMIT: break
                     add_movie(m, keywords, cert, genres, holiday_name, data)
                     valid_in_batch += 1
 
-                print(f"[{label}] Added {valid_in_batch}. Total: {len(movie_metadata)}", file=sys.stderr)
+                if valid_in_batch or not year:  # The year searches log only the years that add films
+                    print(f"[{label}] Added {valid_in_batch}. Total: {len(movie_metadata)}", file=sys.stderr)
                 if len(movie_metadata) >= TOTAL_MAX_LIMIT or page >= resp.get('total_pages', 1): break
+
+        # Last week's films the searches missed this time stay if they still pass: still found under a holiday by
+        # keyword or title, and through the same checks. Searches can still miss a film (a lookup that fails, TMDB
+        # shuffling results), and before the year searches, 8 films came and 7 went between two runs 7 hours apart.
+        # If TMDB doesn't answer about one, last week's copy stays; if TMDB has deleted it, it goes.
+        last = load_last_build()
+        missed = [mid for mid in last.get("movies", {}) if mid not in movie_metadata and mid not in ALWAYS_INCLUDE]
+        print(f"\n--- Checking {len(missed)} films from last week's build that the searches didn't add ---", file=sys.stderr)
+        answers = await asyncio.gather(*[fetch_with_retry(session, f"{API_ROOT}/movie/{mid}", DETAIL_PARAMS, semaphore)
+                                         for mid in missed])
+        for mid, data in zip(missed, answers):
+            title = last["movies"][mid]["title"]
+            if data is None:
+                keep_last_weeks_copy(mid, last)
+                print(f"Kept last week's copy (no answer from TMDB): {title}", file=sys.stderr)
+                continue
+            keywords, cert, genres = parse_details(data) if data else ([], None, [])
+            holidays = holidays_of(data, keywords) if data else []
+            if holidays and passes_quick_checks(data, None): cert = passes_gate(data, keywords, cert, genres, data)
+            else: cert = None
+            if not cert:
+                print(f"Dropped, no longer qualifies{'' if data else ' (gone from TMDB)'}: {title}", file=sys.stderr)
+                continue
+            add_movie(data, keywords, cert, genres, holidays[0], data)
+            for h in holidays[1:]: add_holiday_tag(mid, h)
+            print(f"Kept: {title}", file=sys.stderr)
 
         missing = [mid for mid in ALWAYS_INCLUDE if mid not in movie_metadata]
         details = await asyncio.gather(*[fetch_movie_details(session, semaphore, mid) for mid in missing])

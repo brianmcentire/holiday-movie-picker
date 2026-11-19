@@ -5209,6 +5209,27 @@
   "title": "The Fitzgerald Family Christmas",
   "year": "2012"
  },
+ "128780": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "musical",
+   "knows_film": true,
+   "reason": "This 1966 Italian-American children's fantasy, directed by and starring Rossano Brazzi, is a musical in which the characters sing several original songs throughout the story, such as Prune's villain song and the title tune.",
+   "songs": 8,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "musical",
+   "knows_film": true,
+   "reason": "This 1966 Italian-American family film (Il Natale che quasi non fu) features a number of songs by Bruno Nicolai, including Phineas Prune's villain number and elf and Santa songs, which move the story along, though dialogue also carries a good share of the plot.",
+   "songs": 9,
+   "version": 1
+  },
+  "title": "The Christmas That Almost Wasn't",
+  "year": "1966"
+ },
  "1290287": {
   "music_hint": false,
   "opus": {
@@ -7760,6 +7781,27 @@
   "title": "Christmas Song",
   "year": "2012"
  },
+ "14541": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "This is mainly a ventriloquist stand-up special told through comedy dialogue. It includes a few musical bits, such as the puppets singing a Christmas carol parody and Jeff Dunham with Walter on 'Jingle Bells', but songs are not the focus.",
+   "songs": 2,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "This is a stand-up comedy special with ventriloquist puppets, and the only music is a few comedic holiday song bits (such as Peanut's and Jose Jalapeño's parodies), so songs are incidental to the comedy rather than the main event.",
+   "songs": 2,
+   "version": 1
+  },
+  "title": "Jeff Dunham's Very Special Christmas Special",
+  "year": "2008"
+ },
  "145840": {
   "music_hint": false,
   "opus": {
@@ -9918,6 +9960,34 @@
   "title": "Mickey's Home Alone",
   "year": "2026"
  },
+ "1723884": {
+  "fable": {
+   "kind": "some_songs",
+   "knows_film": false,
+   "reason": "I don't have reliable knowledge of this 2026 special, but SpongeBob holiday specials typically feature a song or two within a dialogue-driven story, so some_songs is the best inference absent evidence it's song-driven.",
+   "version": 1,
+   "why_asked": "unsure"
+  },
+  "music_hint": false,
+  "opus": {
+   "confidence": "low",
+   "kind": "some_songs",
+   "knows_film": false,
+   "reason": "I don't know this 2026 special beyond its description; SpongeBob holiday specials usually include a song or two, but there's no sign that songs drive this one, so I'm guessing some songs with low confidence.",
+   "songs": 2,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "low",
+   "kind": "some_songs",
+   "knows_film": false,
+   "reason": "I don't have reliable knowledge of this 2026 special, so I'm inferring from the SpongeBob franchise, where holiday specials usually include a few songs but are mostly told through dialogue, though it could be more song-driven than I expect.",
+   "songs": 2,
+   "version": 1
+  },
+  "title": "SpongeBob SquarePants: Merry Christmas, Mr. Plankton",
+  "year": "2026"
+ },
  "1729134": {
   "music_hint": false,
   "opus": {
@@ -10106,6 +10176,27 @@
   },
   "title": "Silent Night",
   "year": "2002"
+ },
+ "1773006": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 TV movie specifically; it reads as a typical dialogue-driven holiday romance about a Christmas market and family traditions, with no sign of on-screen singing.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't recognize this 2026 title, but the description fits a standard dialogue-driven holiday romance TV movie with no sign of on-screen performances beyond possible incidental carols or soundtrack music.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Mr. & Mrs. Christmas",
+  "year": "2026"
  },
  "1773195": {
   "music_hint": false,
@@ -10351,6 +10442,27 @@
   "title": "A Disney Christmas Gift",
   "year": "1982"
  },
+ "1795649": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this title; the description points to a dialogue-driven romantic comedy mystery with no sign of musical performances.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't recognize this 2026 title; the description and Comedy/Romance genres point to a dialogue-driven Christmas whodunnit with no sign of on-screen musical numbers.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Honey's Christmas Wish",
+  "year": "2026"
+ },
  "17979": {
   "music_hint": false,
   "opus": {
@@ -10473,6 +10585,55 @@
   "title": "Unaccompanied Minors",
   "year": "2006"
  },
+ "1822260": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "low",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 family film, and its description points to a dialogue-driven adventure about foster kids foiling a robbery, with no sign of on-screen musical numbers.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "low",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't recognize this 2026 title, and the description reads like a family adventure about foster kids foiling a robbery with no sign that songs drive the story.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Christmas to the Rescue",
+  "year": "2026"
+ },
+ "1823586": {
+  "fable": {
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't have reliable knowledge of this 2025 animated Marvel special, and nothing about a dialogue-driven superhero Christmas Carol parody suggests on-screen musical numbers, so I side with the no-songs default rather than inventing a song.",
+   "version": 1,
+   "why_asked": "unsure"
+  },
+  "music_hint": false,
+  "opus": {
+   "confidence": "low",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "This appears to be a recent animated Marvel short or special parodying A Christmas Carol that I don't know well, and nothing in the description suggests on-screen songs, so I'm defaulting to no songs with low confidence.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "low",
+   "kind": "some_songs",
+   "knows_film": false,
+   "reason": "I don't have reliable knowledge of this 2025 title; based on the description it appears to be a Marvel parody of A Christmas Carol told mainly through dialogue and comedy, so at most a song or two is likely.",
+   "songs": 1,
+   "version": 1
+  },
+  "title": "A Merry Marvel Christmas Carol",
+  "year": "2025"
+ },
  "18846": {
   "music_hint": false,
   "opus": {
@@ -10577,6 +10738,27 @@
   },
   "title": "The Cheaters",
   "year": "1945"
+ },
+ "197766": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "This short Looney Tunes Christmas Carol spoof is driven by slapstick and dialogue, with only brief carol singing (Bugs and friends sing a bit of a carol) rather than full musical numbers.",
+   "songs": 1,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "This 1979 Looney Tunes TV special is a Dickens spoof told mostly through dialogue and gags, with a few carol moments, such as the Cratchit family and Tiny Tim singing, but it is not built around full song numbers.",
+   "songs": 2,
+   "version": 1
+  },
+  "title": "Bugs Bunny's Christmas Carol",
+  "year": "1979"
  },
  "197857": {
   "fable": {
@@ -10742,6 +10924,34 @@
   },
   "title": "Bedtime for Sniffles",
   "year": "1940"
+ },
+ "210123": {
+  "fable": {
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I only loosely know this Cartoon Network anthology of Plympton's wordless Christmas gag vignettes; his shorts rely on sight gags over a soundtrack rather than on-screen singing, and I can't confirm Reviewer B's claim that each is built on a performed carol, so songs are at most background music.",
+   "version": 1,
+   "why_asked": "disagree"
+  },
+  "music_hint": true,
+  "opus": {
+   "confidence": "low",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this short collection of Bill Plympton animated Christmas vignettes well, and his shorts are typically dialogue-free sight gags set to a soundtrack rather than built around on-screen songs, despite the Music genre tag.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "low",
+   "kind": "music_show",
+   "knows_film": true,
+   "reason": "Bill Plympton's 2001 anthology of short animated shorts, each set to a Christmas carol or holiday song (e.g. 'Deck the Halls', 'Jingle Bells'), so it is built on songs but lacks a continuous story, though I recall it only loosely.",
+   "songs": 12,
+   "version": 1
+  },
+  "title": "12 Tiny Christmas Tales",
+  "year": "2001"
  },
  "21386": {
   "music_hint": true,
@@ -11195,6 +11405,34 @@
   "title": "Window Wonderland",
   "year": "2013"
  },
+ "239650": {
+  "fable": {
+   "kind": "musical",
+   "knows_film": true,
+   "reason": "Tyler Perry's filmed stage plays, including A Madea Christmas (2011), are gospel-style musical comedies where cast members like Chandra Currelley and Cheryl Pepsii Riley perform numerous full gospel and R&B numbers that express the characters' feelings throughout, not just one or two.",
+   "version": 1,
+   "why_asked": "disagree"
+  },
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "musical",
+   "knows_film": true,
+   "reason": "Tyler Perry's filmed stage plays, including A Madea Christmas (2011), are gospel-inflected 'chitlin circuit' musicals in which cast members regularly break into full R&B and gospel songs that express their emotions between comedic scenes.",
+   "songs": 8,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "Tyler Perry's stage plays are comedy-driven with gospel numbers woven in, but the story is carried mostly by dialogue and Madea's antics, so songs are a supporting feature rather than the main event.",
+   "songs": 4,
+   "version": 1
+  },
+  "title": "Tyler Perry's A Madea Christmas - The Play",
+  "year": "2011"
+ },
  "239899": {
   "music_hint": false,
   "opus": {
@@ -11436,6 +11674,27 @@
   },
   "title": "Russian Roulette",
   "year": "1975"
+ },
+ "24251": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": true,
+   "reason": "This 2003 Peanuts special tells its Rerun-and-Spike story through dialogue and vignettes with a Guaraldi-style jazz score, and as far as I recall it has no real sung numbers on screen.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": true,
+   "reason": "This 2003 Peanuts TV special is told through dialogue and visual gags, with only the usual instrumental score and perhaps a brief carol moment, so songs are not a feature.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "I Want a Dog for Christmas, Charlie Brown",
+  "year": "2003"
  },
  "242682": {
   "fable": {
@@ -12264,6 +12523,27 @@
   },
   "title": "Frosty's Winter Wonderland",
   "year": "1976"
+ },
+ "26540": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "The 1979 special is three slapstick cartoon shorts told through gags and dialogue, with only brief carol singing (e.g., in the Christmas Carol segment) rather than songs driving the story.",
+   "songs": 1,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "This 1979 TV special is a compilation of new-framed Looney Tunes shorts (Yosemite Sam's 'Christmas Carol' as Scrooge, Road Runner chase, Taz as Santa) that rely on slapstick and dialogue, with at most a carol or brief song moment rather than song-driven storytelling.",
+   "songs": 1,
+   "version": 1
+  },
+  "title": "Bugs Bunny's Looney Christmas Tales",
+  "year": "1979"
  },
  "26542": {
   "music_hint": false,
@@ -15175,6 +15455,34 @@
   },
   "title": "Rudolph and Frosty's Christmas in July",
   "year": "1979"
+ },
+ "405794": {
+  "fable": {
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "This 2004 DVD compilation of Cartoon Network holiday episodes (Dexter's Lab, Powerpuff Girls, Ed Edd n Eddy, Courage, Johnny Bravo, etc.) is dialogue-driven comedy with only an occasional carol or short song gag, so it is not built around musical numbers.",
+   "version": 1,
+   "why_asked": "unsure"
+  },
+  "music_hint": false,
+  "opus": {
+   "confidence": "low",
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "This DVD compilation of Cartoon Network Christmas episodes (Dexter, Powerpuff Girls, Ed Edd n Eddy and others) is mostly dialogue-driven comedy, with only occasional carol or song moments in individual episodes.",
+   "songs": 1,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "low",
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "This is a 2004 DVD compilation of Cartoon Network holiday shorts and episodes, mostly told in dialogue with the odd carol or short song gag, so it is not built around songs, though I don't recall its exact contents.",
+   "songs": 2,
+   "version": 1
+  },
+  "title": "Cartoon Network Christmas: Yuletide Follies",
+  "year": "2004"
  },
  "40767": {
   "music_hint": false,
@@ -18726,6 +19034,27 @@
   "title": "Noelle",
   "year": "2007"
  },
+ "51298": {
+  "music_hint": true,
+  "opus": {
+   "confidence": "high",
+   "kind": "music_show",
+   "knows_film": true,
+   "reason": "This entry in the Disney Sing-Along Songs video series is a compilation of Christmas songs and carols set to clips from Disney animation, with on-screen lyrics, and has no real story, so it works as a song showcase rather than a narrative musical.",
+   "songs": 11,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "music_show",
+   "knows_film": true,
+   "reason": "This Disney Sing-Along Songs volume is a compilation of Christmas songs and carols with on-screen lyrics and Disney character clips, so it works as a song-based special rather than a story-driven musical; the song count is approximate.",
+   "songs": 12,
+   "version": 1
+  },
+  "title": "Disney's Sing-Along Songs: Very Merry Christmas Songs",
+  "year": "1988"
+ },
  "51531": {
   "music_hint": false,
   "opus": {
@@ -19006,6 +19335,34 @@
   },
   "title": "A Christmas Prince: The Royal Wedding",
   "year": "2018"
+ },
+ "52515": {
+  "fable": {
+   "kind": "none",
+   "knows_film": true,
+   "reason": "Rich Little's 1978 special is a one-man comedy retelling of A Christmas Carol performed entirely through celebrity impressions (W.C. Fields as Scrooge, Paul Lynde as Cratchit, Nixon as Marley, etc.) and dialogue, with at most a fleeting musical gag rather than any real song numbers.",
+   "version": 1,
+   "why_asked": "unsure"
+  },
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": true,
+   "reason": "Rich Little's 1978 HBO/CBC special is a comedy retelling of A Christmas Carol in which he impersonates celebrities playing every role (W.C. Fields as Scrooge, Paul Lynde as Cratchit, etc.), told through dialogue and impressions rather than song numbers.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "low",
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "Rich Little's Christmas Carol is a 1978 one-man impressionist retelling of Dickens in which he voices all the characters as celebrity impressions, so it is told mostly through dialogue and comedy rather than songs, though I'm not certain whether it includes any brief musical bit.",
+   "songs": 1,
+   "version": 1
+  },
+  "title": "Rich Little's Christmas Carol",
+  "year": "1978"
  },
  "5255": {
   "music_hint": false,
@@ -20508,6 +20865,34 @@
   "title": "Trancers",
   "year": "1984"
  },
+ "569038": {
+  "fable": {
+   "kind": "none",
+   "knows_film": true,
+   "reason": "This is a dialogue-driven Netflix sitcom holiday episode about the characters snowed in at a bowling alley, with no on-screen musical numbers beyond at most a passing moment.",
+   "version": 1,
+   "why_asked": "unsure"
+  },
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": true,
+   "reason": "This Netflix sitcom holiday special about a prince and his friend snowed in at a bowling alley is a dialogue-driven comedy, and as far as I recall it has no substantial on-screen song performances.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "low",
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "This is a Netflix holiday special from the sitcom The Prince of Peoria, a live-action kids' comedy that is mostly dialogue-driven; I recall it as having a holiday song or two but not being built around its numbers, though I'm not certain of the details.",
+   "songs": 1,
+   "version": 1
+  },
+  "title": "Prince of Peoria: A Christmas Moose Miracle",
+  "year": "2018"
+ },
  "57210": {
   "fable": {
    "kind": "some_songs",
@@ -21017,6 +21402,34 @@
   },
   "title": "Jiminy Cricket's Christmas",
   "year": "1983"
+ },
+ "61549": {
+  "fable": {
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "This is a DVD compilation of classic Disney shorts where the Silly Symphonies (Santa's Workshop, The Night Before Christmas, The Cookie Carnival) include some sung rhymed passages and the Pluto's Christmas Tree carol scene, but the Mickey, Donald and Pluto cartoons are gag-driven with musical scoring rather than performed songs, so the collection as a whole is not built around numbers.",
+   "version": 1,
+   "why_asked": "unsure"
+  },
+  "music_hint": false,
+  "opus": {
+   "confidence": "low",
+   "kind": "some_songs",
+   "knows_film": false,
+   "reason": "This is a compilation of classic Disney shorts: Silly Symphonies like Santa's Workshop, The Night Before Christmas and The Cookie Carnival have rhymed sung passages, but the Mickey, Pluto and Donald shorts are gag-driven, so the collection as a whole is not built around songs.",
+   "songs": 3,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "low",
+   "kind": "some_songs",
+   "knows_film": false,
+   "reason": "This is a compilation of classic Disney shorts (Santa's Workshop, The Night Before Christmas, Pluto's Christmas Tree, On Ice, Donald's Snow Fight, The Cookie Carnival, Ferdinand the Bull) that is mostly slapstick and visual gags, with only occasional musical moments such as the toys' dancing and the Cookie Carnival's score, so I'm not certain of the exact song count.",
+   "songs": 2,
+   "version": 1
+  },
+  "title": "Celebrate Christmas With Mickey, Donald & Friends",
+  "year": "2000"
  },
  "61550": {
   "fable": {
@@ -23167,6 +23580,27 @@
    "version": 1
   },
   "title": "A Welcome Home Christmas",
+  "year": "2020"
+ },
+ "744933": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "This is a standard dialogue-driven holiday TV romance about a blogger visiting Solvang, with no known musical performances beyond possible background carols.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "This looks like a standard Hallmark-style holiday romance (blogger meets chocolate shop owner in Solvang) told through dialogue, and I don't specifically recall the film, so I'm inferring there are no notable on-screen performances beyond possible background carols.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "A Very Charming Christmas Town",
   "year": "2020"
  },
  "744935": {
@@ -25407,6 +25841,34 @@
   "title": "Falling for Christmas",
   "year": "2022"
  },
+ "83477": {
+  "fable": {
+   "kind": "musical",
+   "knows_film": true,
+   "reason": "The 1979 NBC special is a rhymed, song-driven cartoon with several original Elliot Lawrence/Berenstain numbers (the tree-hunt song, Papa's songs, the closing carol) performed on screen that carry the story, so it fits the musical filter rather than merely having a song or two.",
+   "version": 1,
+   "why_asked": "disagree"
+  },
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "musical",
+   "knows_film": true,
+   "reason": "The 1979 NBC animated special, narrated in rhyme, is built around several original songs (music by Elliot Lawrence, lyrics by Stan and Jan Berenstain) that are sung on screen and carry the story of Papa's tree hunt.",
+   "songs": 5,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "low",
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "The 1979 Berenstain Bears' Christmas Tree special is mostly dialogue-driven, with a couple of songs (including a closing carol-style number), so I judge it as having some songs rather than being built around them.",
+   "songs": 2,
+   "version": 1
+  },
+  "title": "The Berenstain Bears' Christmas Tree",
+  "year": "1979"
+ },
  "83774": {
   "fable": {
    "kind": "none",
@@ -25515,6 +25977,34 @@
   },
   "title": "The Holdovers",
   "year": "2023"
+ },
+ "84420": {
+  "fable": {
+   "kind": "none",
+   "knows_film": true,
+   "reason": "This notorious 1964 low-budget fantasy (famous from MST3K/RiffTrax) is told through dialogue and narration about a boy, a witch's ring and a talking tree that kidnaps Santa, with music confined to the score and opening theme rather than any on-screen song numbers.",
+   "version": 1,
+   "why_asked": "unsure"
+  },
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": true,
+   "reason": "This notorious low-budget 1964 fantasy (later riffed by MST3K) tells its story of a boy, a witch's ring and a wish-granting tree through dialogue and narration, with music only on the soundtrack and no real on-screen song numbers.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "low",
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "This low-budget 1964 family fantasy is driven mainly by dialogue and its magic-ring wish plot, with perhaps a song or two, so it isn't built around its songs, though my memory of the details is limited.",
+   "songs": 2,
+   "version": 1
+  },
+  "title": "Magic Christmas Tree",
+  "year": "1964"
  },
  "844819": {
   "music_hint": false,
@@ -27953,6 +28443,27 @@
    "version": 1
   },
   "title": "A Great North Christmas",
+  "year": "2021"
+ },
+ "893702": {
+  "music_hint": true,
+  "opus": {
+   "confidence": "high",
+   "kind": "music_show",
+   "knows_film": true,
+   "reason": "This is an Apple TV+ holiday variety special built around Mariah Carey's performances, including \"Fall in Love at Christmas\" and a closing classic, with a Zane Lowe interview in between.",
+   "songs": 2,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "high",
+   "kind": "music_show",
+   "knows_film": true,
+   "reason": "This Apple TV+ holiday special is a Mariah Carey performance and interview show built around songs like \"Fall in Love at Christmas\" and a closing festive classic, so it is a music special rather than a story-driven musical.",
+   "songs": 3,
+   "version": 1
+  },
+  "title": "Mariah's Christmas: The Magic Continues",
   "year": "2021"
  },
  "89551": {

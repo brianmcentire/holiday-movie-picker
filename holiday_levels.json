@@ -1547,6 +1547,18 @@
   "version": 2,
   "year": "2023"
  },
+ "117471": {
+  "confidence": "high",
+  "haiku": "adjacent",
+  "knows_film": true,
+  "level": "none",
+  "opus": "none",
+  "reason": "Lindsay Anderson's Free Cinema documentary portrays the nightly working routine of Covent Garden market workers, and Christmas appears only in the title, which refers to the one day the market closes.",
+  "referee": "Christmas features only in the title, as the one day the Covent Garden market closes, and the documentary depicts an ordinary working night with no holiday setting or theme.",
+  "title": "Every Day Except Christmas",
+  "version": 2,
+  "year": "1957"
+ },
  "1175697": {
   "confidence": "high",
   "haiku": "about",
@@ -2338,6 +2350,18 @@
   "title": "The Fitzgerald Family Christmas",
   "version": 2,
   "year": "2012"
+ },
+ "128780": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "This Italian-American children's fantasy is centered on saving Santa and Christmas itself from the villainous Phineas Prune, making the holiday its core subject.",
+  "referee": null,
+  "title": "The Christmas That Almost Wasn't",
+  "version": 2,
+  "year": "1966"
  },
  "1290287": {
   "confidence": "high",
@@ -3551,6 +3575,18 @@
   "version": 2,
   "year": "2012"
  },
+ "14541": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "Jeff Dunham's holiday stand-up special is built around Christmas-themed bits with his puppets, including the Christmas-dressed characters and holiday songs, so Christmas is its subject.",
+  "referee": null,
+  "title": "Jeff Dunham's Very Special Christmas Special",
+  "version": 2,
+  "year": "2008"
+ },
  "145840": {
   "confidence": "high",
   "haiku": "about",
@@ -4571,6 +4607,18 @@
   "version": 2,
   "year": "1995"
  },
+ "1723884": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A SpongeBob Christmas TV special whose plot centers on saving Christmas at the North Pole from Plankton, making the holiday the subject.",
+  "referee": null,
+  "title": "SpongeBob SquarePants: Merry Christmas, Mr. Plankton",
+  "version": 2,
+  "year": "2026"
+ },
  "1729134": {
   "confidence": "medium",
   "haiku": "set_at",
@@ -4678,6 +4726,18 @@
   "title": "Silent Night",
   "version": 2,
   "year": "2002"
+ },
+ "1773006": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Hallmark-style Christmas romance centered on reviving a town Christmas Market and on family Christmas traditions, so the holiday is the subject.",
+  "referee": null,
+  "title": "Mr. & Mrs. Christmas",
+  "version": 2,
+  "year": "2026"
  },
  "1773195": {
   "confidence": "medium",
@@ -4799,6 +4859,18 @@
   "version": 2,
   "year": "1982"
  },
+ "1795649": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Christmas TV-movie style romantic comedy centered on mysterious holiday gifts and good deeds at a guesthouse, making Christmas spirit the subject.",
+  "referee": null,
+  "title": "Honey's Christmas Wish",
+  "version": 2,
+  "year": "2026"
+ },
  "17979": {
   "confidence": "high",
   "haiku": "about",
@@ -4820,6 +4892,30 @@
   "reason": "I don't know this film, but the description centers on a family discovering the true meaning of Christmas, which marks a classic Christmas-themed romantic comedy.",
   "referee": "Based on its title and premise, the film's resolution hinges on the family discovering the true meaning of Christmas, which makes the holiday's spirit the subject of the story rather than a backdrop.",
   "title": "A Richer Christmas",
+  "version": 2,
+  "year": "2026"
+ },
+ "1800621": {
+  "confidence": "medium",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "I don't know this film, but the description centers its plot on a demon stealing Santa Claus's energy and a threatened Christmas, making Christmas the core subject.",
+  "referee": "The plot centers on a demon stealing Santa Claus's energy and threatening Christmas, making this a save-Christmas story in which the holiday itself is the subject rather than a backdrop.",
+  "title": "Dick Dangerous: Christmas EVIL",
+  "version": 2,
+  "year": "2026"
+ },
+ "1801544": {
+  "confidence": "medium",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Christmas-titled inspirational romance explicitly built around the holiday season's magic, fitting the Hallmark-style Christmas romance mold, though I don't know this 2026 film specifically.",
+  "referee": "A Christmas-titled, Hallmark-style inspirational romance marketed on holiday magic fits the Christmas-romance mold, where the season runs through the whole story and its emotional payoff.",
+  "title": "Coming Home for Christmas",
   "version": 2,
   "year": "2026"
  },
@@ -4858,6 +4954,30 @@
   "title": "Unaccompanied Minors",
   "version": 2,
   "year": "2006"
+ },
+ "1822260": {
+  "confidence": "medium",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "Going only on the title and description, this is a family Christmas film that builds to finding family and love by Christmas, so the holiday looks central to the story's payoff.",
+  "referee": "Going on the title and description alone, this family film puts Christmas in its title and ties its emotional payoff of family and love to the holiday, making it a Christmas movie through and through in the Home Alone mold.",
+  "title": "Christmas to the Rescue",
+  "version": 2,
+  "year": "2026"
+ },
+ "1823586": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Christmas Carol retelling in which Iron Man learns the true meaning of the holiday season through visits to his Christmas past, present and future, so Christmas is the subject.",
+  "referee": null,
+  "title": "A Merry Marvel Christmas Carol",
+  "version": 2,
+  "year": "2025"
  },
  "18846": {
   "confidence": "high",
@@ -4918,6 +5038,18 @@
   "title": "The Cheaters",
   "version": 2,
   "year": "1945"
+ },
+ "197766": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Looney Tunes short spoofing A Christmas Carol, with Bugs teaching Yosemite Sam's Scrooge the meaning of Christmas, so the holiday is its subject.",
+  "referee": null,
+  "title": "Bugs Bunny's Christmas Carol",
+  "version": 2,
+  "year": "1979"
  },
  "197857": {
   "confidence": "medium",
@@ -5002,6 +5134,18 @@
   "title": "Bedtime for Sniffles",
   "version": 2,
   "year": "1940"
+ },
+ "210123": {
+  "confidence": "medium",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A collection of short animated Christmas vignettes by Bill Plympton, so the holiday is the subject of every segment, though I don't know the specific shorts well.",
+  "referee": "Every one of Plympton's twelve animated gags is built directly on Christmas traditions and icons, so the holiday is the subject of the entire collection.",
+  "title": "12 Tiny Christmas Tales",
+  "version": 2,
+  "year": "2001"
  },
  "21386": {
   "confidence": "high",
@@ -5243,6 +5387,18 @@
   "version": 2,
   "year": "2013"
  },
+ "239650": {
+  "confidence": "medium",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "Tyler Perry's stage play centers on a family Christmas gathering where Madea and Aunt Bam set out to save the holiday, making Christmas the core of the story and its payoff.",
+  "referee": "The play is framed entirely around a family Christmas gathering whose resolution is saving the holiday and restoring its spirit, making Christmas the subject rather than mere setting.",
+  "title": "Tyler Perry's A Madea Christmas - The Play",
+  "version": 2,
+  "year": "2011"
+ },
  "239899": {
   "confidence": "medium",
   "haiku": "about",
@@ -5362,6 +5518,18 @@
   "title": "Russian Roulette",
   "version": 2,
   "year": "1975"
+ },
+ "24251": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "This Peanuts TV special centers on Rerun's Christmas wish for a dog, so the holiday frames the whole story, set amid the school's Christmas activities and Santa letters.",
+  "referee": null,
+  "title": "I Want a Dog for Christmas, Charlie Brown",
+  "version": 2,
+  "year": "2003"
  },
  "242682": {
   "confidence": "high",
@@ -5794,6 +5962,18 @@
   "title": "Frosty's Winter Wonderland",
   "version": 2,
   "year": "1976"
+ },
+ "26540": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Looney Tunes Christmas TV special built around holiday segments, including a Christmas Carol parody and Santa gags, so Christmas is its subject throughout.",
+  "referee": null,
+  "title": "Bugs Bunny's Looney Christmas Tales",
+  "version": 2,
+  "year": "1979"
  },
  "26542": {
   "confidence": "high",
@@ -7294,6 +7474,18 @@
   "title": "Rudolph and Frosty's Christmas in July",
   "version": 2,
   "year": "1979"
+ },
+ "405794": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "A DVD compilation of Christmas-themed episodes from Cartoon Network shows, so the holiday is the subject of every segment.",
+  "referee": null,
+  "title": "Cartoon Network Christmas: Yuletide Follies",
+  "version": 2,
+  "year": "2004"
  },
  "40767": {
   "confidence": "medium",
@@ -9023,6 +9215,18 @@
   "version": 2,
   "year": "2007"
  },
+ "51298": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "This Disney Sing-Along Songs volume is a compilation of Christmas songs and carols set to holiday clips, so Christmas is its entire subject.",
+  "referee": null,
+  "title": "Disney's Sing-Along Songs: Very Merry Christmas Songs",
+  "version": 2,
+  "year": "1988"
+ },
  "51531": {
   "confidence": "high",
   "haiku": "about",
@@ -9178,6 +9382,18 @@
   "title": "A Christmas Prince: The Royal Wedding",
   "version": 2,
   "year": "2018"
+ },
+ "52515": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "It is an adaptation of A Christmas Carol, with Rich Little impersonating celebrities in all the roles, so the story is centered on Scrooge's redemption and the spirit of Christmas.",
+  "referee": null,
+  "title": "Rich Little's Christmas Carol",
+  "version": 2,
+  "year": "1978"
  },
  "5255": {
   "confidence": "high",
@@ -9923,6 +10139,18 @@
   "version": 2,
   "year": "1985"
  },
+ "569038": {
+  "confidence": "medium",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "This Netflix holiday special of the Prince of Peoria series centers on Christmas, with Emil's Christmas moose tradition and getting home for the Festival of Lights as its whole premise and payoff.",
+  "referee": "A dedicated Christmas special whose premise, stakes (missing the Festival of Lights) and payoff (the Christmas moose miracle) are all about the holiday and its traditions.",
+  "title": "Prince of Peoria: A Christmas Moose Miracle",
+  "version": 2,
+  "year": "2018"
+ },
  "57210": {
   "confidence": "high",
   "haiku": "about",
@@ -10186,6 +10414,18 @@
   "title": "Jiminy Cricket's Christmas",
   "version": 2,
   "year": "1983"
+ },
+ "61549": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "This is a Disney Christmas-themed compilation built around holiday shorts like Santa's Workshop, The Night Before Christmas and Pluto's Christmas Tree, and it is packaged as a Christmas release, though a few of the shorts are only wintry.",
+  "referee": null,
+  "title": "Celebrate Christmas With Mickey, Donald & Friends",
+  "version": 2,
+  "year": "2000"
  },
  "61550": {
   "confidence": "high",
@@ -11216,6 +11456,18 @@
   "reason": "A Lifetime Christmas TV romance built around a military Christmas toy drive and holiday ball, with the holiday spirit as its central subject.",
   "referee": null,
   "title": "A Welcome Home Christmas",
+  "version": 2,
+  "year": "2020"
+ },
+ "744933": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A made-for-TV Christmas romance centered on a blogger covering the 'Most Christmassy Town,' with the holiday and its traditions as the core subject.",
+  "referee": null,
+  "title": "A Very Charming Christmas Town",
   "version": 2,
   "year": "2020"
  },
@@ -12275,6 +12527,18 @@
   "version": 2,
   "year": "2022"
  },
+ "83477": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "This animated Christmas TV special centers on the family's hunt for a Christmas tree and ends with Papa learning the holiday's spirit of giving.",
+  "referee": null,
+  "title": "The Berenstain Bears' Christmas Tree",
+  "version": 2,
+  "year": "1979"
+ },
  "83774": {
   "confidence": "medium",
   "haiku": "about",
@@ -12322,6 +12586,18 @@
   "title": "The Holdovers",
   "version": 2,
   "year": "2023"
+ },
+ "84420": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "This low-budget children's fantasy centers on a magic Christmas tree that grants wishes, with Santa Claus appearing and the boy learning a Christmas-spirit lesson, so the holiday is its subject.",
+  "referee": null,
+  "title": "Magic Christmas Tree",
+  "version": 2,
+  "year": "1964"
  },
  "844819": {
   "confidence": "high",
@@ -13412,6 +13688,18 @@
   "reason": "A made-for-TV-style Christmas romance in which a workaholic is sent on a Christmas vacation to rediscover holiday spirit and love, so the holiday is central to the story.",
   "referee": "A formulaic Christmas TV-movie romance in which a lonely workaholic rediscovers love and holiday spirit on a Christmas getaway, making the holiday the story's subject.",
   "title": "A Great North Christmas",
+  "version": 2,
+  "year": "2021"
+ },
+ "893702": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "This is a Christmas music special on Apple TV+ built entirely around Mariah Carey's holiday persona and Christmas songs, so the holiday is its whole subject.",
+  "referee": null,
+  "title": "Mariah's Christmas: The Magic Continues",
   "version": 2,
   "year": "2021"
  },
