@@ -4751,6 +4751,30 @@
   "version": 2,
   "year": "2026"
  },
+ "1773329": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "This is a Hallmark-style Christmas romance built around the twins' first Christmas without their mom and a holiday trip to Hay-on-Wye, so Christmas is central to its premise and emotional arc.",
+  "referee": null,
+  "title": "Double Booked for the Holidays",
+  "version": 2,
+  "year": "2026"
+ },
+ "1773334": {
+  "confidence": "medium",
+  "haiku": "set_at",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "I don't know this film, but it reads as a classic made-for-TV Christmas fake-dating romance built around a homecoming and a family holiday tradition, so the holiday is central to it.",
+  "referee": "This is a seasonal made-for-TV Christmas romance whose fake-dating plot centers on a family's annual holiday tradition, which places it squarely in the Hallmark-style Christmas movie category.",
+  "title": "Our Holiday Playbook",
+  "version": 2,
+  "year": "2026"
+ },
  "1773345": {
   "confidence": "medium",
   "haiku": "about",
@@ -4859,6 +4883,18 @@
   "version": 2,
   "year": "1982"
  },
+ "1783631": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A festive Christmas romance with a magic wish-granting chair and a community saving a café before Christmas is a classic Hallmark-style holiday movie where the season is the subject.",
+  "referee": null,
+  "title": "A Christmas Wish for Everyone",
+  "version": 2,
+  "year": "2026"
+ },
  "1795649": {
   "confidence": "high",
   "haiku": "about",
@@ -4882,6 +4918,18 @@
   "title": "A Christmas Carol",
   "version": 2,
   "year": "2009"
+ },
+ "1799512": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": false,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Christmas-titled romantic comedy sequel centered on planning a dream Christmas wedding during the holiday season, making Christmas the core subject.",
+  "referee": null,
+  "title": "Christmas Everyday: Married and Bright",
+  "version": 2,
+  "year": "2026"
  },
  "1800082": {
   "confidence": "medium",
@@ -10859,6 +10907,18 @@
   "version": 2,
   "year": "2022"
  },
+ "634": {
+  "confidence": "medium",
+  "haiku": "set_at",
+  "knows_film": true,
+  "level": "set_at",
+  "opus": "set_at",
+  "reason": "The film spans a year bookended by the Christmas turkey curry buffet and New Year's resolutions, ending with a snowy Christmas kiss, so the season frames its structure and romance, but the story is about Bridget's love life rather than the holidays.",
+  "referee": "Bridget Jones's Diary is a year-in-the-life romantic comedy about Bridget's love life, but its New Year's resolution premise and its bookending holiday gatherings, from the turkey curry buffet to the snowy Christmas finale, shape its structure, themes and key romantic scenes.",
+  "title": "Bridget Jones's Diary",
+  "version": 2,
+  "year": "2001"
+ },
  "637402": {
   "confidence": "medium",
   "haiku": "about",
@@ -11194,6 +11254,18 @@
   "title": "Toy Tinkers",
   "version": 2,
   "year": "1949"
+ },
+ "69016": {
+  "confidence": "high",
+  "haiku": "about",
+  "knows_film": true,
+  "level": "about",
+  "opus": "about",
+  "reason": "A Lifetime Christmas TV movie in which a Christmas wish sends the heroine back in time to rethink her choices, a classic holiday-magic romance built around the season.",
+  "referee": null,
+  "title": "Eve's Christmas",
+  "version": 2,
+  "year": "2004"
  },
  "70393": {
   "confidence": "high",

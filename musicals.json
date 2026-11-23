@@ -10219,6 +10219,48 @@
   "title": "Winter Wonderlanes",
   "year": "2026"
  },
+ "1773329": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this title specifically, but it reads as a dialogue-driven Christmas romance TV movie about twins running a bookshop in Wales, with no sign of musical performances.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 title, but as a romance TV movie about twins running a Welsh bookshop-AirBnb at Christmas, nothing suggests singing beyond possible background music or a brief carol moment.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Double Booked for the Holidays",
+  "year": "2026"
+ },
+ "1773334": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this title specifically, but it reads as a 2026 fake-dating holiday rom-com built around a family flag football rivalry, with no sign that songs are performed on screen.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 title, but the description describes a fake-dating romantic comedy centered on a flag football rivalry with no sign of on-screen singing beyond possible background music.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Our Holiday Playbook",
+  "year": "2026"
+ },
  "1773345": {
   "music_hint": false,
   "opus": {
@@ -10442,6 +10484,27 @@
   "title": "A Disney Christmas Gift",
   "year": "1982"
  },
+ "1783631": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "low",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 title, and the description points to a standard festive romance about saving a café with no sign of musical performances, so it is most likely not a musical.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't recognize this 2026 title; the description reads as a standard holiday romance with a magic chair and no sign of performed songs, so I'm assuming songs are at most background soundtrack.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "A Christmas Wish for Everyone",
+  "year": "2026"
+ },
  "1795649": {
   "music_hint": false,
   "opus": {
@@ -10483,6 +10546,27 @@
   },
   "title": "A Christmas Carol",
   "year": "2009"
+ },
+ "1799512": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "low",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't know this 2026 TV movie, and its description and genres point to a dialogue-driven romantic comedy about a wedding and a boutique with no sign of musical numbers.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "low",
+   "kind": "none",
+   "knows_film": false,
+   "reason": "I don't recognize this 2026 TV movie; the description and genres point to a standard holiday romantic comedy about wedding planning with no sign that songs are performed on screen.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Christmas Everyday: Married and Bright",
+  "year": "2026"
  },
  "1800082": {
   "fable": {
@@ -22379,6 +22463,27 @@
   "title": "Spirited",
   "year": "2022"
  },
+ "634": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "A dialogue-driven romantic comedy where the singing is incidental: Bridget mimes and sings along to \"All By Myself\" alone at home and belts out a drunken \"Without You\" at a party, while most of the music stays on the soundtrack.",
+   "songs": 2,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "some_songs",
+   "knows_film": true,
+   "reason": "Bridget Jones's Diary is a dialogue-driven romantic comedy; the only on-screen singing is a couple of isolated moments, such as Bridget lip-syncing to 'All by Myself' in her flat and a brief karaoke-style scene, with the rest of the music on the soundtrack.",
+   "songs": 2,
+   "version": 1
+  },
+  "title": "Bridget Jones's Diary",
+  "year": "2001"
+ },
  "637402": {
   "fable": {
    "kind": "none",
@@ -23089,6 +23194,27 @@
   },
   "title": "Toy Tinkers",
   "year": "1949"
+ },
+ "69016": {
+  "music_hint": false,
+  "opus": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": true,
+   "reason": "Eve's Christmas is a Lifetime romantic fantasy starring Elisa Donovan, told through dialogue, and as far as I recall its music is limited to the soundtrack and incidental moments rather than on-screen song performances.",
+   "songs": 0,
+   "version": 1
+  },
+  "sonnet": {
+   "confidence": "medium",
+   "kind": "none",
+   "knows_film": true,
+   "reason": "Eve's Christmas is a 2004 Hallmark-style fantasy romance (Lori Loughlin) told through dialogue, with no notable on-screen singing beyond possible background carols.",
+   "songs": 0,
+   "version": 1
+  },
+  "title": "Eve's Christmas",
+  "year": "2004"
  },
  "70393": {
   "music_hint": false,
