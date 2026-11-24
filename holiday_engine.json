@@ -1580,7 +1580,8 @@
       "1507275",
       "927",
       "287903",
-      "28436"
+      "28436",
+      "1567605"
     ],
     "r": [
       "296100",
@@ -1725,7 +1726,8 @@
       "1398264",
       "1800082",
       "1783631",
-      "287903"
+      "287903",
+      "1567605"
     ],
     "beer": [
       "13376",
@@ -3423,7 +3425,8 @@
       "874144",
       "229056",
       "1519780",
-      "656968"
+      "656968",
+      "1567605"
     ],
     "new year's": [
       "258480",
@@ -3966,7 +3969,8 @@
       "13189",
       "25842",
       "51282",
-      "1559980"
+      "1559980",
+      "1567605"
     ],
     "sibling relationship": [
       "16274",
@@ -4521,7 +4525,8 @@
       "942609",
       "31445",
       "315411",
-      "656968"
+      "656968",
+      "1567605"
     ],
     "magic": [
       "9479",
@@ -4782,7 +4787,8 @@
       "673737",
       "1235246",
       "768232",
-      "656968"
+      "656968",
+      "1567605"
     ],
     "miser": [
       "17979",
@@ -4845,7 +4851,8 @@
       "1235246",
       "52060",
       "49742",
-      "110439"
+      "110439",
+      "1567605"
     ],
     "greed": [
       "17979",
@@ -4870,7 +4877,8 @@
       "368809",
       "47520",
       "1602653",
-      "656968"
+      "656968",
+      "1567605"
     ],
     "supernatural": [
       "17979",
@@ -4907,7 +4915,8 @@
       "197766",
       "5833",
       "656968",
-      "910816"
+      "910816",
+      "1567605"
     ],
     "money": [
       "17979",
@@ -6301,7 +6310,8 @@
       "48874"
     ],
     "victorian era": [
-      "10437"
+      "10437",
+      "1567605"
     ],
     "cautionary": [
       "10437"
@@ -8118,7 +8128,8 @@
       "294861"
     ],
     "spirit": [
-      "25842"
+      "25842",
+      "1567605"
     ],
     "apparition": [
       "25842",
@@ -9660,7 +9671,8 @@
       "278818"
     ],
     "search for happiness": [
-      "299579"
+      "299579",
+      "1567605"
     ],
     "happiness": [
       "299579"
@@ -11673,7 +11685,8 @@
       "1361132",
       "1823586",
       "1741641",
-      "287903"
+      "287903",
+      "1567605"
     ],
     "holiday setting": [
       "2609",
@@ -11797,6 +11810,18 @@
       "144987",
       "1443151",
       "301816"
+    ],
+    "self reflection": [
+      "1567605"
+    ],
+    "gothic": [
+      "1567605"
+    ],
+    "gothic fantasy": [
+      "1567605"
+    ],
+    "dark fantasy": [
+      "1567605"
     ]
   },
   "movies": {
@@ -36293,6 +36318,35 @@
         "Robert Wise",
         "Gunther von Fritsch"
       ]
+    },
+    "1567605": {
+      "title": "Ebenezer",
+      "overview": "An elderly miser embarks on a supernatural journey after visits from the ghost of his former business partner and the Spirits of Christmas Past, Present, and Yet to Come force him to confront his past and fight for a second chance at happiness.",
+      "rating": 7.57,
+      "votes": 107,
+      "cert": "PG-13",
+      "date": "2026-11-13",
+      "poster": "https://image.tmdb.org/t/p/w500/6H2N59jJW1hZEzn2ZdrMvJw5vNI.jpg",
+      "imdb_id": "tt38773219",
+      "trailer": "D-n-lqKVr78",
+      "cast": [
+        "Johnny Depp",
+        "Rupert Grint",
+        "Daisy Ridley",
+        "Ian McKellen",
+        "Andrea Riseborough",
+        "Sam Claflin",
+        "Tramell Tillman",
+        "Charlie Murphy",
+        "Rose Williams",
+        "Ben Daniels"
+      ],
+      "directors": [
+        "Ti West"
+      ],
+      "writers": [
+        "Charles Dickens"
+      ]
     }
   },
   "genres": {
@@ -37148,7 +37202,8 @@
       "1823586",
       "1741641",
       "927",
-      "287903"
+      "287903",
+      "1567605"
     ],
     "Drama": [
       "643938",
@@ -38127,7 +38182,8 @@
       "1186957",
       "927",
       "287903",
-      "28436"
+      "28436",
+      "1567605"
     ],
     "Romance": [
       "1180682",

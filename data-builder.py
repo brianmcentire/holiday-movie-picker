@@ -47,6 +47,7 @@ ALWAYS_INCLUDE = {
     "927": "Christmas",      # Gremlins (1984), kept despite the horror rule
     "287903": "Christmas",   # Krampus (2015), kept despite the horror rule
     "28436": "Christmas",    # The Curse of the Cat People (1944), kept despite the horror rule
+    "1567605": "Christmas",  # Ebenezer (2026), a Christmas Carol; kept despite the horror rule
 }
 
 # TODO(2027): reconsider Anna and the Apocalypse (2018, R, TMDB 461928), a zombie
